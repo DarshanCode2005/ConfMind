@@ -5,6 +5,58 @@
 
 ---
 
+## Getting Started
+
+### 1. Clone the repo
+```bash
+git clone https://github.com/DarshanCode2005/ConfMind.git
+cd ConfMind
+```
+
+### 2. Set up Python environment
+```bash
+# Create a virtual environment
+python3 -m venv venv
+
+# Activate it
+source venv/bin/activate        # Linux / macOS
+# venv\Scripts\activate         # Windows
+
+# Install dev tools (Ruff linter + Pyright type checker)
+pip install -r requirements-dev.txt
+```
+
+### 3. Set up Node / commit tooling
+```bash
+# Install Commitizen + Husky + Commitlint
+npm install
+
+# Fix hook permissions (run once after cloning)
+chmod +x .husky/pre-commit
+```
+
+> [!IMPORTANT]
+> **Steps 2 and 3 are mandatory for all team members.** Without them, the pre-commit linting hook won't run and commit messages won't be validated.
+
+### 4. Making commits
+Use the interactive prompt to ensure correct commit format:
+```bash
+npm run commit
+# OR manually:
+git commit -m "feat(scope): describe WHY, not just what"
+```
+
+**Valid types**: `feat` · `fix` · `docs` · `style` · `refactor` · `test` · `chore`
+
+### 5. Manual lint / type-check commands
+```bash
+npm run lint:py        # Ruff: check for issues
+npm run format:py      # Ruff: auto-format all Python files
+npm run typecheck:py   # Pyright: static type analysis
+```
+
+---
+
 ## Table of Contents
 1. [Project Overview](#project-overview)
 2. [Tech Stack](#tech-stack)
