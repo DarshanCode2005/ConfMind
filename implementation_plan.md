@@ -452,6 +452,8 @@ estimated_attendance, venue_name, venue_capacity, source_url
 ```
 confmind/
 ├── README.md
+├── package.json                  # Root dev tools (Commitizen, Husky)
+├── implementation_plan.md
 ├── engineering_doc.md
 ├── dataset/
 │   ├── events_2025_2026.csv
@@ -510,7 +512,40 @@ confmind/
 
 ---
 
-## 9. Evaluation Alignment
+## 10. Commit Guidelines
+
+To maintain a clean and understandable history for the team, we follow **Conventional Commits** and prioritize **"Why-heavy"** messages.
+
+### Format
+`type(scope): brief description`
+
+- **feat**: A new feature (e.g., `feat(agent): add sponsor discovery logic`)
+- **fix**: A bug fix (e.g., `fix(scraper): handle Eventbrite pagination`)
+- **docs**: Documentation changes only
+- **style**: Changes that do not affect the meaning of the code (white-space, formatting, etc.)
+- **refactor**: A code change that neither fixes a bug nor adds a feature
+- **test**: Adding missing tests or correcting existing tests
+- **chore**: Changes to the build process or auxiliary tools and libraries
+
+### Tools
+- **Commitizen**: For interactive commit prompts, run:
+  ```bash
+  npm run commit
+  ```
+- **Husky + Commitlint**: A hook is active that will automatically reject any commit that doesn't follow the `type(scope): description` format.
+
+> [!IMPORTANT]
+> **To activate hooks**: Everyone MUST run `npm install` once after cloning the repository.
+
+### Why-heavy Commits
+Don't just say *what* you changed (the code shows that). Say **why** you changed it.
+- **Bad**: `fix: update prompt`
+- **Good**: `feat(gtm): update Discord scraping prompt to include server member counts for better prioritize scoring`
+- **Rationale**: A teammate looking at your commit 2 months from now should understand the *reasoning* for a complex logic change without needing to ask you.
+
+---
+
+## 11. Evaluation Alignment
 
 | Criteria | Weight | Our Approach |
 |---|---|---|

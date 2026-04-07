@@ -1,0 +1,13 @@
+node_modules/
+.env
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+.vscode/
+.idea/
+dist/
+build/
+.next/
+out/
+.DS_Store
+.husky/_/
