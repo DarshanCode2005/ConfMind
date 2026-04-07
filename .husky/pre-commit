@@ -1,2 +1,18 @@
-# (empty) - or comment it out
-# npm test
+#!/bin/sh
+# Run Ruff on staged Python files only (fast — skips unmodified files)
+STAGED_PY=$(git diff --cached --name-only --diff-filter=ACM | grep '\.py$')
+
+if [ -n "$STAGED_PY" ]; then
+  echo "🐍 Running Ruff lint check..."
+  echo "$STAGED_PY" | xargs ruff check --fix
+  if [ $? -ne 0 ]; then
+    echo "❌ Ruff found issues that could not be auto-fixed. Fix them and re-commit."
+    exit 1
+  fi
+
+  echo "✨ Running Ruff formatter..."
+  echo "$STAGED_PY" | xargs ruff format
+  
+  # Re-add any files Ruff auto-fixed/formatted
+  echo "$STAGED_PY" | xargs git add
+fi

@@ -11,3 +11,8 @@ build/
 out/
 .DS_Store
 .husky/_/
+
+
+venv/  
+env/
+myenv/
