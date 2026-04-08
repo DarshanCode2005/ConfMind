@@ -153,10 +153,13 @@ def normalize_country(raw: str) -> str:
     if not raw or not isinstance(raw, str):
         return ""
     cleaned = raw.strip().lower()
-    # Already a 2-letter code?
+    # Check the name map first so aliases like "uk" -> "GB" take priority
+    if cleaned in _COUNTRY_NAME_MAP:
+        return _COUNTRY_NAME_MAP[cleaned]
+    # Already a recognised 2-letter ISO code (but not in alias map)
     if re.match(r"^[a-z]{2}$", cleaned):
         return cleaned.upper()
-    return _COUNTRY_NAME_MAP.get(cleaned, raw.strip().upper())
+    return raw.strip().upper()
 
 
 # ─────────────────────────────────────────────
