@@ -112,8 +112,8 @@ class AttendancePredictor:
         try:
             return int(encoder.transform([value])[0])
         except ValueError:
-            # Unseen label — use the mean index as a neutral fallback
-            return len(encoder.classes_) // 2
+            # Unseen label — use the median index as a neutral fallback
+            return len(encoder.classes_) // 2  # type: ignore[arg-type]
 
     def predict(
         self,

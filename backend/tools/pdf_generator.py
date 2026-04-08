@@ -64,7 +64,7 @@ def render_proposal(
     env = _get_jinja_env()
     template = env.get_template(_TEMPLATE_NAME)
     html_str = template.render(sponsor=sponsor, event=event_meta)
-    pdf_bytes: bytes = HTML(string=html_str).write_pdf()
+    pdf_bytes: bytes = HTML(string=html_str).write_pdf() or b""  # write_pdf is bytes | None
     return pdf_bytes
 
 

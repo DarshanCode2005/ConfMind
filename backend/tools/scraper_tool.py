@@ -156,10 +156,10 @@ class SmartScraperWrapper:
 
         cfg = self._llm_config or _default_llm_config(api_key)
         graph = SmartScraperGraph(prompt=prompt, source=url, config={"llm": cfg})
-        result: dict[str, Any] = graph.run()
+        result: Any = graph.run()
         if not result:
             raise ScraperError(f"SmartScraperGraph returned empty result for URL: {url}")
-        return result
+        return dict(result)
 
 
 class SearchGraphWrapper:
@@ -208,17 +208,18 @@ class SearchGraphWrapper:
             prompt=f"{query}. {prompt}",
             config={"llm": cfg, "max_results": self._max_results},
         )
-        result = graph.run()
+        result: Any = graph.run()
         if not result:
             raise ScraperError(f"SearchGraph returned empty result for query: {query!r}")
         # SearchGraph returns either a list or a dict with a list inside
         if isinstance(result, list):
-            return result
+            return [item for item in result if isinstance(item, dict)]
         # Some versions nest under a key
-        for v in result.values():
-            if isinstance(v, list):
-                return v
-        return [result]
+        if hasattr(result, "values"):
+            for v in result.values():
+                if isinstance(v, list):
+                    return [item for item in v if isinstance(item, dict)]
+        return [dict(result)]
 
 
 # ─────────────────────────────────────────────
