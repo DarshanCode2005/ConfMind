@@ -42,3 +42,9 @@ reportMissingImports = true
 reportMissingTypeStubs = false    # 3rd-party libs (LangChain etc.) lack stubs — suppress noise
 reportUnusedVariable = "warning"
 reportUnusedImport = "warning"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+# Makes `import backend.tools.serper_tool` etc. work from any CWD
+pythonpath = ["."]
+addopts = ["-v", "--tb=short"]
