@@ -6,20 +6,30 @@ all structured data flowing through the system.
 
 Domain models
 ─────────────
-EventSchema      Full event record (used by ETL pipeline + dataset)
-SponsorSchema    A company / brand that sponsors events
-SpeakerSchema    A conference speaker or artist
-VenueSchema      A physical event location
-ExhibitorSchema  A company showing products/services at an event
-TicketTierSchema One ticket pricing tier (Early Bird / General / VIP)
-CommunitySchema  An online community (Discord server, Slack, etc.)
-SerperResult     A single Google search result returned by serper_tool
-LinkedInProfile  Enriched LinkedIn data for a Person
+EventSchema         Full event record (used by ETL pipeline + dataset)
+SponsorSchema       A company / brand that sponsors events
+SpeakerSchema       A conference speaker or artist
+VenueSchema         A physical event location
+ExhibitorSchema     A company showing products/services at an event
+TicketTierSchema    One ticket pricing tier (Early Bird / General / VIP)
+CommunitySchema     An online community (Discord server, Slack, etc.)
+SerperResult        A single Google search result returned by serper_tool
+LinkedInProfile     Enriched LinkedIn data for a Person
+
+Orchestration contracts (LangGraph)
+────────────────────────────────────
+EventConfigInput    The user's event configuration submitted via the UI/API
+AgentState          The shared TypedDict flowing through the LangGraph graph
+                    Every agent reads from and writes to this object.
 """
 
 from __future__ import annotations
 
+from typing import Annotated, Any
+
+from langgraph.graph.message import add_messages  # type: ignore[import-untyped]
 from pydantic import BaseModel, Field, field_validator
+from typing_extensions import TypedDict
 
 # ─────────────────────────────────────────────
 # Search / Scraping primitives
@@ -151,3 +161,71 @@ class EventSchema(BaseModel):
     venue_name: str = ""
     venue_capacity: int | None = Field(default=None, ge=1)
     source_url: str = ""
+
+
+# ─────────────────────────────────────────────
+# Orchestration contracts (LangGraph)
+# ─────────────────────────────────────────────
+
+
+class EventConfigInput(BaseModel):
+    """User event configuration submitted via the UI or REST API.
+
+    This is the entry point — the user fills in these fields through the
+    Next.js input wizard, and the API passes them to the LangGraph orchestrator.
+
+    Fields
+    ──────
+    category       Type of event — "AI", "Web3", "ClimateTech", "Music", "Sports"
+    geography      Target region — "Europe", "India", "USA", "Singapore"
+    audience_size  Expected number of attendees
+    budget_usd     Total event budget in USD
+    event_dates    Target event date in ISO 8601 format ("2025-09-15")
+    event_name     Optional custom event name; defaults to "{category} Summit"
+    """
+
+    category: str
+    geography: str
+    audience_size: int = Field(ge=1)
+    budget_usd: float = Field(ge=0.0)
+    event_dates: str  # ISO 8601 "YYYY-MM-DD"
+    event_name: str = ""  # optional; agents fall back to "{category} Summit"
+
+
+class AgentState(TypedDict):
+    """Shared mutable state flowing through the LangGraph graph.
+
+    The orchestrator initialises this from an EventConfigInput.
+    Each agent node receives the full state, reads what it needs, writes
+    its outputs into the relevant fields, and returns the updated state.
+
+    Layout
+    ──────
+    event_config   Immutable user input — agents READ only
+    sponsors       Written by Sponsor Agent
+    speakers       Written by Speaker Agent
+    venues         Written by Venue Agent
+    exhibitors     Written by Exhibitor Agent
+    pricing        Written by Pricing & Footfall Agent
+    communities    Written by Community GTM Agent
+    schedule       Written by Event Ops Agent
+    revenue        Written by Revenue Agent
+    gtm_messages   Written by Community GTM Agent (platform -> message mapping)
+    messages       LangGraph message history (used for LLM call logging)
+    errors         Any agent can append an error string here; orchestrator skips failed agents
+    metadata       Free-form dict for agent-specific extras (proposal paths, etc.)
+    """
+
+    event_config: EventConfigInput
+    sponsors: list[SponsorSchema]
+    speakers: list[SpeakerSchema]
+    venues: list[VenueSchema]
+    exhibitors: list[ExhibitorSchema]
+    pricing: list[TicketTierSchema]
+    communities: list[CommunitySchema]
+    schedule: list[dict[str, Any]]
+    revenue: dict[str, Any]
+    gtm_messages: dict[str, str]
+    messages: Annotated[list[Any], add_messages]
+    errors: list[str]
+    metadata: dict[str, Any]
