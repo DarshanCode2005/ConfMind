@@ -110,6 +110,80 @@ Run: `pytest tests/test_sponsor_agent.py -v` — **11 tests, all mocked** (no AP
 
 ---
 
+## `SpeakerAgent`
+
+**File**: [`speaker_agent.py`](./speaker_agent.py)  
+**LangGraph node name**: `speaker_agent`  
+**Uses LLM**: Yes — per-speaker agenda topic mapping (`gpt-4o-mini`, temperature 0.3)  
+**Reads from state**: `event_config`  
+**Writes to state**: `speakers`
+
+### What It Does
+
+1. **Fetches** speakers via `search_speakers_structured(category, geography)` (ScrapeGraph-AI)
+2. **Enriches** each speaker with a LinkedIn influence score via `enrich_speakers()`:
+   - Speakers without `linkedin_url` are skipped gracefully (score stays 0.0)
+   - Per-speaker LinkedIn errors are non-fatal (enrichment continues for the rest)
+3. **Maps topics** — one LLM call per speaker via `_map_topic(chain, theme, speaker)`:
+   - Input: event theme + speaker name, bio, current topic
+   - Output: refined agenda topic (max 10 words), aligned with the event theme
+   - Falls back to original topic if LLM raises (non-fatal)
+4. **Sorts** descending by `influence_score` (no top-N cap; EventOpsAgent handles scheduling)
+
+### LLM Prompt
+
+```
+system: "You are a conference agenda specialist. Given an event theme and a speaker's
+         name, bio, and current topic, return a single refined agenda topic (maximum
+         10 words) that best fits the event theme. Respond with ONLY the topic string."
+human:  "Event theme: {theme}\nSpeaker: {name}\nBio: {bio}\nCurrent topic: {topic}"
+```
+
+### Influence Score Formula (from `linkedin_tool.py`)
+
+```
+follower_pts  = log10(followers + 1) / log10(100_001) * 6.0   (max 6)
+posts_pts     = min(posts, 10) / 10 * 2.0                      (max 2)
+conn_pts      = min(connections, 500) / 500 * 2.0              (max 2)
+influence_score = follower_pts + posts_pts + conn_pts          (max 10)
+```
+
+### Private Helper
+
+```python
+def _map_topic(chain: Any, theme: str, speaker: SpeakerSchema) -> str:
+    """Invoke the LLM chain; falls back to speaker.topic on any exception."""
+```
+
+### Usage
+
+```python
+from backend.agents.speaker_agent import SpeakerAgent
+
+agent = SpeakerAgent()
+updated_state = agent.run(state)
+speakers = updated_state["speakers"]    # list[SpeakerSchema], sorted by influence_score
+```
+
+### Tests
+
+Test file: [`tests/test_speaker_agent.py`](../../tests/test_speaker_agent.py)  
+Run: `pytest tests/test_speaker_agent.py -v` — **9 tests, all mocked**.
+
+| Test | Description |
+|---|---|
+| `test_map_topic_returns_llm_content` | `_map_topic` strips and returns LLM `.content` |
+| `test_map_topic_falls_back_on_exception` | `_map_topic` returns original topic when LLM raises |
+| `test_speaker_agent_run_returns_agent_state` | `run()` returns dict with `speakers` key |
+| `test_speaker_agent_speakers_sorted_by_influence` | Output sorted descending by `influence_score` |
+| `test_speaker_agent_enrich_speakers_called` | `enrich_speakers` called once with scraper output |
+| `test_speaker_agent_topic_mapped_via_llm` | Speaker topic updated to `_map_topic` return value |
+| `test_speaker_agent_handles_llm_topic_failure` | `_map_topic` exception caught by outer try/except → error logged |
+| `test_speaker_agent_handles_empty_scraper_result` | Empty list → `speakers=[]`, no errors |
+| `test_speaker_agent_logs_error_on_scraper_exception` | Scraper raises → `state["errors"]` non-empty |
+
+---
+
 ## Upcoming Agents
 
 > The following agents are planned but not yet implemented.
