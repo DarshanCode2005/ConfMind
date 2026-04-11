@@ -252,15 +252,88 @@ Run: `pytest tests/test_exhibitor_agent.py -v` — **11 tests, all mocked**.
 
 ---
 
+---
+
+## `RevenueAgent`
+
+**File**: [`revenue_agent.py`](./revenue_agent.py)  
+**LangGraph node name**: `revenue_agent`  
+**Uses LLM**: No — pure arithmetic  
+**Reads from state**: `pricing`, `sponsors`, `event_config`  
+**Writes to state**: `revenue`
+
+### What It Does
+
+1. **Ticket revenue** — `sum(tier.revenue for tier in state["pricing"])`
+2. **Sponsor revenue** — fixed tier map: Gold=50k, Silver=20k, Bronze=5k, General=0
+3. **Total** = ticket + sponsor
+4. **Profit** = total − `event_config.budget_usd`
+5. **Break-even price** = `budget_usd / audience_size`
+6. **What-if scenarios** — 3 variants at −20%, base, +20% ticket price
+
+### Sponsor Tier Values
+
+| Tier | Value (USD) |
+|---|---|
+| Gold | 50,000 |
+| Silver | 20,000 |
+| Bronze | 5,000 |
+| General | 0 |
+
+### Output Shape
+
+```python
+state["revenue"] = {
+    "ticket_revenue":    float,
+    "sponsor_revenue":   float,
+    "total_revenue":     float,
+    "profit":            float,   # negative = loss
+    "break_even_price":  float,
+    "what_if_scenarios": [
+        {"label": "-20%", "base_price_multiplier": 0.8, "estimated_ticket_revenue": float},
+        {"label": "base", "base_price_multiplier": 1.0, "estimated_ticket_revenue": float},
+        {"label": "+20%", "base_price_multiplier": 1.2, "estimated_ticket_revenue": float},
+    ]
+}
+```
+
+### Private Helpers
+
+```python
+def _calc_ticket_revenue(pricing: list[TicketTierSchema]) -> float: ...
+def _calc_sponsor_revenue(sponsors: list[SponsorSchema]) -> float: ...
+def _calc_what_if(pricing: list[TicketTierSchema]) -> list[dict]: ...
+```
+
+### Tests
+
+Test file: [`tests/test_revenue_agent.py`](../../tests/test_revenue_agent.py)  
+Run: `pytest tests/test_revenue_agent.py -v` — **10 tests, no mocking needed**.
+
+| Test | Description |
+|---|---|
+| `test_calc_ticket_revenue_sums_tiers` | Sums `tier.revenue` across all tiers |
+| `test_calc_sponsor_revenue_by_tier` | Gold+Silver+Bronze+General → 75k |
+| `test_calc_what_if_has_three_scenarios` | Returns exactly 3 scenario dicts |
+| `test_calc_what_if_base_matches_tier_price` | Base scenario equals original ticket revenue |
+| `test_revenue_agent_run_returns_agent_state` | `run()` returns dict with `revenue` key |
+| `test_revenue_agent_all_keys_present` | All 6 keys present in `state["revenue"]` |
+| `test_revenue_agent_total_is_ticket_plus_sponsor` | `total == ticket + sponsor` |
+| `test_revenue_agent_profit_is_total_minus_budget` | `profit == total - budget_usd` |
+| `test_revenue_agent_break_even_price` | `break_even == budget / audience` |
+| `test_revenue_agent_handles_empty_pricing_and_sponsors` | All zeros, no errors |
+
+---
+
 ## Upcoming Agents
 
 > The following agents are planned but not yet implemented.
 
 | Agent | Node Name | Writes to | Owner |
 |---|---|---|---|
-| `RevenueAgent` | `revenue_agent` | `state["revenue"]` | P2 |
 | `VenueAgent` | `venue_agent` | `state["venues"]` | P3 |
 | `CommunityGTMAgent` | `community_gtm_agent` | `state["communities"]`, `state["gtm_messages"]` | P5 |
 | `EventOpsAgent` | `event_ops_agent` | `state["schedule"]` | P5 |
 
 Add a new section to this file for each agent as it is implemented.
+
