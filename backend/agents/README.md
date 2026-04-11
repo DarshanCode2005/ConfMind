@@ -260,7 +260,6 @@ Run: `pytest tests/test_exhibitor_agent.py -v` — **11 tests, all mocked**.
 |---|---|---|---|
 | `RevenueAgent` | `revenue_agent` | `state["revenue"]` | P2 |
 | `VenueAgent` | `venue_agent` | `state["venues"]` | P3 |
-| `PricingAgent` | `pricing_agent` | `state["pricing"]` | P3 |
 | `CommunityGTMAgent` | `community_gtm_agent` | `state["communities"]`, `state["gtm_messages"]` | P5 |
 | `EventOpsAgent` | `event_ops_agent` | `state["schedule"]` | P5 |
 
