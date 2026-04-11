@@ -184,14 +184,80 @@ Run: `pytest tests/test_speaker_agent.py -v` — **9 tests, all mocked**.
 
 ---
 
+## `ExhibitorAgent`
+
+**File**: [`exhibitor_agent.py`](./exhibitor_agent.py)  
+**LangGraph node name**: `exhibitor_agent`  
+**Uses LLM**: Yes — single batched call assigns cluster + relevance for all exhibitors (`gpt-4o-mini`, temperature 0.2)  
+**Reads from state**: `event_config`  
+**Writes to state**: `exhibitors`
+
+### What It Does
+
+1. **Fetches** exhibitors via `search_exhibitors_structured(category)` (ScrapeGraph-AI)
+2. **LLM batch call** — all exhibitors sent in one prompt; response is a JSON array:
+   - `cluster`: one of `startup / enterprise / tools / individual`
+   - `relevance`: float 0.0-10.0 based on fit to the event theme
+3. **Parses** via `_parse_llm_clusters()` — falls back per-item on bad JSON or invalid values
+4. **Sorts** descending by `relevance`
+
+### LLM Prompt
+
+```
+system: "You are a conference exhibitor analyst. Given an event theme and a numbered
+         list of exhibitors, return a JSON array (same length and order as input).
+         Each object must have 'cluster' (startup/enterprise/tools/individual) and
+         'relevance' (float 0.0-10.0). Respond with ONLY the JSON array."
+human:  "Event theme: {theme}\n\nExhibitors:\n{exhibitor_list}"
+```
+
+### Private Helpers
+
+```python
+def _format_exhibitor_list(exhibitors: list[ExhibitorSchema]) -> str:
+    """Format as numbered text block: '1. Name: Acme | Website: acme.com'"""
+
+def _parse_llm_clusters(response_text: str, exhibitors: list[ExhibitorSchema]) -> list[ExhibitorSchema]:
+    """Parse JSON array and merge into exhibitor list; falls back per-item on errors."""
+```
+
+### Usage
+
+```python
+from backend.agents.exhibitor_agent import ExhibitorAgent
+
+agent = ExhibitorAgent()
+updated_state = agent.run(state)
+exhibitors = updated_state["exhibitors"]    # list[ExhibitorSchema], sorted by relevance
+```
+
+### Tests
+
+Test file: [`tests/test_exhibitor_agent.py`](../../tests/test_exhibitor_agent.py)  
+Run: `pytest tests/test_exhibitor_agent.py -v` — **11 tests, all mocked**.
+
+| Test | Description |
+|---|---|
+| `test_format_exhibitor_list_numbered` | Output is numbered with Name + Website |
+| `test_format_exhibitor_list_missing_website_shows_none` | No website → shows `(none)` |
+| `test_parse_llm_clusters_merges_correctly` | Valid JSON → cluster and relevance updated |
+| `test_parse_llm_clusters_falls_back_on_bad_json` | Invalid JSON → original values unchanged |
+| `test_parse_llm_clusters_clamps_relevance` | Relevance > 10 → clamped to 10.0 |
+| `test_parse_llm_clusters_rejects_invalid_cluster` | Unknown cluster → original value kept |
+| `test_exhibitor_agent_run_returns_agent_state` | `run()` returns dict with `exhibitors` key |
+| `test_exhibitor_agent_sorted_by_relevance` | Output sorted descending by `relevance` |
+| `test_exhibitor_agent_clusters_assigned` | All clusters are one of the 4 valid values |
+| `test_exhibitor_agent_handles_empty_scraper_result` | Empty list → `exhibitors=[]`, no errors |
+| `test_exhibitor_agent_logs_error_on_scraper_exception` | Scraper raises → `state["errors"]` non-empty |
+
+---
+
 ## Upcoming Agents
 
 > The following agents are planned but not yet implemented.
 
 | Agent | Node Name | Writes to | Owner |
 |---|---|---|---|
-| `SpeakerAgent` | `speaker_agent` | `state["speakers"]` | P2 |
-| `ExhibitorAgent` | `exhibitor_agent` | `state["exhibitors"]` | P2 |
 | `RevenueAgent` | `revenue_agent` | `state["revenue"]` | P2 |
 | `VenueAgent` | `venue_agent` | `state["venues"]` | P3 |
 | `PricingAgent` | `pricing_agent` | `state["pricing"]` | P3 |
