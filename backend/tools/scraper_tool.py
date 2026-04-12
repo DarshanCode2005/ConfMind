@@ -104,12 +104,37 @@ def _default_llm_config(api_key: str | None = None) -> dict[str, Any]:
     development and hackathon testing.
     """
     key = api_key or os.getenv("OPENAI_API_KEY", "")
+    base_url = os.getenv("OPENAI_BASE_URL", None)
+
+    # ScrapeGraph uses the "openai/" prefix internally for its provider routing.
+    # When a custom base_url is set (e.g. Nvidia NIM), we pass the bare model name
+    # and set openai_api_base — ScrapeGraph's recognized key for custom endpoints.
+    # Without base_url: keep the "openai/" prefix so ScrapeGraph routes correctly to OpenAI.
+    raw_model = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
+
     if not key:
         raise OSError("OPENAI_API_KEY is not set. Add it to your .env file or export it.")
-    return {
-        "model": "openai/gpt-4o-mini",
-        "api_key": key,
-    }
+
+    if base_url:
+        # ScrapeGraph must receive a plain dict — it does not accept model instances.
+        # Its provider detection works by reading the prefix from the model name:
+        #   "openai/<xyz>" → uses openai provider, strips prefix, sends "<xyz>" to API.
+        # For Nvidia: prefix with "openai/" so ScrapeGraph routes to its OpenAI provider,
+        # which then strips it and sends the real model name (e.g. "meta/llama-3.3-70b-instruct")
+        # as the model field in the HTTP request body — exactly what Nvidia expects.
+        nvidia_model = raw_model[7:] if raw_model.startswith("openai/") else raw_model
+        return {
+            "model": f"openai/{nvidia_model}",  # e.g. openai/meta/llama-3.3-70b-instruct
+            "api_key": key,
+            "openai_api_base": base_url,
+        }
+    else:
+        # Standard OpenAI — add "openai/" prefix if not already present
+        model_name = raw_model if raw_model.startswith("openai/") else f"openai/{raw_model}"
+        return {
+            "model": model_name,
+            "api_key": key,
+        }
 
 
 # ─────────────────────────────────────────────
@@ -117,15 +142,27 @@ def _default_llm_config(api_key: str | None = None) -> dict[str, Any]:
 # ─────────────────────────────────────────────
 
 
+def _crawl4ai_llm_config(api_key: str | None = None) -> Any:
+    """Helper to convert environment vars to Crawl4AI LLMConfig."""
+    import os
+
+    from crawl4ai import LLMConfig
+
+    key = api_key or os.getenv("OPENAI_API_KEY", "")
+    base_url = os.getenv("OPENAI_BASE_URL", "")
+    raw_model = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
+
+    if base_url:
+        os.environ["OPENAI_API_BASE"] = base_url
+
+    provider = raw_model if raw_model.startswith("openai/") else f"openai/{raw_model}"
+
+    return LLMConfig(provider=provider, api_token=key)
+
+
 class SmartScraperWrapper:
-    """Wraps ScrapeGraph-AI SmartScraperGraph for single-URL extraction.
-
-    SmartScraperGraph fetches a URL and uses an LLM to extract structured
-    data matching the given prompt, with no need for CSS selectors.
-
-    Args:
-        llm_config: Override the default LLM config (model + api_key dict).
-                    If None, uses GPT-4o-mini via OPENAI_API_KEY.
+    """A pure-Crawl4AI alternative to ScrapeGraph-AI SmartScraperGraph.
+    Uses AsyncWebCrawler and LLMExtractionStrategy for intelligent, robust scraping.
     """
 
     def __init__(self, llm_config: dict[str, Any] | None = None) -> None:
@@ -138,40 +175,125 @@ class SmartScraperWrapper:
         *,
         api_key: str | None = None,
     ) -> dict[str, Any]:
-        """Scrape a URL and return extracted data as a raw dict.
+        """Scrape a URL and return extracted data as a raw dict."""
+        import asyncio
+        import json
 
-        Args:
-            url:     The page URL to scrape.
-            prompt:  Natural-language instruction describing the fields to extract.
-            api_key: Override OPENAI_API_KEY for this call.
+        import requests
+        from crawl4ai import (
+            AsyncWebCrawler,
+            BrowserConfig,
+            CacheMode,
+            CrawlerRunConfig,
+            LLMExtractionStrategy,
+        )
 
-        Returns:
-            A dict whose keys match the fields described in the prompt.
+        async def _do_crawl():
+            source_url = url
+            try:
+                # Bypass raw DNS Playwright issues by pre-fetching
+                resp = requests.get(url, timeout=15, headers={"User-Agent": "Mozilla/5.0"})
+                if resp.ok and resp.text.strip():
+                    source_url = f"raw://{resp.text}"
+            except Exception:
+                pass
 
-        Raises:
-            ScraperError: If ScrapeGraph-AI returns None or an empty dict.
-        """
-        # Import here to avoid slow startup when running tests that mock this class
-        from scrapegraphai.graphs import SmartScraperGraph  # type: ignore[import-untyped]
+            llm_strategy = LLMExtractionStrategy(
+                llm_config=_crawl4ai_llm_config(api_key),
+                instruction=f"{prompt}\nReturn ONLY a pure valid JSON dict. No lists.",
+                extraction_type="block",
+            )
+            config = CrawlerRunConfig(cache_mode=CacheMode.BYPASS, extraction_strategy=llm_strategy)
+            browser_config = BrowserConfig(headless=True)
 
-        cfg = self._llm_config or _default_llm_config(api_key)
-        graph = SmartScraperGraph(prompt=prompt, source=url, config={"llm": cfg})
-        result: Any = graph.run()
-        if not result:
-            raise ScraperError(f"SmartScraperGraph returned empty result for URL: {url}")
-        return dict(result)
+            async with AsyncWebCrawler(config=browser_config) as crawler:
+                res = await crawler.arun(url=source_url, config=config)
+                if not res.success:
+                    raise ScraperError(f"Crawl4AI failed: {res.error_message}")
+
+                content = res.extracted_content
+                if not content:
+                    return {}
+                try:
+                    data = json.loads(content)
+                    return data
+                except json.JSONDecodeError as e:
+                    raise ScraperError(f"Crawl4AI JSON Error: {content} - {e}") from e
+
+        try:
+            data = asyncio.run(_do_crawl())
+        except RuntimeError:
+            loop = asyncio.get_event_loop()
+            data = loop.run_until_complete(_do_crawl())
+
+        if isinstance(data, list):
+            if not data:
+                return {}
+            return data[0]
+        return data
+
+    def scrape_list(
+        self,
+        url: str,
+        prompt: str,
+        *,
+        api_key: str | None = None,
+    ) -> list[dict[str, Any]]:
+        """Scrape a URL and return extracted data as a list of dicts (for calendars)."""
+        import asyncio
+        import json
+
+        import requests
+        from crawl4ai import (
+            AsyncWebCrawler,
+            BrowserConfig,
+            CacheMode,
+            CrawlerRunConfig,
+            LLMExtractionStrategy,
+        )
+
+        async def _do_crawl_list():
+            source_url = url
+            try:
+                resp = requests.get(url, timeout=15, headers={"User-Agent": "Mozilla/5.0"})
+                if resp.ok and resp.text.strip():
+                    source_url = f"raw://{resp.text}"
+            except Exception:
+                pass
+
+            llm_strategy = LLMExtractionStrategy(
+                llm_config=_crawl4ai_llm_config(api_key),
+                instruction=f"{prompt}\nReturn ONLY a pure valid JSON LIST of dicts (`[{{...}}]`).",
+                extraction_type="block",
+            )
+            config = CrawlerRunConfig(cache_mode=CacheMode.BYPASS, extraction_strategy=llm_strategy)
+            browser_config = BrowserConfig(headless=True)
+
+            async with AsyncWebCrawler(config=browser_config) as crawler:
+                res = await crawler.arun(url=source_url, config=config)
+                if not res.success:
+                    raise ScraperError(f"Crawl4AI failed: {res.error_message}")
+
+                content = res.extracted_content
+                if not content:
+                    return []
+                try:
+                    data = json.loads(content)
+                    if isinstance(data, dict):
+                        return [data]
+                    return data
+                except json.JSONDecodeError as e:
+                    raise ScraperError(f"Crawl4AI JSON Error: {content} - {e}") from e
+
+        try:
+            return asyncio.run(_do_crawl_list())
+        except RuntimeError:
+            loop = asyncio.get_event_loop()
+            return loop.run_until_complete(_do_crawl_list())
 
 
 class SearchGraphWrapper:
-    """Wraps ScrapeGraph-AI SearchGraph for multi-source search + scrape.
-
-    SearchGraph runs a web search query, visits the top results, and
-    aggregates structured data from all pages in one LLM pass.
-
-    Args:
-        llm_config:    Override the default LLM config.
-        max_results:   How many search results to scrape (default 5).
-    """
+    """A SearchGraph equivalent using Crawl4AI and Serper."""
 
     def __init__(
         self,
@@ -188,38 +310,69 @@ class SearchGraphWrapper:
         *,
         api_key: str | None = None,
     ) -> list[dict[str, Any]]:
-        """Run a search query and return a list of extracted records.
+        """Run a search query and return a list of extracted records."""
+        import asyncio
+        import json
 
-        Args:
-            query:   The Google-style search query (no special syntax required).
-            prompt:  What fields to extract from each result page.
-            api_key: Override OPENAI_API_KEY for this call.
-
-        Returns:
-            A list of dicts; each dict represents one extracted entity.
-
-        Raises:
-            ScraperError: If SearchGraph returns no results.
-        """
-        from scrapegraphai.graphs import SearchGraph  # type: ignore[import-untyped]
-
-        cfg = self._llm_config or _default_llm_config(api_key)
-        graph = SearchGraph(
-            prompt=f"{query}. {prompt}",
-            config={"llm": cfg, "max_results": self._max_results},
+        import requests
+        from crawl4ai import (
+            AsyncWebCrawler,
+            BrowserConfig,
+            CacheMode,
+            CrawlerRunConfig,
+            LLMExtractionStrategy,
         )
-        result: Any = graph.run()
-        if not result:
-            raise ScraperError(f"SearchGraph returned empty result for query: {query!r}")
-        # SearchGraph returns either a list or a dict with a list inside
-        if isinstance(result, list):
-            return [item for item in result if isinstance(item, dict)]
-        # Some versions nest under a key
-        if hasattr(result, "values"):
-            for v in result.values():
-                if isinstance(v, list):
-                    return [item for item in v if isinstance(item, dict)]
-        return [dict(result)]
+
+        from backend.tools.serper_tool import search_web
+
+        # 1. Search Google
+        try:
+            search_results = search_web(query, num_results=self._max_results)
+        except Exception as e:
+            raise ScraperError(f"Search failed: {e}") from e
+
+        async def _do_search():
+            all_records = []
+            browser_config = BrowserConfig(headless=True)
+
+            async with AsyncWebCrawler(config=browser_config) as crawler:
+                for res in search_results:
+                    source_url = res.url
+                    try:
+                        resp = requests.get(
+                            source_url, timeout=10, headers={"User-Agent": "Mozilla/5.0"}
+                        )
+                        if resp.ok and resp.text.strip():
+                            source_url = f"raw://{resp.text}"
+                    except Exception:
+                        pass
+
+                    llm_strategy = LLMExtractionStrategy(
+                        llm_config=_crawl4ai_llm_config(api_key),
+                        instruction=f"{prompt}\nReturn ONLY a pure valid JSON LIST of dicts (`[{{...}}]`).",
+                        extraction_type="block",
+                    )
+                    config = CrawlerRunConfig(
+                        cache_mode=CacheMode.BYPASS, extraction_strategy=llm_strategy
+                    )
+
+                    crawl_res = await crawler.arun(url=source_url, config=config)
+                    if crawl_res.success and crawl_res.extracted_content:
+                        try:
+                            parts = json.loads(crawl_res.extracted_content)
+                            if isinstance(parts, list):
+                                all_records.extend(parts)
+                            elif isinstance(parts, dict):
+                                all_records.append(parts)
+                        except json.JSONDecodeError:
+                            pass
+            return all_records
+
+        try:
+            return asyncio.run(_do_search())
+        except RuntimeError:
+            loop = asyncio.get_event_loop()
+            return loop.run_until_complete(_do_search())
 
 
 # ─────────────────────────────────────────────

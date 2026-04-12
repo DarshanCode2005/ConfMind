@@ -75,6 +75,16 @@ EXHIBITOR_SEARCH_PROMPT = (
     "Return a list of objects with these fields."
 )
 
+GENERIC_EVENTS_PROMPT = (
+    "This is a conference or event listing page. "
+    "Extract all events visible on the page as a list. For each event extract: "
+    "event_name (string), date (any date string you can find), city (string), "
+    "country (string), category (e.g. Tourism, AI, Tech, Business), "
+    "theme (short description or subtitle), estimated_attendance (integer if shown, else 0), "
+    "venue_name (string if shown), source_url (the full URL of this page). "
+    "Return a list of event objects with exactly these field names."
+)
+
 # Map source name string -> SmartScraperGraph prompt constant.
 # Used by scrapegraph_runner.run_smart_scraper(url, source_name).
 PROMPT_BY_SOURCE: dict[str, str] = {
@@ -83,4 +93,5 @@ PROMPT_BY_SOURCE: dict[str, str] = {
     "sessionize": SESSIONIZE_PROMPT,
     "cvent": CVENT_PROMPT,
     "eventlocations": EVENTLOCATIONS_PROMPT,
+    "generic": GENERIC_EVENTS_PROMPT,  # for any public events listing page
 }
