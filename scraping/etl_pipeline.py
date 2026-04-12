@@ -178,17 +178,17 @@ def normalize_event(raw: dict[str, Any]) -> EventSchema:
     """
     cleaned: dict[str, Any] = {}
 
-    cleaned["event_name"] = raw.get("event_name", "")
-    cleaned["date"] = normalize_date(str(raw.get("date", "")))
-    cleaned["city"] = raw.get("city", "")
-    cleaned["country"] = normalize_country(str(raw.get("country", "")))
-    cleaned["category"] = raw.get("category", "")
-    cleaned["theme"] = raw.get("theme", "")
-    cleaned["sponsors"] = raw.get("sponsors", [])
-    cleaned["speakers"] = raw.get("speakers", [])
-    cleaned["exhibitors"] = raw.get("exhibitors", [])
-    cleaned["venue_name"] = raw.get("venue_name", "")
-    cleaned["source_url"] = raw.get("source_url", "")
+    cleaned["event_name"] = raw.get("event_name") or ""
+    cleaned["date"] = normalize_date(str(raw.get("date") or ""))
+    cleaned["city"] = raw.get("city") or ""
+    cleaned["country"] = normalize_country(str(raw.get("country") or ""))
+    cleaned["category"] = raw.get("category") or ""
+    cleaned["theme"] = raw.get("theme") or ""
+    cleaned["sponsors"] = raw.get("sponsors") or []
+    cleaned["speakers"] = raw.get("speakers") or []
+    cleaned["exhibitors"] = raw.get("exhibitors") or []
+    cleaned["venue_name"] = raw.get("venue_name") or ""
+    cleaned["source_url"] = raw.get("source_url") or ""
 
     for price_field in ("ticket_price_early", "ticket_price_general", "ticket_price_vip"):
         val = raw.get(price_field, 0)

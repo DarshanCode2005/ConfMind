@@ -114,7 +114,9 @@ def test_pricing_agent_sets_tiers_and_summary(monkeypatch) -> None:
 
 def test_pricing_agent_logs_errors(monkeypatch) -> None:
     agent = PricingAgent()
-    monkeypatch.setattr(agent, "_get_predictor", lambda: (_ for _ in ()).throw(RuntimeError("boom")))
+    monkeypatch.setattr(
+        agent, "_get_predictor", lambda: (_ for _ in ()).throw(RuntimeError("boom"))
+    )
 
     state = _base_state()
     result = agent.run(state)

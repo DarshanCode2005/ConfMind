@@ -74,9 +74,11 @@ class BaseAgent(ABC):
         Uses OPENAI_API_KEY from environment (loaded via .env).
         """
         api_key = os.getenv("OPENAI_API_KEY", "")
+        base_url = os.getenv("OPENAI_BASE_URL", None)
+        model = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
         if not api_key:
             raise OSError("OPENAI_API_KEY is not set — add it to your .env file.")
-        llm = ChatOpenAI(model="gpt-4o-mini", temperature=temperature, api_key=api_key)
+        llm = ChatOpenAI(model=model, temperature=temperature, api_key=api_key, base_url=base_url)
         if self.tools:
             return llm.bind_tools(self.tools)  # type: ignore[return-value]
         return llm
