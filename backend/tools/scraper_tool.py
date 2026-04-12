@@ -179,7 +179,6 @@ class SmartScraperWrapper:
         import asyncio
         import json
 
-        import requests
         from crawl4ai import (
             AsyncWebCrawler,
             BrowserConfig,
@@ -191,10 +190,42 @@ class SmartScraperWrapper:
         async def _do_crawl():
             source_url = url
             try:
-                # Bypass raw DNS Playwright issues by pre-fetching
+                # 1. Surgical Pruning: Extract only the HEART of the page to save tokens
+                import requests
+                from bs4 import BeautifulSoup
+
                 resp = requests.get(url, timeout=15, headers={"User-Agent": "Mozilla/5.0"})
                 if resp.ok and resp.text.strip():
-                    source_url = f"raw://{resp.text}"
+                    soup = BeautifulSoup(resp.text, "html.parser")
+
+                    # Remove all noise
+                    for tag in soup(
+                        [
+                            "script",
+                            "style",
+                            "nav",
+                            "footer",
+                            "header",
+                            "noscript",
+                            "svg",
+                            "form",
+                            "aside",
+                            "button",
+                            "input",
+                        ]
+                    ):
+                        tag.decompose()
+
+                    # Try to find the main content area
+                    main_content = soup.find("main") or soup.find("article") or soup.find("body")
+                    if main_content:
+                        clean_html = str(main_content)
+                    else:
+                        clean_html = str(soup)
+
+                    # Strict character limit to keep TPM low
+                    clean_html = clean_html[:15000]
+                    source_url = f"raw://{clean_html}"
             except Exception:
                 pass
 
@@ -203,22 +234,39 @@ class SmartScraperWrapper:
                 instruction=f"{prompt}\nReturn ONLY a pure valid JSON dict. No lists.",
                 extraction_type="block",
             )
-            config = CrawlerRunConfig(cache_mode=CacheMode.BYPASS, extraction_strategy=llm_strategy)
+
+            config = CrawlerRunConfig(
+                cache_mode=CacheMode.BYPASS,
+                extraction_strategy=llm_strategy,
+                word_count_threshold=5,
+                excluded_tags=["nav", "footer", "script", "style", "header", "aside"],
+            )
             browser_config = BrowserConfig(headless=True)
 
-            async with AsyncWebCrawler(config=browser_config) as crawler:
-                res = await crawler.arun(url=source_url, config=config)
-                if not res.success:
-                    raise ScraperError(f"Crawl4AI failed: {res.error_message}")
+            # Slower exponential backoff: 429s usually need ~15-30s to clear
+            import time
 
-                content = res.extracted_content
-                if not content:
-                    return {}
+            for attempt in range(3):
                 try:
-                    data = json.loads(content)
-                    return data
-                except json.JSONDecodeError as e:
-                    raise ScraperError(f"Crawl4AI JSON Error: {content} - {e}") from e
+                    async with AsyncWebCrawler(config=browser_config) as crawler:
+                        res = await crawler.arun(url=source_url, config=config)
+                        if not res.success:
+                            if "429" in str(res.error_message) and attempt < 2:
+                                print(f"   ⚠️ Rate limited. Cool-down {15 * (attempt + 1)}s...")
+                                time.sleep(15 * (attempt + 1))
+                                continue
+                            raise ScraperError(f"Crawl4AI failed: {res.error_message}")
+
+                        content = res.extracted_content
+                        if not content:
+                            return {}
+                        return json.loads(content)
+                except Exception as e:
+                    if "429" in str(e) and attempt < 2:
+                        print(f"   ⚠️ Rate limited. Cool-down {15 * (attempt + 1)}s...")
+                        time.sleep(15 * (attempt + 1))
+                        continue
+                    raise e
 
         try:
             data = asyncio.run(_do_crawl())
@@ -383,13 +431,16 @@ class SearchGraphWrapper:
 def scrape_event_page(url: str, *, api_key: str | None = None) -> EventSchema:
     """Scrape a single event page (Eventbrite, Luma, etc.) → EventSchema.
 
-    Uses the built-in event extraction prompt.
+    Uses the built-in event extraction prompt and normalizes the data.
     """
+    from scraping.etl_pipeline import normalize_event
+
     wrapper = SmartScraperWrapper()
     raw = wrapper.scrape(url, _EVENT_PAGE_PROMPT, api_key=api_key)
     # Provide source_url if not extracted
     raw.setdefault("source_url", url)
-    return EventSchema(**{k: v for k, v in raw.items() if k in EventSchema.model_fields})
+
+    return normalize_event(raw)
 
 
 def scrape_venue_page(url: str, *, api_key: str | None = None) -> VenueSchema:
