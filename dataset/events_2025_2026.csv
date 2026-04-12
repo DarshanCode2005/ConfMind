@@ -1,75 +1,543 @@
 event_name,date,city,country,category,theme,sponsors,speakers,exhibitors,ticket_price_early,ticket_price_general,ticket_price_vip,estimated_attendance,venue_name,venue_capacity,source_url
-Open Source in Finance Forum,April 2026,,,,,,,,0.0,0.0,0.0,0,,,https://events.linuxfoundation.org/about/calendar/
-,,,,,,,,,0.0,0.0,0.0,0,,,https://events.linuxfoundation.org/about/calendar/
-Open Source in Finance Forum Toronto,2026-04-14,Toronto,CA,,,,,,0.0,0.0,0.0,0,,,https://events.linuxfoundation.org/open-source-finance-forum-toronto/
-OpenSearchCon Europe,"Apr 16–17, 2026",Prague,CZECHIA,,,,,,0.0,0.0,0.0,0,,,https://events.linuxfoundation.org/opensearchcon-europe/
-Overture Member Summit,"Apr 21–23, 2026",Florence,IT,,,,,,0.0,0.0,0.0,0,,,https://events.linuxfoundation.org/overture-member-summit/
-"Linux Storage, Filesystem, MM & BPF Summit","May 4–6, 2026",Zagreb,CROATIA,,,,,,0.0,0.0,0.0,0,,,https://events.linuxfoundation.org/lsfmmbpf/
-GraphQLConf,"May 6–7, 2026",Menlo Park,US,,,,,,0.0,0.0,0.0,0,,,https://graphql.org/conf/2026/
-KyvernoCon Virtual,,,,,,,,,0.0,0.0,0.0,0,,,https://community.cncf.io/events/details/cncf-virtual-project-events-hosted-by-cncf-presents-kyvernocon-virtual-2026/
-KyvernoCon Virtual,2026-05-06,,,,,,,,0.0,0.0,0.0,0,Virtual,,https://community.cncf.io/events/details/cncf-virtual-project-events-hosted-by-cncf-presents-kyvernocon-virtual-2026/
-Virtual EnvoyCon,2026-05-07,,,,,,,,0.0,0.0,0.0,0,Virtual,,https://community.cncf.io/events/details/cncf-virtual-project-events-hosted-by-cncf-presents-virtual-envoycon-2026/
-DPDK Summit,"May 12–13, 2026",Stockholm,SWEDEN,,,,,,0.0,0.0,0.0,0,,,https://events.linuxfoundation.org/dpdk-summit/
-AGL All Member Meeting Japan,"May 13–14, 2026",Tokyo,JP,,,,,,0.0,0.0,0.0,0,,,https://events.linuxfoundation.org/agl-amm/
-Embedded Linux Conference North America,"May 18–20, 2026",Minneapolis,US,,,,,,0.0,0.0,0.0,0,,,https://events.linuxfoundation.org/embedded-linux-conference-north-america/
-Open Source Summit North America,,,,,,,,,0.0,0.0,0.0,0,,,https://events.linuxfoundation.org/open-source-summit-north-america/
-Open Source Summit North America,"May 18–20, 2026",Minneapolis,US,Tech,,,,,0.0,0.0,0.0,0,,,https://events.linuxfoundation.org/open-source-summit-north-america/
-Linux Security Summit North America,"May 21–22, 2026",Minneapolis,US,Tech,,,,,0.0,0.0,0.0,0,,,https://events.linuxfoundation.org/linux-security-summit-north-america/
-Observability Summit North America,"May 21–22, 2026",Minneapolis,US,Tech,,,,,0.0,0.0,0.0,0,,,https://events.linuxfoundation.org/observability-summit-north-america/
-OpenSSF Community Day North America,2026-05-21,Minneapolis,US,Tech,,,,,0.0,0.0,0.0,0,,,https://events.linuxfoundation.org/openssf-community-day-north-america/
-CozySummit Virtual,2026-05-26,,,Tech,,,,,0.0,0.0,0.0,0,,,https://community.cncf.io/events/details/cncf-virtual-project-events-hosted-by-cncf-presents-cozysummit-virtual-2026/
-Open Source Policy & Ecosystem Forum,,,,Tech,,,,,0.0,0.0,0.0,0,,,https://events.linuxfoundation.org/open-source-policy-ecosystem-forum/
-Open Source Policy & Ecosystem Forum,2026-06-08,Brussels,BELGIUM,Tech,Open Source Policy & Ecosystem,,,,0.0,0.0,0.0,0,,,https://events.linuxfoundation.org/open-source-policy-ecosystem-forum/
-European Open Source Security Forum,2026-06-09,Brussels,BELGIUM,Tech,Open Source Security,,,,0.0,0.0,0.0,0,,,https://events.linuxfoundation.org/european-open-source-security-forum/
-MCP Dev Summit Bengaluru,"Jun 9–10, 2026",Bengaluru,IN,Tech,MCP Dev Summit,,,,0.0,0.0,0.0,0,,,https://events.linuxfoundation.org/mcp-dev-summit-bengaluru/
-MCP Dev Summit Mumbai,"Jun 14–15, 2026",Mumbai,IN,Tech,MCP Dev Summit,,,,0.0,0.0,0.0,0,,,https://events.linuxfoundation.org/mcp-dev-summit-mumbai/
-Jupyter Workshops: Demystifying MyST Markdown in Education,"Jun 15–17, 2026",Orsay,FR,Education,Jupyter Workshops,,,,0.0,0.0,0.0,0,,,https://events.linuxfoundation.org/demystifying-myst-markdown/
-OpenSearchCon India,,,,,,,,,0.0,0.0,0.0,0,,,https://events.linuxfoundation.org/opensearchcon-india/
-OpenSearchCon India,"Jun 15–16, 2026",Mumbai,IN,Tech,,,,,0.0,0.0,0.0,0,,,https://events.linuxfoundation.org/opensearchcon-india/
-Open Source Summit India,"Jun 16–17, 2026",Mumbai,IN,Tech,,,,,0.0,0.0,0.0,0,,,https://events.linuxfoundation.org/open-source-summit-india/
-KubeCon + CloudNativeCon India,"Jun 18–19, 2026",Mumbai,IN,Tech,,,,,0.0,0.0,0.0,0,,,https://events.linuxfoundation.org/kubecon-cloudnativecon-india/
-Confidential Computing Summit,"Jun 23–24, 2026",San Francisco,US,Tech,,,,,0.0,0.0,0.0,0,,,https://events.linuxfoundation.org/confidential-computing-summit/
-Open Source in Finance Forum London,2026-06-25,London,ENGLAND,Finance,,,,,0.0,0.0,0.0,0,,,https://events.linuxfoundation.org/open-source-finance-forum-london/
-Open Source Days,2026-07-19,,,Tech,,,,,0.0,0.0,0.0,0,,,https://events.linuxfoundation.org/open-source-days/
-Open Source Days,2026-07-19,Los Angeles,US,Tech,,,,,0.0,0.0,0.0,0,,,https://events.linuxfoundation.org/open-source-days/
-ArgoCon Japan,2026-07-28,Yokohama,JP,Tech,,,,,0.0,0.0,0.0,0,,,https://events.linuxfoundation.org/kubecon-cloudnativecon-japan/co-located-events/argocon/
-KeyCloakCon Japan,2026-07-28,Yokohama,JP,Tech,,,,,0.0,0.0,0.0,0,,,https://events.linuxfoundation.org/kubecon-cloudnativecon-japan/co-located-events/keycloakcon/
-KubeCon + CloudNativeCon Japan,"Jul 29–30, 2026",Yokohama,JP,Tech,,,,,0.0,0.0,0.0,0,,,https://events.linuxfoundation.org/kubecon-cloudnativecon-japan/
-Open Source Summit Korea,"Aug 11–12, 2026",Seoul,SOUTH KOREA,Tech,,,,,0.0,0.0,0.0,0,,,https://events.linuxfoundation.org/open-source-summit-korea/
-MCP Dev Summit Seoul,"Aug 13–14, 2026",,,Tech,,,,,0.0,0.0,0.0,0,,,https://events.linuxfoundation.org/mcp-dev-summit-seoul/
-MCP Dev Summit Seoul,"Aug 13–14, 2026",Seoul,SOUTH KOREA,Tech,,,,,0.0,0.0,0.0,0,,,https://events.linuxfoundation.org/mcp-dev-summit-seoul/
-seL4 Summit,"Sep 1–3, 2026",Vancouver,CA,Tech,,,,,0.0,0.0,0.0,0,,,https://events.linuxfoundation.org/sel4-summit/
-MCP Dev Summit Shanghai,"Sep 6–7, 2026",Shanghai,CHINA,Tech,,,,,0.0,0.0,0.0,0,,,https://www.lfopensource.cn/mcp-dev-summit-shanghai/
-KubeCon + CloudNativeCon + OpenInfra Summit + PyTorch Conference China,"Sep 8–9, 2026",Shanghai,CHINA,Tech,,,,,0.0,0.0,0.0,0,,,https://www.lfopensource.cn/kubecon-cloudnativecon-openinfra-summit-pytorch-conference-china/
-MCP Dev Summit Tokyo,"Sep 10–11, 2026",Tokyo,JP,Tech,,,,,0.0,0.0,0.0,0,,,https://events.linuxfoundation.org/mcp-dev-summit-tokyo/
-LF Energy Summit Europe,"Sep 15–16, 2026",,,Tech,,,,,0.0,0.0,0.0,0,,,https://events.linuxfoundation.org/lfenergysummit-europe/
-Unknown,"Sep 15–16, 2026",Berlin,DE,Unknown,Unknown,,,,0.0,0.0,0.0,0,Unknown,,Unknown
-AGNTCon + MCPCon Europe,"Sep 17–18, 2026",Amsterdam,NL,Unknown,Unknown,,,,0.0,0.0,0.0,0,Unknown,,https://events.linuxfoundation.org/agntcon-mcpcon-europe/
-Cloud Foundry Summit,"Sep 21–22, 2026",Heidelberg,DE,Unknown,Unknown,,,,0.0,0.0,0.0,0,Unknown,,https://events.linuxfoundation.org/cloud-foundry-summit/
-OpenSearchCon North America,"Sep 22–24, 2026",San Jose,US,Unknown,Unknown,,,,0.0,0.0,0.0,0,Unknown,,https://events.linuxfoundation.org/opensearchcon-north-america/
-Automotive Grade Linux All Member Meeting Europe,"Sep 30–Oct 1, 2026",Berlin,DE,Unknown,Unknown,,,,0.0,0.0,0.0,0,Unknown,,https://events.linuxfoundation.org/agl-amm-europe/
-Linux Plumbers Conference,"Oct 5–7, 2026",Unknown,UNKNOWN,Unknown,Unknown,,,,0.0,0.0,0.0,0,Unknown,,https://lpc.events/event/20/
-Unknown,"Oct 5–7, 2026",Prague,CZECHIA,Tech,Unknown,,,,0.0,0.0,0.0,0,Unknown,,Unknown
-MCP Dev Summit Toronto,"Oct 5–6, 2026",Toronto,CA,Tech,Unknown,,,,0.0,0.0,0.0,0,Unknown,,https://events.linuxfoundation.org/mcp-dev-summit-toronto/
-OpenSSF Community Day Europe,2026-10-06,Prague,CZECHIA,Tech,Unknown,,,,0.0,0.0,0.0,0,Unknown,,https://events.linuxfoundation.org/openssf-community-day-europe/
-Embedded Linux Conference Europe,"Oct 7–9, 2026",Prague,CZECHIA,Tech,Unknown,,,,0.0,0.0,0.0,0,Unknown,,https://events.linuxfoundation.org/embedded-linux-conference-europe/
-Open Source Summit Europe,"Oct 7–9, 2026",Prague,CZECHIA,Tech,Unknown,,,,0.0,0.0,0.0,0,Unknown,,https://events.linuxfoundation.org/open-source-summit-europe/
-Linux Kernel Maintainer Summit,2026-10-08,Unknown,UNKNOWN,Tech,Unknown,,,,0.0,0.0,0.0,0,Unknown,,https://events.linuxfoundation.org/linux-kernel-maintainer-summit/
-Linux Security Summit Europe,2026-10-08,Prague,CZECHIA,Tech,,,,,0.0,0.0,0.0,0,,,https://events.linuxfoundation.org/linux-security-summit-europe/
-Linux Security Summit Europe,2026-10-08,Prague,CZECHIA,Tech,,,,,0.0,0.0,0.0,0,,,https://events.linuxfoundation.org/linux-security-summit-europe/
-BazelCon,"Oct 13–15, 2026",Amsterdam,NL,Tech,,,,,0.0,0.0,0.0,0,,,https://events.linuxfoundation.org/bazelcon/
-PyTorch Conference North America,"Oct 20–21, 2026",San Jose,US,AI,,,,,0.0,0.0,0.0,0,,,https://events.linuxfoundation.org/pytorch-conference-north-america/
-AGNTCon + MCPCon North America,"Oct 22–23, 2026",San Jose,US,Tech,,,,,0.0,0.0,0.0,0,,,https://events.linuxfoundation.org/agntcon-mcpcon-north-america/
-Open Source in Finance Forum New York,"Nov 4–5, 2026",New York,US,Business,,,,,0.0,0.0,0.0,0,,,https://events.linuxfoundation.org/open-source-finance-forum-new-york/
-KubeCon + CloudNativeCon North America,"Nov 9–12, 2026",Salt Lake City,US,Tech,,,,,0.0,0.0,0.0,0,,,https://events.linuxfoundation.org/kubecon-cloudnativecon-north-america/
-MCP Dev Summit Nairobi,"Nov 19–20, 2026",Nairobi,KENYA,Tech,,,,,0.0,0.0,0.0,0,,,https://events.linuxfoundation.org/mcp-dev-summit-nairobi/
-Automotive Linux Summit,"Dec 7–9, 2026",Tokyo,JP,Tech,,,,,0.0,0.0,0.0,0,,,https://events.linuxfoundation.org/automotive-linux-summit/
-Embedded Linux Conference Asia,"Dec 7–9, 2026",Tokyo,JP,Tech,,,,,0.0,0.0,0.0,0,,,https://events.linuxfoundation.org/embedded-linux-conference-asia/
-Open Source Summit Japan,"Dec 7–9, 2026",Tokyo,JP,Tech,,,,,0.0,0.0,0.0,0,,,https://events.linuxfoundation.org/open-source-summit-japan/
-ONE Summit Japan,"Dec 10–11, 2026",Tokyo,JP,,,,,,0.0,0.0,0.0,0,,,https://events.linuxfoundation.org/open-networking-edge-summit-japan/
-Open Compliance Summit,"Dec 10–11, 2026",Tokyo,JP,,,,,,0.0,0.0,0.0,0,,,https://events.linuxfoundation.org/open-compliance-summit/
-The Linux Foundation Member Summit,"Feb 22–23, 2027",Half Moon Bay,US,,,,,,0.0,0.0,0.0,0,,,https://events.linuxfoundation.org/lf-member-summit/
-KubeCon + CloudNativeCon Europe 2027,"Mar 15–18, 2027",Barcelona,ES,,,,,,0.0,0.0,0.0,0,,,https://events.linuxfoundation.org/kubecon-cloudnativecon-europe-2027/
-PyTorch Conference 2027,"Oct 6–7, 2027",San Jose,US,,,,,,0.0,0.0,0.0,0,,,https://events.linuxfoundation.org/pytorch-conference-2027/
-KubeCon + CloudNativeCon North America 2027,"Oct 6–7, 2027",San Jose,US,,,,,,0.0,0.0,0.0,0,,,https://events.linuxfoundation.org/kubecon-cloudnativecon-north-america-2027/
-KubeCon + CloudNativeCon North America 2027,"Oct 6–7, 2027",San Jose,US,,,,,,0.0,0.0,0.0,0,,,https://events.linuxfoundation.org/kubecon-cloudnativecon-north-america-2027/
+Open Source in Finance Forum Toronto,2026-04-14,Toronto,CA,Finance,Open Source in Finance,,,,0.0,0.0,0.0,0,,,https://events.linuxfoundation.org/open-source-finance-forum-toronto/
+Automotive Grade Linux All Member Meeting Europe,2026-09-30T00:00:00+00:00,Berlin,DE,Automotive Linux,Automotive Grade Linux,Honda|Renesas,,,0.0,0.0,0.0,0,,,
+AGL All Member Meeting Japan,2026-05-13T00:00:00Z,Tokyo,JP,Automotive Linux,Automotive Grade Linux,Honda|Renesas,,,0.0,0.0,0.0,0,,,
+AGNTCon + MCPCon Europe,2026-09-17T00:00:00+00:00,Amsterdam,THE NETHERLANDS,AI,open agentic AI ecosystem,AWS|Obot.ai|FME by Safe Software|Runlayer|Descope|Neo4j|Solo.io|Alpic|Apify|Arcade|Kilo Code|mcp-use|Reboot|Stacklok,,,0.0,0.0,0.0,0,,,
+AGNTCon + MCPCon North America,2026-10-22T00:00:00-07:00,San Jose,US,Conference,Open Agentic AI Ecosystem,Akamai|Google|Solo.io|Arcade|FME by Safe Software|Kong|Neo4j|Runlayer|Descope|Obot.ai|Apify|Kilo Code|MintMCP,,,0.0,0.0,0.0,0,,,
+Automotive Linux Summit,2026-12-07,Tokyo,JP,Automotive Linux,Open Source,Google|AWS|LavinMQ|Red Hat,,,0.0,0.0,0.0,0,,,
+BazelCon,2026-10-13,Amsterdam,THE NETHERLANDS,,,Aspect Build|BuildBuddy|EngFlow|Tweag by Modus Create|Uber|VirtusLab,,,0.0,0.0,0.0,0,,,
+Cloud Foundry Summit,2026-09-21T00:00:00Z,Heidelberg,DE,Technology,Cloud Computing,Anynines,,,0.0,0.0,0.0,0,,,
+Confidential Computing Summit,2026-06-23T00:00:00-07:00,San Francisco,US,AI Infrastructure,Secure AI Infrastructure,AMD|Confidential Computing Consortium|Microsoft OSS,,,0.0,0.0,0.0,0,,,https://events.linuxfoundation.org/confidential-computing-summit/
+Jupyter Workshops: Demystifying MyST Markdown in Education,2026-06-15,Orsay,FR,Education,MyST Markdown,,,,0.0,0.0,0.0,0,,,
+DPDK Summit,2026-05-12,Stockholm,SWEDEN,Software Development,Networking Software,,,,0.0,0.0,0.0,0,,,
+Embedded Linux Conference Asia,2026-12-07,Tokyo,JP,Embedded Linux,Embedded Linux Conference,Google|AWS|LavinMQ|Red Hat,,,0.0,0.0,0.0,0,,,
+Embedded Linux Conference Europe,2026-10-07,Prague,CZECHIA,Conference,Embedded Linux,AWS|Google|openKylin|OpenSearch|Red Hat|Cloud Native Computing Foundation|Coder|dynatrace|LavinMQ|Texas Instruments|Edera|Framework|Minimus|Percona,,,0.0,0.0,0.0,0,,,
+Embedded Linux Conference North America,2026-05-18,Minneapolis,US,Technology,Embedded Linux,Google|Microsoft OSS|AWS|Cardano|Chainguard|Cloud Native Computing Foundation|Coder,,,0.0,0.0,0.0,0,,,
+European Open Source Security Forum,2026-06-09,Brussels,BELGIUM,Open Source Security,"Security Initiatives, Policy Efforts, and Cross-Collaboration",OpenSSF|Linux Foundation,,,0.0,0.0,0.0,0,,,https://events.linuxfoundation.org/european-open-source-security-forum/
+Jupyter Workshops,,,,,Jupyter ecosystem,,,,0.0,0.0,0.0,0,,,
+Unnamed Event,,,,,,,,,0.0,0.0,0.0,0,,,https://events.linuxfoundation.org/kubecon-cloudnativecon-europe-2027/
+KubeCon + CloudNativeCon Europe 2028,2028-04-24T00:00:00Z,Berlin,DE,,,,,,0.0,0.0,0.0,0,,,
+KubeCon + CloudNativeCon India,2026-06-18T00:00:00+00:00,Mumbai,IN,Conference,Cloud Native Computing,CAST AI|Chainguard|Microsoft Azure|vmware|ClickHouse|intuit|NeevAI|Portworx by Pure Storage|vultr,,,0.0,0.0,0.0,0,,,
+KubeCon + CloudNativeCon Japan,2026-07-29T00:00:00+09:00,Yokohama,JP,Conference,Cloud Native Computing,Canonical|Datadog|Hitachi|Microsoft Azure|Octopus Deploy,,,0.0,0.0,0.0,0,,,https://events.linuxfoundation.org/kubecon-cloudnativecon-japan/
+ArgoCon Japan,2026-07-28,Yokohama,JP,Technology,Argo Project,,,,49.0,99.0,179.0,0,,,
+KeycloakCon,2026-07-28,Yokohama,JP,conference,Keycloak community,Hitachi|Midships,,,49.0,99.0,179.0,0,,,
+Unnamed Event,,,,,,,,,0.0,0.0,0.0,0,,,https://events.linuxfoundation.org/kubecon-cloudnativecon-north-america-2027/
+KubeCon + CloudNativeCon North America,2026-11-09T00:00:00-07:00,Salt Lake City,US,Technology,Cloud Native Computing,,,,0.0,0.0,0.0,0,,,https://events.linuxfoundation.org/kubecon-cloudnativecon-north-america/
+Unnamed Event,,,,,,,,,0.0,0.0,0.0,0,,,https://events.linuxfoundation.org/lf-member-summit/
+LF Energy Summit Europe,2026-09-15,Berlin,DE,Energy,Open Source for Energy Systems,EcoPhi|BearingPoint|Savoir-faire Linux|SOPTIM AG,,,0.0,0.0,0.0,0,,,
+Linux Kernel Maintainer Summit,2026-10-08,Prague,CZECHIA,,,,,,0.0,0.0,0.0,0,,,
+Linux Security Summit Europe,2026-10-08,Prague,CZECHIA,Linux Security,Linux Security Challenges,,,,0.0,0.0,0.0,0,,,
+Linux Security Summit North America,2026-05-21T00:00:00-05:00,Minneapolis,US,Security,Linux Security,Edera,,,0.0,0.0,0.0,0,,,
+"Linux Storage, Filesystem, Memory Management & BPF Summit",2026-05-04,Zagreb,CROATIA,Technology,"Linux Storage, Filesystem, Memory Management & BPF",Google|Meta|Anthropic|Nvidia|Samsung|Western Digital|eBPF Foundation|Microsoft OSS|Everpure|Jump Trading|SUSE,,,0.0,0.0,0.0,0,,,
+MCP Dev Summit Bengaluru,2026-06-09T00:00:00+05:30,Bengaluru,IN,AI,Model Context Protocol (MCP),Agentic AI Foundation,,,0.0,0.0,0.0,0,,,https://events.linuxfoundation.org/mcp-dev-summit-bengaluru/
+MCP Dev Summit Mumbai,2026-06-14,Mumbai,IN,AI,Model Context Protocol (MCP),,,,0.0,0.0,0.0,0,,,
+MCP Dev Summit Nairobi,2026-11-19T00:00:00+00:00,Nairobi,KENYA,AI,Model Context Protocol (MCP),Agentic AI Foundation,,,0.0,0.0,0.0,0,,,
+MCP Dev Summit Seoul,2026-08-13T00:00:00+00:00,Seoul,SOUTH KOREA,AI,Model Context Protocol (MCP),Agentic AI Foundation,,,0.0,0.0,0.0,0,,,
+MCP Dev Summit Tokyo,2026-09-10T00:00:00+09:00,Tokyo,JP,AI,Model Context Protocol (MCP),Agentic AI Foundation,,,0.0,0.0,0.0,0,,,
+MCP Dev Summit Toronto,2026-10-05,Toronto,CA,AI,Model Context Protocol (MCP),Agentic AI Foundation,,,0.0,0.0,0.0,0,,,
+Observability Summit North America,2026-05-21T00:00:00-05:00,Minneapolis,US,Technology,Open Source Observability,"Chronosphere, a Palo Alto Networks Company|Datadog|OpenSearch|Odigos|ClickHouse|Coralogix|Cribl|Dynatrace",,,0.0,0.0,0.0,0,,,
+Open Compliance Summit,2026-12-10,Tokyo,JP,,Code. Community. Collaboration.,,,,0.0,0.0,0.0,0,,,
+ONE Summit Japan,2026-12-10T00:00:00+09:00,Tokyo,JP,"AI, Networking & Edge",Powering the Intelligent Future,,,,0.0,0.0,0.0,0,,,https://events.linuxfoundation.org/open-networking-edge-summit-japan/
+Open Source Days,2026-07-19,Los Angeles,US,,,,,,0.0,0.0,0.0,0,,,
+Open Source in Finance Forum London,2026-06-25,London,ENGLAND,Finance,Open Source in Finance,Moderne|Red Hat,,Kosli|OpenLogic,0.0,0.0,0.0,0,,,
+Open Source in Finance Forum New York,2026-11-04,New York,US,Finance,Open Source in Finance,Moderne|Kosli|OpenLogic,,,0.0,0.0,0.0,0,,,https://events.linuxfoundation.org/open-source-finance-forum-new-york/
+Open Source in Finance Forum Toronto,2026-04-14,Toronto,CA,Finance,Open Source in Finance,RBC (Royal Bank of Canada)|Red Hat|TD|Aisle|GitLab|Moderne,,,0.0,0.0,0.0,0,,,
+Open Source Policy & Ecosystem Forum,2026-06-08,Brussels,BELGIUM,Open Source,"European digital sovereignty, innovation leadership, and industrial competitiveness",,,,0.0,0.0,0.0,0,,,https://events.linuxfoundation.org/open-source-policy-ecosystem-forum/
+Open Source Summit Europe,2026-10-07,Prague,CZECHIA,Open Source,Code. Community. Collaboration.,,,,0.0,0.0,0.0,0,,,
+Open Source Summit India,2026-06-16T00:00:00+05:30,Mumbai,IN,Open Source,Code. Community. Collaboration.,,,,0.0,0.0,0.0,0,,,https://events.linuxfoundation.org/open-source-summit-india/
+Open Source Summit Japan,2026-12-07,Tokyo,JP,Open Source,Code. Community. Collaboration.,,,,0.0,0.0,0.0,0,,,
+Open Source Summit Korea,2026-08-11T00:00:00+00:00,Seoul,SOUTH KOREA,Open Source,Code. Community. Collaboration.,,,,0.0,0.0,0.0,0,,,
+Open Source Summit North America,2026-05-18,Minneapolis,US,Open Source,Code. Community. Collaboration.,,,,0.0,0.0,0.0,0,,,https://events.linuxfoundation.org/open-source-summit-north-america/
+OpenSearchCon Europe,2026-04-16T00:00:00+00:00,Prague,CZECHIA,Technology,"Search, Observability, and Security Applications",Adeptic Reply|AWS|Instaclustr|aiven|BigData Boutique|Eliatra,,,0.0,0.0,0.0,0,,,
+OpenSearchCon India,2026-06-15T00:00:00+00:00,Mumbai,IN,Technology,"Search, Observability, and Security Applications",AWS,,,0.0,0.0,0.0,0,,,https://events.linuxfoundation.org/opensearchcon-india/
+OpenSearchCon North America,2026-09-22T00:00:00-07:00,San Jose,US,Technology,"Search, Observability, and Security",AWS,,,0.0,0.0,0.0,0,,,
+OpenSSF Community Day Europe,2026-10-06,Prague,CZECHIA,Security and Open Source ecosystems,Software security best practices,,,,0.0,0.0,0.0,0,,,https://events.linuxfoundation.org/openssf-community-day-europe/
+"Turing Fest 2025 | Edinburgh, UK | 7th-8th May 2025",2025-05-07,Edinburgh,GB,,,,,,0.0,0.0,0.0,0,,,https://turingfest.com/turingfest-2025
+PMC2025,,is designed for professionals responsible for building and managing products,AS WELL AS EXECUTING PRODUCT STRATEGY. IT IS THE PERFECT EVENT FOR THOSE FRUSTRATED BY THE LACK OF ACCESSIBLE,,,,,,0.0,0.0,0.0,0,,,https://pmc2025.treevent.pl
+Mind the Product Chicago | 2026 Product Conference,,. Chicago,ILLINOIS.,,,,,,0.0,0.0,0.0,0,,,https://www.industryconference.com
+TBC'26 | Nonstop TBC,,,,,,,,,0.0,0.0,0.0,0,,,https://nonstoptbc.com
+Outpace Conf | Manchester,2025-10-16,,GB,,,,,,0.0,0.0,0.0,0,,,https://outpaceconf.com
+Agile Leadership Conference 2025 – Agile Leadership Day & Self Leadership Day,,r Gruppen,TEAM- UND ABTEILUNGSLEITER,,,,,,0.0,0.0,0.0,0,,,https://alc.inside-agile.de
+"TechLeader Summit - Conference for Software Engineering Leaders - December 2 - 4, 2026 - Clearwater, FL",,Clearwater,US,,,,,,0.0,0.0,0.0,0,,,https://techleadersummit.io
+Tickets | Festival der Zukunft 2025,,. But of course we don't know what it will look like yet. Buy your Curious Cat ticket now,SAVE BIG ON THE TICKET PRICE AND SUPPORT,,,,,,0.0,0.0,0.0,0,,,https://www.1e9.community/events/festival-der-zukunft-2025
+Beyond IoT 2025 – Die Entwicklerkonferenz zu Industrial IoT und Digitalisierung,,Karlsruhe,DE,,,,,,0.0,0.0,0.0,0,,,https://beyond-iot.de
+"S2N – Storage, Server, Network. Die heise-Konferenz für Admins und IT-Verantwortliche",,Storage,DE,,,,,,0.0,0.0,0.0,0,,,https://s2n.heise.de
+enterJS 2026: Die Konferenz für Enterprise-JavaScript,,ge,DE,,,,,,0.0,0.0,0.0,0,,,https://enterjs.de
+JavaScript Conference London,,London,GB,,,,,,0.0,0.0,0.0,0,,,https://javascript-conference.com/london
+"StrapiConf 2025 - Paris, France",,Paris,FR,,,,,,0.0,0.0,0.0,0,,,https://www.strapi.io/strapiconf
+JSHeroes 2026 | Community Organized JS Conference,,JSHeroes is an yearly event organized by the local JS community in Cluj,ROMANIA. CHECK THE LATEST UPDATES AND JOIN US ON THE,,,,,,0.0,0.0,0.0,0,,,https://jsheroes.io
+Frontend Nation 2026,,Learn new Web Development skills. Get your career to the next level with online training,COVERING TOPICS FROM ACROSS THE APP DEVELOPMENT ECOSYSTEM,,,,,,0.0,0.0,0.0,0,,,https://frontendnation.com
+SquiggleConf 2025 | Supercharging web devs and their tools,,,,,,,,,0.0,0.0,0.0,0,,,https://2025.squiggleconf.com
+SquiggleConf 2025 | Supercharging web devs and their tools,,,,,,,,,0.0,0.0,0.0,0,,,https://squiggleconf.com
+GenAI für Angular-Entwickler:innen Bootcamp mit Marco Frodl,,München,DE,,,,,,0.0,0.0,0.0,0,,,https://javascript-days.de/berlin/genai-fur-angular-bootcamp
+La conferencia de JavaScript mÃ¡s importante de EspaÃ±a | JSConf EspaÃ±a 2026,2026-03-14,Madrid,ES,,,,,,0.0,0.0,0.0,0,,,https://jsconf.es
+"SmashingConf 2025, September 8–11 — Friendly, inclusive, practical event for web designers and developers. — Freiburg in Germany, September 8–11.",,Friendly,INCLUSIVE,,,,,,0.0,0.0,0.0,0,,,https://smashingconf.com/freiburg-2025
+"Front-end & web development conference and workshops — New York 2025, October 6–9.",,Join us this October at our friendly and inclusive conference for web designers and front-end developers. Boost your web design and development skills,THE SMASHING WAY.,,,,,,0.0,0.0,0.0,0,,,https://smashingconf.com/ny-2025
+RuhrSec – IT Security Conference,2025-02-20,Bochum,DE,,,,,,0.0,0.0,0.0,0,,,https://www.ruhrsec.de/2025
+OC3 | Open Confidential Computing Conference 2026,2026-03-12,. For the sixth edition,OC,,,,,,0.0,0.0,0.0,0,,,https://www.oc3.dev
+Axe-con,2025-02-25,,,accessibility,,,,,0.0,0.0,0.0,0,,,https://www.deque.com/axe-con
+Code & Coffee: A Virtual Coffee Conference,2025-04-25,,,accessibility,,,,,0.0,0.0,0.0,0,,,https://cfe.dev/events/virtual-coffee-conf-2025
+Test Coast,2025-05-15,Gothenburg,Sweden,accessibility,,,,,0.0,0.0,0.0,0,,,https://www.testcoast.se
+Positive Design Days,2025-06-12,Strasbourg,France,accessibility,,,,,0.0,0.0,0.0,0,,,https://positive-design-days.com
+uxcon vienna,2025-10-06,Vienna,Austria,accessibility,,,,,0.0,0.0,0.0,0,,,https://www.uxcon.io
+International PHP Conference Munich,2025-10-27,Munich,Germany,accessibility,,,,,0.0,0.0,0.0,0,,,https://phpconference.com/munich
+Wey Wey Web,2025-11-17,Malaga,Spain,accessibility,,,,,0.0,0.0,0.0,0,,,https://www.weyweyweb.com
+Agile Testing Days,2025-11-24,Berlin,Germany,accessibility,,,,,0.0,0.0,0.0,0,,,https://agiletestingdays.com
+AndroidMakers by droidcon,2025-04-10,Paris,France,android,,,,,0.0,0.0,0.0,0,,,https://androidmakers.droidcon.com
+Droidcon Italy,2025-11-19,Turin,Italy,android,,,,,0.0,0.0,0.0,0,,,https://it.droidcon.com/2025
+Tech + Startups Community Conference,2025-05-01,"Miami, FL",U.S.A.,api,,,,,0.0,0.0,0.0,0,,,https://lu.ma/0nct5q0k
+API Conference London,2025-05-12,London,U.K.,api,,,,,0.0,0.0,0.0,0,,,https://apiconference.net/london
+betterCode() API,2025-05-15,,,api,,,,,0.0,0.0,0.0,0,,,https://www.api.bettercode.eu
+INTEGRATE  - The Largest Microsoft Integration Tech Conference,2025-06-09,London,U.K.,api,,,,,0.0,0.0,0.0,0,,,https://turbo360.com/events/integrate-2025
+MAD Summit,2025-06-30,Munich,Germany,api,,,,,0.0,0.0,0.0,0,,,https://mad-summit.de/muenchen
+UberConf,2025-07-15,"Denver, CO",U.S.A.,api,,,,,0.0,0.0,0.0,0,,,https://uberconf.com
+DevRelCon,2025-07-17,"New York, NY",U.S.A.,api,,,,,0.0,0.0,0.0,0,,,https://nyc.devrelcon.dev
+API Conference New York,2025-09-29,"New York, NY",U.S.A.,api,,,,,0.0,0.0,0.0,0,,,https://apiconference.net/new-york
+Apidays India,2025-10-08,Bangalore,India,api,,,,,0.0,0.0,0.0,0,,,https://www.apidays.global/india
+The API Security UnConference,2025-10-13,Stockholm,Sweden,api,,,,,0.0,0.0,0.0,0,,,https://nordicapis.com/events/the-api-security-unconference
+Platform Summit,2025-10-13,Stockholm,Sweden,api,,,,,0.0,0.0,0.0,0,,,https://nordicapis.com/events/platform-summit-2025
+InfoQ Dev Summit Munich,2025-10-15,Munich,Germany,api,,,,,0.0,0.0,0.0,0,,,https://devsummit.infoq.com/munich2025_medialisting
+Mastering Microservices,2025-10-16,,,api,,,,,0.0,0.0,0.0,0,,,https://mastering-microservices.de
+API Conference Berlin,2025-10-20,Berlin,Germany,api,,,,,0.0,0.0,0.0,0,,,https://apiconference.net/berlin
+Serverless Architecture Conference Berlin,2025-10-20,Berlin,Germany,api,,,,,0.0,0.0,0.0,0,,,https://serverless-architecture.io/berlin
+"MAD Summit - Der Summit für Software-Design, pragmatische Backend-Entwicklung und Fullstack-Lösungen",2025-11-24,Berlin,Germany,api,,,,,0.0,0.0,0.0,0,,,https://mad-summit.de/berlin
+APIConf,2025-12-01,"Clearwater, FL",U.S.A.,api,,,,,0.0,0.0,0.0,0,,,https://apiconf.io
+Into The Box,2025-04-30,"Washington, DC",U.S.A.,cfml,,,,,0.0,0.0,0.0,0,,,https://www.intothebox.org
+emBO++,2025-03-06,Bochum,Germany,cpp,,,,,0.0,0.0,0.0,0,,,https://embo.io
+CppConf Japan,2025-04-25,Tokyo,Japan,cpp,,,,,0.0,0.0,0.0,0,,,https://www.cppconf.com/conf
+Visual Studio Live,2025-08-04,"Redmond, WA",U.S.A.,cpp,,,,,0.0,0.0,0.0,0,,,https://vslive.com/events/microsofthq-2025/home.aspx
+JSConf Spain,2025-03-01,Madrid,Spain,css,,,,,0.0,0.0,0.0,0,,,https://jsconf.es
+SmashingConf Freiburg,2025-09-08,Freiburg,Germany,css,,,,,0.0,0.0,0.0,0,,,https://smashingconf.com/freiburg-2025
+SmashingConf New York,2025-10-06,"New York, NY",U.S.A.,css,,,,,0.0,0.0,0.0,0,,,https://smashingconf.com/ny-2025
+betterCode() GenAI,2025-01-21,,,data,,,,,0.0,0.0,0.0,0,,,https://genai.bettercode.eu
+IEEE/SICE SII,2025-01-21,Munich,Germany,data,,,,,0.0,0.0,0.0,0,,,https://sice-si.org/SII2025/sii2025.html
+AI DevWorld,2025-02-11,"Santa Clara, CA",U.S.A.,data,,,,,0.0,0.0,0.0,0,,,https://aidevworld.com
+CDAO UK,2025-02-12,London,U.K.,data,,,,,0.0,0.0,0.0,0,,,https://cdao-uk.coriniumintelligence.com
+PGConf India,2025-03-05,Bengaluru,India,data,,,,,0.0,0.0,0.0,0,,,https://pgconf.in/conferences/pgconfin2025
+NVIDIA GTC AI Conference,2025-03-17,"San Jose, CA",U.S.A.,data,,,,,0.0,0.0,0.0,0,,,https://www.nvidia.com/gtc
+Nordic PGDay,2025-03-18,Copenhagen,Denmark,data,,,,,0.0,0.0,0.0,0,,,https://2025.nordicpgday.org/
+PGDay Paris,2025-03-20,Paris,France,data,,,,,0.0,0.0,0.0,0,,,https://2025.pgday.paris/
+Open Confidential Computing Conference,2025-03-27,Berlin,Germany,data,,,,,0.0,0.0,0.0,0,,,https://www.oc3.dev
+WebDev & AI Day,2025-03-27,,,data,,,,,0.0,0.0,0.0,0,,,https://www.wearedevelopers.com/events/webdev-ai-day
+Productivity Conf | Devs & Tech Leaders,2025-03-27,,,data,,,,,0.0,0.0,0.0,0,,,https://productivityconf.com/developers
+AI Integration & Autonomous Mobility,2025-04-03,Munich,Germany,data,,,,,0.0,0.0,0.0,0,,,https://www.automantia.in/aiam24-munich
+heise devSec: KI und Security,2025-04-08,,,data,,,,,0.0,0.0,0.0,0,,,https://www.heise-devsec.de/ki.php
+11th Data Management ThinkLab,2025-04-09,Prague,Czech Republic,data,,,,,0.0,0.0,0.0,0,,,https://thinklinkers.com/events/workshops/data_management_conference_event_europe_2025
+Azure Cosmos DB Conf,2025-04-15,,,data,,,,,0.0,0.0,0.0,0,,,https://developer.microsoft.com/en-us/reactor/events/24779/
+PyCon DE & PyData,2025-04-22,Darmstadt,Germany,data,,,,,0.0,0.0,0.0,0,,,https://2025.pycon.de
+IA & Data Day,2025-04-24,Strasbourg,France,data,,,,,0.0,0.0,0.0,0,,,https://iadataday.capitale.dev
+GOSIM AI Paris,2025-05-06,Paris,France,data,,,,,0.0,0.0,0.0,0,,,https://paris2025.gosim.org
+Infobip Shift Miami,2025-05-06,"Miami, FL",U.S.A.,data,,,,,0.0,0.0,0.0,0,,,https://shift.infobip.com/us
+Data Science Next Conference,2025-05-07,Amsterdam,Netherlands,data,,,,,0.0,0.0,0.0,0,,,https://dscnextcon.com/
+PGConf Germany,2025-05-08,Berlin,Germany,data,,,,,0.0,0.0,0.0,0,,,https://2025.pgconf.de/
+ETHDam,2025-05-09,Amsterdam,Netherlands,data,,,,,0.0,0.0,0.0,0,,,https://www.ethdam.com
+Postgres Extensions Day,2025-05-12,Montreal,Canada,data,,,,,0.0,0.0,0.0,0,,,https://pgext.day/
+MLCon London,2025-05-12,London,U.K.,data,,,,,0.0,0.0,0.0,0,,,https://mlconference.ai/london
+MLsys,2025-05-12,"Santa Clara, CA",U.S.A.,data,,,,,0.0,0.0,0.0,0,,,https://mlsys.org
+PGConf Dev,2025-05-13,Montreal,Canada,data,,,,,0.0,0.0,0.0,0,,,https://2025.pgconf.dev/
+AI & Machine Learning Summit,2025-05-14,"Boston, MA",U.S.A.,data,,,,,0.0,0.0,0.0,0,,,https://www.dbta.com/DataSummit/2025/AIMachineLearningSummit.aspx
+Rise of AI,2025-05-14,Berlin,Germany,data,,,,,0.0,0.0,0.0,0,,,https://riseof.ai/conference-2025/
+Global Agentic AI & LLM Bootcamp May 16 - 18,2025-05-16,"San Jose, CA",U.S.A.,data,,,,,0.0,0.0,0.0,0,,,https://www.globalbigdataconference.com/fremont/global-agentic-ai-and-llm-bootcamp/event-145.html
+MLCon San Diego,2025-05-19,"San Diego, CA",U.S.A.,data,,,,,0.0,0.0,0.0,0,,,https://mlconference.ai/san-diego
+Minds Mastering Machines - M3,2025-05-20,Karlsruhe,Germany,data,,,,,0.0,0.0,0.0,0,,,https://www.m3-konferenz.de
+J on the Beach,2025-05-21,Malaga,Spain,data,,,,,0.0,0.0,0.0,0,,,https://jonthebeach.com
+ICMLT,2025-05-23,Helsinki,Finland,data,,,,,0.0,0.0,0.0,0,,,https://www.icmlt.org/
+MLCon,2025-05-23,Munich,Germany,data,,,,,0.0,0.0,0.0,0,,,https://mlconference.ai/munich
+IT-GRC-Kongress,2025-05-26,Cologne,Germany,data,,,,,0.0,0.0,0.0,0,,,https://www.grc-kongress.de
+CONFidence,2025-06-02,Kraków,Poland,data,,,,,0.0,0.0,0.0,0,,,https://confidence-conference.org
+EuroSTAR,2025-06-03,Edinburgh,U.K.,data,,,,,0.0,0.0,0.0,0,,,https://conference.eurostarsoftwaretesting.com
+VectorSearch Conference,2025-06-06,,,data,,,,,0.0,0.0,0.0,0,,,https://vsearchcon.com
+AI Con USA,2025-06-08,"Seattle, WA",U.S.A.,data,,,,,0.0,0.0,0.0,0,,,https://aiconusa.techwell.com
+Databricks Data + AI Summit,2025-06-09,"San Francisco, CA",U.S.A.,data,,,,,0.0,0.0,0.0,0,,,https://www.databricks.com/dataaisummit
+Akash Accelerate,2025-06-23,"New York, NY",U.S.A.,data,,,,,0.0,0.0,0.0,0,,,https://akash.network/akash-accelerate-2025
+Artificial Intelligence conference,2025-06-23,Paris,France,data,,,,,0.0,0.0,0.0,0,,,https://www.artificialintelligenceconferences.com
+betterCode() GenAI,2025-06-26,,,data,,,,,0.0,0.0,0.0,0,,,https://genai.bettercode.eu
+Swiss PGDay,2025-06-26,Rapperswil-Jona,Switzerland,data,,,,,0.0,0.0,0.0,0,,,https://www.pgday.ch/2025
+Festival der Zukunft,2025-07-03,Munich,Germany,data,,,,,0.0,0.0,0.0,0,,,https://www.1e9.community/events/festival-der-zukunft-2025
+AI in Production,2025-07-18,"Asheville, NC",U.S.A.,data,,,,,0.0,0.0,0.0,0,,,https://www.aiinproduction.com
+Buffer-Free Video^AI,2025-07-30,"Seattle, WA",U.S.A.,data,,,,,0.0,0.0,0.0,0,,,https://www.buffconf.com
+Software Architecture Conference,2025-08-05,,,data,,,,,0.0,0.0,0.0,0,,,https://softwarearchitecture.live
+TestMu Conference,2025-08-19,,,data,,,,,0.0,0.0,0.0,0,,,https://www.lambdatest.com/testmuconf-2025
+PGDay Austria,2025-09-04,Vienna,Austria,data,,,,,0.0,0.0,0.0,0,,,https://pgday.at/
+PGConf EU,2025-09-09,Riga,Latvia,data,,,,,0.0,0.0,0.0,0,,,https://2025.pgconf.eu/
+PGDay UK,2025-09-09,London,U.K.,data,,,,,0.0,0.0,0.0,0,,,https://2025.pgday.uk/
+LLM in Production: Real Use Cases,2025-09-12,,,data,,,,,0.0,0.0,0.0,0,,,https://events.ringcentral.com/events/llm-in-production-real-use-cases
+PGDay Lowlands,2025-09-12,Rotterdam,Netherlands,data,,,,,0.0,0.0,0.0,0,,,https://2025.pgday.nl/
+OGcon,2025-09-12,,,data,,,,,0.0,0.0,0.0,0,,,https://ogcon.de
+Infobip Shift Zadar,2025-09-14,Zadar,Croatia,data,,,,,0.0,0.0,0.0,0,,,https://shift.infobip.com
+European Microsoft Fabric Community Conference,2025-09-15,Vienna,Austria,data,,,,,0.0,0.0,0.0,0,,,https://www.sharepointeurope.com/european-microsoft-fabric-community-conference
+NinjaOne Summer Roadshow Berlin,2025-09-16,Berlin,Germany,data,,,,,0.0,0.0,0.0,0,,,https://www.ninjaone.com/de/roadshow-europa2025
+NinjaOne Summer Roadshow London,2025-09-17,London,U.K.,data,,,,,0.0,0.0,0.0,0,,,https://www.ninjaone.com/de/roadshow-europa2025
+NinjaOne Summer Roadshow Munich,2025-09-18,Munich,Germany,data,,,,,0.0,0.0,0.0,0,,,https://www.ninjaone.com/de/roadshow-europa2025
+CascadiaJS,2025-09-18,"Seattle, WA",U.S.A.,data,,,,,0.0,0.0,0.0,0,,,https://cascadiajs.com/2025
+TechLead,2025-09-18,,,data,,,,,0.0,0.0,0.0,0,,,https://techleadconf.com
+Enterprise Tech Leadership Summit,2025-09-23,"Las Vegas, NV",U.S.A.,data,,,,,0.0,0.0,0.0,0,,,https://itrevolution.com/product/enterprise-tech-leadership-summit-las-vegas
+PGDay Napoli,2025-09-25,Napels,Italy,data,,,,,0.0,0.0,0.0,0,,,https://2025.pgdaynapoli.org/
+Voxxed Days Crete,2025-09-26,Heraklion,Greece,data,,,,,0.0,0.0,0.0,0,,,https://crete.voxxeddays.com
+MLcon New York,2025-09-29,"New York, NY",U.S.A.,data,,,,,0.0,0.0,0.0,0,,,https://mlconference.ai/new-york
+Manchester Tech Festival - AI Conference,2025-10-01,Manchester,U.K.,data,,,,,0.0,0.0,0.0,0,,,https://www.manchestertechfestival.co.uk/aiconference
+COLLIDE Data & AI Conference,2025-10-01,"Atlanta, GA",U.S.A.,data,,,,,0.0,0.0,0.0,0,,,https://datasciconnect.com/events/collide
+Supabase Select,2025-10-03,"San Francisco, CA",U.S.A.,data,,,,,0.0,0.0,0.0,0,,,https://select.supabase.com
+IMPACT - The Industrial AI and Data Conference,2025-10-13,"Houston, TX",U.S.A.,data,,,,,0.0,0.0,0.0,0,,,http://cognite.com/en/impact-conference
+Outpace Conf,2025-10-16,Manchester,U.K.,data,,,,,0.0,0.0,0.0,0,,,https://outpaceconf.com
+Data 2030 Summit,2025-10-21,Stockholm,Sweden,data,,,,,0.0,0.0,0.0,0,,,https://data2030summit.com
+KI Bootcamp,2025-10-23,Berlin,Germany,data,,,,,0.0,0.0,0.0,0,,,https://javascript-days.de/berlin/genai-fur-angular-bootcamp
+M3: LLMs im Unternehmen,2025-10-29,,,data,,,,,0.0,0.0,0.0,0,,,https://www.m3-konferenz.de/llm.php
+Ray Summit,2025-11-03,"San Francisco, CA",U.S.A.,data,,,,,0.0,0.0,0.0,0,,,https://www.anyscale.com/ray-summit/2025
+data2day,2025-11-04,Karlsruhe,Germany,data,,,,,0.0,0.0,0.0,0,,,https://www.data2day.de
+NODES,2025-11-06,,,data,,,,,0.0,0.0,0.0,0,,,https://neo4j.registration.goldcast.io/events/6bdf92b5-70e3-4b5a-b0b5-1ea484c17ff1
+dotAI,2025-11-06,Paris,France,data,,,,,0.0,0.0,0.0,0,,,https://www.dotai.io
+Testing United conference,2025-11-13,Milano,Italy,data,,,,,0.0,0.0,0.0,0,,,https://www.testingunited.com
+International Conference on Artificial Intelligence & Machine Learning,2025-11-17,London,U.K.,data,,,,,0.0,0.0,0.0,0,,,https://unitedresearchforum.com/ai-conference
+AI By The Bay,2025-11-17,"Oakland, CA",U.S.A.,data,,,,,0.0,0.0,0.0,0,,,https://ai.bythebay.io
+AI Native Dev Con,2025-11-18,"Brooklyn, NY",U.S.A.,data,,,,,0.0,0.0,0.0,0,,,https://ainativedev.io/devcon
+Big Data Conference Europe,2025-11-18,Vilnius,Lithuania,data,,,,,0.0,0.0,0.0,0,,,https://bigdataconference.eu
+DevOpsCon Munich,2025-12-01,Munich,Germany,data,,,,,0.0,0.0,0.0,0,,,https://devopscon.io/munich
+IT Security Summit Munich,2025-12-01,Munich,Germany,data,,,,,0.0,0.0,0.0,0,,,https://it-security-summit.de/muenchen
+AgentCon Milwaukee,2025-12-02,"Milwaukee, WI",U.S.A.,data,,,,,0.0,0.0,0.0,0,,,https://globalai.community/chapters/milwaukee/events/agentcon-milwaukee
+Oh My Hack,2025-12-02,Warsaw,Poland,data,,,,,0.0,0.0,0.0,0,,,https://omhconf.pl
+AgentCon Vancouver,2025-12-11,Vancouver,Canada,data,,,,,0.0,0.0,0.0,0,,,https://globalai.community/chapters/vancouver/events/agentcon-vancouver
+Chaos Carnival,2025-01-22,,,devops,,,,,0.0,0.0,0.0,0,,,https://chaoscarnival.io
+DevOps fwdays conference,2025-02-22,Kyiv,Ukraine,devops,,,,,0.0,0.0,0.0,0,,,https://fwdays.com/en/event/devops-fwdays-2025
+Devopsdays Los Angeles,2025-03-07,"Los Angeles, CA",U.S.A.,devops,,,,,0.0,0.0,0.0,0,,,https://devopsdays.org/events/2025-los-angeles/welcome/
+Devopsdays Zurich,2025-03-12,Zurich,Switzerland,devops,,,,,0.0,0.0,0.0,0,,,https://devopsdays.org/events/2025-zurich/welcome/
+Devopsdays Chicago,2025-03-18,"Chicago, IL",U.S.A.,devops,,,,,0.0,0.0,0.0,0,,,https://devopsdays.org/events/2025-chicago/welcome/
+Open Source Day,2025-03-21,Florence,Italy,devops,,,,,0.0,0.0,0.0,0,,,https://2025.osday.dev
+The Future of Software,2025-03-26,London,U.K.,devops,,,,,0.0,0.0,0.0,0,,,https://www.thefutureofsoftware.com/london
+inside agile: Agile Softwareentwicklung im Unternehmen,2025-03-27,,,devops,,,,,0.0,0.0,0.0,0,,,https://asu.inside-agile.de
+JavaLand,2025-04-01,Nürburgring,Germany,devops,,,,,0.0,0.0,0.0,0,,,https://www.javaland.eu
+KubeCon + CloudNativeCon Europe,2025-04-01,London,U.K.,devops,,,,,0.0,0.0,0.0,0,,,https://events.linuxfoundation.org/kubecon-cloudnativecon-europe-2025
+QCon London,2025-04-07,London,U.K.,devops,,,,,0.0,0.0,0.0,0,,,https://qconlondon.com/medialisting2025
+DevOpsCon London,2025-04-12,London,U.K.,devops,,,,,0.0,0.0,0.0,0,,,https://devopscon.io/london
+DevOpsDays Tokyo,2025-04-15,Tokyo,Japan,devops,,,,,0.0,0.0,0.0,0,,,https://devopsdays.org/events/2025-tokyo/welcome/
+DevOpsDays Raleigh,2025-04-16,"Raleigh, NC",U.S.A.,devops,,,,,0.0,0.0,0.0,0,,,https://devopsdays.org/events/2025-raleigh/welcome
+DevOpsDays Aarhus,2025-04-29,Aarhus,Denmark,devops,,,,,0.0,0.0,0.0,0,,,https://devopsdays.org/events/2025-aarhus/welcome/
+DevOpsDays Atlanta,2025-04-29,"Atlanta, GA",U.S.A.,devops,,,,,0.0,0.0,0.0,0,,,https://devopsdays.org/events/2025-atlanta/welcome/
+Mastering GitOps,2025-04-30,,,devops,,,,,0.0,0.0,0.0,0,,,https://www.mastering-gitops.de
+Devopsdays Austin,2025-05-01,"Austin, TX",U.S.A.,devops,,,,,0.0,0.0,0.0,0,,,https://devopsdays.org/events/2025-austin/welcome/
+Global Transformation & Tech Sector Summit,2025-05-03,,,devops,,,,,0.0,0.0,0.0,0,,,https://terricon.kz/en/summit
+Devopsdays Salt Lake City,2025-05-12,"Austin, TX",U.S.A.,devops,,,,,0.0,0.0,0.0,0,,,https://devopsdays.org/events/2025-salt-lake-city/welcome/
+Code Remix Summit,2025-05-12,"Miami, FL",U.S.A.,devops,,,,,0.0,0.0,0.0,0,,,https://coderemix.ai
+DevOpsCon London,2025-05-12,London,U.K.,devops,,,,,0.0,0.0,0.0,0,,,https://devopscon.io/london
+Camunda Community Summit,2025-05-13,Amsterdam,Netherlands,devops,,,,,0.0,0.0,0.0,0,,,https://www.camundacon.com/amsterdam
+IaCConf,2025-05-15,,,devops,,,,,0.0,0.0,0.0,0,,,https://www.iacconf.com
+Devopsdays Geneva,2025-05-19,Geneva,Switzerland,devops,,,,,0.0,0.0,0.0,0,,,https://devopsdays.org/events/2025-geneva/welcome/
+DevOpsCon San Diego,2025-05-19,"San Diego, CA",U.S.A.,devops,,,,,0.0,0.0,0.0,0,,,https://devopscon.io/san-diego
+JCON EUROPE,2025-05-19,Cologne,Germany,devops,,,,,0.0,0.0,0.0,0,,,https://2025.europe.jcon.one
+PlatforMa,2025-05-20,Tel Aviv,Israel,devops,,,,,0.0,0.0,0.0,0,,,https://platfor-ma.com
+DevDays Europe,2025-05-20,Vilnius,Lithuania,devops,,,,,0.0,0.0,0.0,0,,,https://devdays.lt
+DevOps Pro Europe,2025-05-20,Vilnius,Lithuania,devops,,,,,0.0,0.0,0.0,0,,,https://devopspro.lt
+Devopsdays Prague,2025-05-22,Prague,Czech Republic,devops,,,,,0.0,0.0,0.0,0,,,https://devopsdays.org/events/2025-prague/welcome/
+OWASP Global AppSec EU,2025-05-26,Barcelona,Spain,devops,,,,,0.0,0.0,0.0,0,,,https://owasp.glueup.com/event/owasp-global-appsec-eu-2025-123983
+Mastering Observability,2025-06-05,,,devops,,,,,0.0,0.0,0.0,0,,,https://mastering-obs.de
+Devopsdays Belém,2025-06-07,Belém,Brazil,devops,,,,,0.0,0.0,0.0,0,,,https://devopsdays.org/events/2025-belem/welcome/
+Devopsdays Amsterdam,2025-06-18,Amsterdam,Netherlands,devops,,,,,0.0,0.0,0.0,0,,,https://devopsdays.org/events/2025-amsterdam/welcome/
+PlatformCon Live Day London,2025-06-25,London,U.K.,devops,,,,,0.0,0.0,0.0,0,,,https://platformcon.com/live-day-london
+PlatformCon Live Day New York,2025-06-26,"New York, NY",U.S.A.,devops,,,,,0.0,0.0,0.0,0,,,https://platformcon.com/live-day-nyc
+DevOpsDays Kansas City,2025-08-13,"Kansas City, MO",U.S.A.,devops,,,,,0.0,0.0,0.0,0,,,https://devopsdayskc.org
+Devopsdays Halifax,2025-08-26,Halifax,Canada,devops,,,,,0.0,0.0,0.0,0,,,https://devopsdays.org/events/2025-halifax/welcome/
+Devopsdays Santiago,2025-08-26,Santiago,Chile,devops,,,,,0.0,0.0,0.0,0,,,https://devopsdays.org/events/2025-santiago/welcome/
+DevOpsDays Graz,2025-09-05,Graz,Austria,devops,,,,,0.0,0.0,0.0,0,,,https://www.devopsdays.at
+Visual Studio Live,2025-09-08,"San Diego, CA",U.S.A.,devops,,,,,0.0,0.0,0.0,0,,,https://vslive.com/events/san-diego-2025/home.aspx
+Devopsdays Denver,2025-09-15,"Denver, CO",U.S.A.,devops,,,,,0.0,0.0,0.0,0,,,https://devopsdays.org/events/2025-denver/welcome/
+TechSummit Amsterdam,2025-09-16,Amsterdam,Netherlands,devops,,,,,0.0,0.0,0.0,0,,,https://techsummit.io
+meshcloud Con,2025-09-18,Frankfurt am Main,Germany,devops,,,,,0.0,0.0,0.0,0,,,https://con25.meshcloud.io
+DevOpsCon New York,2025-09-29,"New York, NY",U.S.A.,devops,,,,,0.0,0.0,0.0,0,,,https://devopscon.io/new-york
+Devopsdays Des Moines,2025-10-02,"Des Moines, IA",U.S.A.,devops,,,,,0.0,0.0,0.0,0,,,https://devopsdays.org/events/2025-des-moines/welcome
+Devopsdays Eindhoven,2025-10-02,Eindhoven,Netherlands,devops,,,,,0.0,0.0,0.0,0,,,https://devopsdays.org/events/2025-eindhoven/welcome/
+Manchester Tech Festival | Software Development Day,2025-10-03,Manchester,U.K.,devops,,,,,0.0,0.0,0.0,0,,,https://www.manchestertechfestival.co.uk/software-development
+The Future of Software - Copenhagen,2025-10-21,Copenhagen,Denmark,devops,,,,,0.0,0.0,0.0,0,,,https://www.thefutureofsoftware.com/copenhagen
+Devopsdays Detroit,2025-10-22,"Detroit, MI",U.S.A.,devops,,,,,0.0,0.0,0.0,0,,,https://devopsdays.org/events/2025-detroit/welcome/
+The Future of Software - Stockholm,2025-10-23,Stockholm,Sweden,devops,,,,,0.0,0.0,0.0,0,,,https://www.eventbrite.co.uk/e/the-future-of-software-stockholm-2025-tickets-1311851947489
+DevOps Barcelona,2025-11-04,Barcelona,Spain,devops,,,,,0.0,0.0,0.0,0,,,https://devops.barcelona
+KubeCon + CloudNativeCon North America,2025-11-10,"Atlanta, GA",U.S.A.,devops,,,,,0.0,0.0,0.0,0,,,https://events.linuxfoundation.org/kubecon-cloudnativecon-north-america-2025
+SwampUp Europe,2025-11-13,Berlin,Germany,devops,,,,,0.0,0.0,0.0,0,,,https://swampup.jfrog.com/europe
+Continuous Lifecycle/ContainerConf (CLC),2025-11-19,Mannheim,Germany,devops,,,,,0.0,0.0,0.0,0,,,https://www.continuouslifecycle.de
+Devopsdays Tel Aviv,2025-12-11,Tel Aviv,Israel,devops,,,,,0.0,0.0,0.0,0,,,https://devopsdays.org/events/2025-tel-aviv/welcome/
+Future Tech  NL,2025-03-13,Utrecht,Netherlands,dotnet,,,,,0.0,0.0,0.0,0,,,https://futuretech.nl
+Update Conference Krakow,2025-05-26,Kraków,Poland,dotnet,,,,,0.0,0.0,0.0,0,,,http://krakow.updateconference.net
+BASTA!,2025-09-22,Mainz,Germany,dotnet,,,,,0.0,0.0,0.0,0,,,https://basta.net/mainz-en
+Umbracokalaset,2025-10-22,Stockholm,Sweden,dotnet,,,,,0.0,0.0,0.0,0,,,https://www.umbracokalaset.se
+Update Conference Prague,2025-11-13,Prague,Czech Republic,dotnet,,,,,0.0,0.0,0.0,0,,,https://www.updateconference.net
+betterCode() .NET 10.0,2025-11-18,,,dotnet,,,,,0.0,0.0,0.0,0,,,https://net.bettercode.eu
+Open Source Monitoring Conference,2025-11-18,Nürnberg,Germany,dotnet,,,,,0.0,0.0,0.0,0,,,https://osmc.de
+CodeMash,2025-01-14,"Sandusky, OH",U.S.A.,general,,,,,0.0,0.0,0.0,0,,,https://codemash.org
+Voxxed Days CERN,2025-01-15,Geneva,Switzerland,general,,,,,0.0,0.0,0.0,0,,,https://cern.voxxeddays.com/
+Voxxed Days Ticino,2025-01-17,Lugano,Switzerland,general,,,,,0.0,0.0,0.0,0,,,https://ticino.voxxeddays.com
+Functional Conf,2025-01-22,,,general,,,,,0.0,0.0,0.0,0,,,https://functionalconf.com
+Coderful,2025-01-23,Catania,Italy,general,,,,,0.0,0.0,0.0,0,,,https://www.coderful.io
+NDC London,2025-01-27,London,U.K.,general,,,,,0.0,0.0,0.0,0,,,https://ndclondon.com
+DecompileD,2025-02-06,Dresden,Germany,general,,,,,0.0,0.0,0.0,0,,,https://decompiled.de/
+Civo Navigate,2025-02-10,"San Francisco, CA",U.S.A.,general,,,,,0.0,0.0,0.0,0,,,https://www.civo.com/navigate/north-america
+DeveloperWeek,2025-02-11,"Santa Clara, CA",U.S.A.,general,,,,,0.0,0.0,0.0,0,,,https://www.developerweek.com
+ConFoo Montreal,2025-02-26,Montreal,Canada,general,,,,,0.0,0.0,0.0,0,,,https://confoo.ca
+ConFoo,2025-02-26,Montreal,Canada,general,,,,,0.0,0.0,0.0,0,,,https://confoo.ca/en/2025
+Devworld Conference,2025-02-27,Amsterdam,Netherlands,general,,,,,0.0,0.0,0.0,0,,,https://devworldconference.com
+Tech Rocks Asia,2025-02-28,Ho Chi Minh City,Vietnam,general,,,,,0.0,0.0,0.0,0,,,https://techrocks.asia
+Nullcon Goa,2025-03-01,Goa,India,general,,,,,0.0,0.0,0.0,0,,,https://nullcon.net/goa-2025
+BASTA! Spring,2025-03-03,Frankfurt am Main,Germany,general,,,,,0.0,0.0,0.0,0,,,https://basta.net/frankfurt-en
+Handycon,2025-03-05,,,general,,,,,0.0,0.0,0.0,0,,,https://2025.handycon.xyz
+SCaLE 22x,2025-03-06,"Pasadena, CA",U.S.A.,general,,,,,0.0,0.0,0.0,0,,,https://www.socallinuxexpo.org
+Visual Studio Live,2025-03-10,"Las Vegas, NV",U.S.A.,general,,,,,0.0,0.0,0.0,0,,,https://vslive.com/Events/Las-Vegas-2025
+FOSS Backstage Design,2025-03-12,Berlin,Germany,general,,,,,0.0,0.0,0.0,0,,,https://25.foss-backstage.design
+Soft Skills fwdays conference,2025-03-15,Kyiv,Ukraine,general,,,,,0.0,0.0,0.0,0,,,https://fwdays.com/en/event/soft-skills-fwdays-2025
+betterCode() Clean Architecture,2025-03-24,,,general,,,,,0.0,0.0,0.0,0,,,https://clean-architecture.bettercode.eu
+VoxxedDays Zürich,2025-03-25,Zurich,Switzerland,general,,,,,0.0,0.0,0.0,0,,,https://zurich.voxxeddays.com
+Agile India,2025-03-25,Bengaluru,India,general,,,,,0.0,0.0,0.0,0,,,https://2025.agileindia.org
+Fast Flow Conf,2025-03-27,s-Hertogenbosch,Netherlands,general,,,,,0.0,0.0,0.0,0,,,https://www.fastflowconf.com
+Wasm I/O,2025-03-27,Barcelona,Spain,general,,,,,0.0,0.0,0.0,0,,,https://2025.wasm.io
+Agile meets Architecture,2025-04-03,Berlin,Germany,general,,,,,0.0,0.0,0.0,0,,,https://www.agile-meets-architecture.com
+Digital Crafts Day,2025-04-04,Weiden,Germany,general,,,,,0.0,0.0,0.0,0,,,https://dc-nordoberpfalz.de/DigitalCraftsDay/2025
+Fork it!,2025-04-05,Tunis,Tunisia,general,,,,,0.0,0.0,0.0,0,,,https://www.forkit.community/events/2025-tunisia-tunis
+AI Native DevCon,2025-04-13,,,general,,,,,0.0,0.0,0.0,0,,,https://ai-native-devcon-2025.heysummit.com
+Codemotion Rome,2025-04-14,Rome,Italy,general,,,,,0.0,0.0,0.0,0,,,https://conferences.codemotion.com/rome2025/it/home
+Great International Developer Summit (GIDS),2025-04-22,Bengaluru,India,general,,,,,0.0,0.0,0.0,0,,,https://developersummit.com
+Uphill Conf,2025-04-24,Bern,Switzerland,general,,,,,0.0,0.0,0.0,0,,,https://www.uphillconf.com
+STAREAST,2025-04-27,"Orlando, FL",U.S.A.,general,,,,,0.0,0.0,0.0,0,,,https://stareast.techwell.com
+TEQNATION,2025-05-15,Utrecht,Netherlands,general,,,,,0.0,0.0,0.0,0,,,https://conference.teqnation.com
+NZ Tech Rally,2025-05-16,Wellington,New Zealand,general,,,,,0.0,0.0,0.0,0,,,https://nztechrally.nz
+Tech Internals Conference,2025-05-26,Berlin,Germany,general,,,,,0.0,0.0,0.0,0,,,https://internals.tech/berlin/2025
+myConf,2025-05-26,Varberg,Sweden,general,,,,,0.0,0.0,0.0,0,,,https://myconf.io
+DevConf Johannesburg,2025-05-27,Johannesburg,South Africa,general,,,,,0.0,0.0,0.0,0,,,https://www.devconf.co.za/joburg
+Future Frontend,2025-05-27,Espoo,Finland,general,,,,,0.0,0.0,0.0,0,,,https://futurefrontend.com
+SlashNEW,2025-05-28,Newcastle,Australia,general,,,,,0.0,0.0,0.0,0,,,https://slashnew.tech
+DevConf Cape Town,2025-05-29,Cape Town,South Africa,general,,,,,0.0,0.0,0.0,0,,,https://www.devconf.co.za/capetown
+InfoQ Dev Summit Boston,2025-06-09,"Boston, MA",U.S.A.,general,,,,,0.0,0.0,0.0,0,,,https://devsummit.infoq.com/conference/boston2025
+RenderATL,2025-06-11,"Atlanta, GA",U.S.A.,general,,,,,0.0,0.0,0.0,0,,,https://www.renderatl.com
+Berlin Buzzwords,2025-06-15,Berlin,Germany,general,,,,,0.0,0.0,0.0,0,,,https://2025.berlinbuzzwords.de
+LDX3 London,2025-06-16,London,U.K.,general,,,,,0.0,0.0,0.0,0,,,https://leaddev.com/leaddev-london
+DevOpsCon Berlin,2025-06-16,Berlin,Germany,general,,,,,0.0,0.0,0.0,0,,,https://devopscon.io/berlin
+Pixel Pioneers,2025-06-20,Bristol,U.K.,general,,,,,0.0,0.0,0.0,0,,,https://pixelpioneers.co/events/bristol-2025
+Zoom Developer Summit: Building the Future of Real-Time Collaboration,2025-06-25,,,general,,,,,0.0,0.0,0.0,0,,,https://events.zoom.us/ev/Amiw6FbmW5N3lLZJSE00b8vsPts4QvZWWQ1acaflAASlRX24cAWC~AqkNnKrLODbrtgGh-W2qaxhylCGwKJLL2-qPyDoLtV7kmkhIcw7I6-wkjg
+APIdays,2025-07-02,Munich,Germany,general,,,,,0.0,0.0,0.0,0,,,https://www.apidays.global/munich/
+Women in tech,2025-07-03,Berlin,Germany,general,,,,,0.0,0.0,0.0,0,,,https://www.femtechconf.com/
+DevBcn,2025-07-08,Barcelona,Spain,general,,,,,0.0,0.0,0.0,0,,,https://www.devbcn.com
+WeAreDevelopers World Congress,2025-07-09,Berlin,Germany,general,,,,,0.0,0.0,0.0,0,,,https://www.wearedevelopers.com/world-congress
+Front End North,2025-07-10,Sheffield,U.K.,general,,,,,0.0,0.0,0.0,0,,,https://frontendnorth.com
+bit summit,2025-09-04,Hamburg,Germany,general,,,,,0.0,0.0,0.0,0,,,https://bit-summit.com
+Build with mapbox,2025-09-08,,,general,,,,,0.0,0.0,0.0,0,,,https://www.mapbox.com/build/agenda
+ContainerDays Conference,2025-09-09,Hamburg,Germany,general,,,,,0.0,0.0,0.0,0,,,https://www.containerdays.io/containerdays-conference-2025
+UtahJS,2025-09-12,"Salt Lake City, UT",U.S.A.,general,,,,,0.0,0.0,0.0,0,,,https://utahjs.com/conference
+IndoSec,2025-09-16,Jakarta,Indonesia,general,,,,,0.0,0.0,0.0,0,,,https://www.indosecsummit.com
+entwickler Summit,2025-09-18,Berlin,Germany,general,,,,,0.0,0.0,0.0,0,,,https://entwickler.de/entwickler-summit
+Confitura,2025-09-19,Warsaw,Poland,general,,,,,0.0,0.0,0.0,0,,,https://confitura.pl
+Fluttercon Europe,2025-09-24,Berlin,Germany,general,,,,,0.0,0.0,0.0,0,,,https://fluttercon.dev
+droidcon Berlin,2025-09-24,Berlin,Germany,general,,,,,0.0,0.0,0.0,0,,,https://berlin.droidcon.com
+DYNA Fall,2025-09-29,"New York, NY",U.S.A.,general,,,,,0.0,0.0,0.0,0,,,https://dyna.dyalog.com
+GOTO Copenhagen,2025-09-29,Copenhagen,Denmark,general,,,,,0.0,0.0,0.0,0,,,https://gotocph.com/2025
+Porto Tech Hub Conference,2025-10-07,Porto,Portugal,general,,,,,0.0,0.0,0.0,0,,,https://portotechhub.com/conference-2025
+Moldova DevCon,2025-10-10,Chișinău,Moldova,general,,,,,0.0,0.0,0.0,0,,,https://mdc.md
+Software Architecture Summit,2025-10-13,Berlin,Germany,general,,,,,0.0,0.0,0.0,0,,,https://software-architecture-summit.de/berlin
+Codemotion,2025-10-14,Milano,Italy,general,,,,,0.0,0.0,0.0,0,,,https://conferences.codemotion.com/milan2025
+LeadDev New York,2025-10-15,"New York, NY",U.S.A.,general,,,,,0.0,0.0,0.0,0,,,https://leaddev.com/leaddev-new-york
+StaffPlus New York,2025-10-15,"New York, NY",U.S.A.,general,,,,,0.0,0.0,0.0,0,,,https://leaddev.com/staffplus-new-york
+LeadingEng New York,2025-10-17,"New York, NY",U.S.A.,general,,,,,0.0,0.0,0.0,0,,,https://leaddev.com/leadingeng-new-york
+JavaScript & Angular Days,2025-10-20,Berlin,Germany,general,,,,,0.0,0.0,0.0,0,,,https://javascript-days.de/berlin
+Ad-Filtering Dev Summit,2025-10-23,Limassol,Cyprus,general,,,,,0.0,0.0,0.0,0,,,https://adfilteringdevsummit.com
+Lambda World,2025-10-23,Cádiz,Spain,general,,,,,0.0,0.0,0.0,0,,,https://www.lambda.world
+"Fork it! Full-day event Kuala Lumpur, Malaysia",2025-10-25,Kuala Lumpur,Malaysia,general,,,,,0.0,0.0,0.0,0,,,https://www.forkit.community/events/2025-malaysia-kuala-lumpur
+Heapcon,2025-10-30,Belgrade,Serbia,general,,,,,0.0,0.0,0.0,0,,,https://heapcon.io
+droidcon London,2025-10-30,London,U.K.,general,,,,,0.0,0.0,0.0,0,,,https://london.droidcon.com
+LeadDev Berlin,2025-11-03,Berlin,Germany,general,,,,,0.0,0.0,0.0,0,,,https://leaddev.com/leaddev-berlin
+code.talks,2025-11-05,Hamburg,Germany,general,,,,,0.0,0.0,0.0,0,,,https://code-talks.de
+Øredev,2025-11-05,Malmö,Sweden,general,,,,,0.0,0.0,0.0,0,,,https://oredev.org
+Italian Agile Days,2025-11-07,Bergamo,Italy,general,,,,,0.0,0.0,0.0,0,,,https://www.agileday.it
+Voxxed Days Thessaloniki,2025-11-07,Thessaloniki,Greece,general,,,,,0.0,0.0,0.0,0,,,https://thessaloniki.voxxeddays.com
+Mozilla Festival,2025-11-07,Barcelona,Spain,general,,,,,0.0,0.0,0.0,0,,,https://www.mozillafestival.org/en
+Software Architecture Gathering,2025-11-24,Berlin,Germany,general,,,,,0.0,0.0,0.0,0,,,https://conferences.isaqb.org/software-architecture-gathering
+ESPC,2025-12-01,Dublin,Ireland,general,,,,,0.0,0.0,0.0,0,,,https://www.sharepointeurope.com
+IT-Tage,2025-12-08,Frankfurt am Main,Germany,general,,,,,0.0,0.0,0.0,0,,,https://www.ittage.informatik-aktuell.de/index.html
+DICE Ecosystems,2025-03-04,Zurich,Switzerland,identity,,,,,0.0,0.0,0.0,0,,,https://lu.ma/DICEecosystems
+IIW Internet Identity Workshop,2025-04-08,"Mountain View, CA",U.S.A.,identity,,,,,0.0,0.0,0.0,0,,,https://internetidentityworkshop.com
+DICE Digital Identity unConference Europe,2025-09-02,Zurich,Switzerland,identity,,,,,0.0,0.0,0.0,0,,,https://lu.ma/DICE2025
+ARCtic Conference,2025-03-11,Oulu,Finland,ios,,,,,0.0,0.0,0.0,0,,,https://arcticonference.com
+try! Swift Tokyo,2025-04-09,Tokyo,Japan,ios,,,,,0.0,0.0,0.0,0,,,https://tryswift.jp/_en
+iOSKonf,2025-05-13,Skopje,North Macedonia,ios,,,,,0.0,0.0,0.0,0,,,https://www.ioskonf.mk
+Swift Craft,2025-05-20,Folkestone,U.K.,ios,,,,,0.0,0.0,0.0,0,,,https://swiftcraft.uk
+SwiftLeeds,2025-10-06,Leeds,U.K.,ios,,,,,0.0,0.0,0.0,0,,,https://swiftleeds.co.uk
+Software Architecture Summit,2025-03-24,Munich,Germany,iot,,,,,0.0,0.0,0.0,0,,,https://software-architecture-summit.de/muenchen
+beyond IoT,2025-09-23,Cologne,Germany,iot,,,,,0.0,0.0,0.0,0,,,https://beyond-iot.de
+S2N: Storage Server Network,2025-10-22,Regensburg,Germany,iot,,,,,0.0,0.0,0.0,0,,,https://s2n.heise.de
+Jfokus,2025-02-03,Stockholm,Sweden,java,,,,,0.0,0.0,0.0,0,,,https://www.jfokus.se/
+JavaOne,2025-03-18,"Redwood City, CA",U.S.A.,java,,,,,0.0,0.0,0.0,0,,,https://www.oracle.com/javaone/
+Voxxed Days Amsterdam,2025-04-03,Amsterdam,Netherlands,java,,,,,0.0,0.0,0.0,0,,,https://amsterdam.voxxeddays.com
+JAX,2025-05-05,Mainz,Germany,java,,,,,0.0,0.0,0.0,0,,,https://jax.de/mainz
+Devoxx UK,2025-05-07,London,U.K.,java,,,,,0.0,0.0,0.0,0,,,https://www.devoxx.co.uk
+Spring I/O,2025-05-21,Barcelona,Spain,java,,,,,0.0,0.0,0.0,0,,,https://2025.springio.net
+betterCode() Spring,2025-06-03,,,java,,,,,0.0,0.0,0.0,0,,,https://spring.bettercode.eu
+JAX London,2025-09-29,London,U.K.,java,,,,,0.0,0.0,0.0,0,,,https://jaxlondon.com
+JCON USA @ IBM TechXchange,2025-10-06,"Orlando, FL",U.S.A.,java,,,,,0.0,0.0,0.0,0,,,https://usa.jcon.one
+betterCode() Java,2025-10-14,,,java,,,,,0.0,0.0,0.0,0,,,https://java.bettercode.eu
+JDD,2025-10-21,Kraków,Poland,java,,,,,0.0,0.0,0.0,0,,,https://jdd.org.pl
+ChurConf,2025-11-02,Auckland,New Zealand,java,,,,,0.0,0.0,0.0,0,,,https://churconf.com
+W-JAX,2025-11-03,Munich,Germany,java,,,,,0.0,0.0,0.0,0,,,https://jax.de/munich
+XtremeJ Online Conference,2025-11-04,,,java,,,,,0.0,0.0,0.0,0,,,https://xtremej.dev
+Java ON,2025-11-11,,,java,,,,,0.0,0.0,0.0,0,,,https://wearecommunity.io/events/java-on-2025
+ArchConf,2025-12-08,"Clear Water, FL",U.S.A.,java,,,,,0.0,0.0,0.0,0,,,https://archconf.com
+Vue.js Nation,2025-01-29,,,javascript,,,,,0.0,0.0,0.0,0,,,https://vuejsnation.com
+HalfStack Phoenix,2025-01-31,"Phoenix, AZ",U.S.A.,javascript,,,,,0.0,0.0,0.0,0,,,https://halfstackconf.com/phoenix
+Vuejs Amsterdam,2025-03-12,Amsterdam,Netherlands,javascript,,,,,0.0,0.0,0.0,0,,,https://vuejs.amsterdam
+JSworld Conference,2025-03-12,Amsterdam,Netherlands,javascript,,,,,0.0,0.0,0.0,0,,,https://jsworldconference.com
+JavaScript & Angular Days,2025-03-17,Munich,Germany,javascript,,,,,0.0,0.0,0.0,0,,,https://javascript-days.de/muenchen
+React Paris,2025-03-20,Paris,France,javascript,,,,,0.0,0.0,0.0,0,,,https://react.paris
+Frontrunners,2025-03-21,"Washington, DC",U.S.A.,javascript,,,,,0.0,0.0,0.0,0,,,https://frontrunners.tech
+Startup Mahakumbh,2025-03-27,Delhi,India,javascript,,,,,0.0,0.0,0.0,0,,,https://startupmahakumbh.co.in
+dotJS,2025-04-03,Paris,France,javascript,,,,,0.0,0.0,0.0,0,,,https://www.dotjs.io
+Node Congress,2025-04-17,,,javascript,,,,,0.0,0.0,0.0,0,,,https://nodecongress.com
+React Miami,2025-04-17,"Miami, FL",U.S.A.,javascript,,,,,0.0,0.0,0.0,0,,,https://www.reactmiami.com
+CityJS London,2025-04-23,London,U.K.,javascript,,,,,0.0,0.0,0.0,0,,,https://london.cityjsconf.org
+enterJS,2025-05-07,Mannheim,Germany,javascript,,,,,0.0,0.0,0.0,0,,,https://enterjs.de
+International JavaScript Conference London,2025-05-12,London,U.K.,javascript,,,,,0.0,0.0,0.0,0,,,https://javascript-conference.com/london
+StrapiConf,2025-05-13,Paris,France,javascript,,,,,0.0,0.0,0.0,0,,,https://www.strapi.io/strapiconf
+International JavaScript Conference San Diego,2025-05-19,"San Diego, CA",U.S.A.,javascript,,,,,0.0,0.0,0.0,0,,,https://javascript-conference.com/san-diego
+CityJS Athens,2025-05-27,Athens,Greece,javascript,,,,,0.0,0.0,0.0,0,,,https://athens.cityjsconf.org
+App.js Conference,2025-05-28,Kraków,Poland,javascript,,,,,0.0,0.0,0.0,0,,,https://appjs.co
+MadVue – Vue.js Conf,2025-05-29,Madrid,Spain,javascript,,,,,0.0,0.0,0.0,0,,,https://madvue.es
+JSHeroes,2025-05-29,Cluj-Napoca,Romania,javascript,,,,,0.0,0.0,0.0,0,,,https://jsheroes.io
+Webinale,2025-06-02,Berlin,Germany,javascript,,,,,0.0,0.0,0.0,0,,,https://webinale.de
+Frontend Nation,2025-06-03,,,javascript,,,,,0.0,0.0,0.0,0,,,https://frontendnation.com
+JSNation,2025-06-12,Amsterdam,Netherlands,javascript,,,,,0.0,0.0,0.0,0,,,https://jsnation.com
+React Norway,2025-06-13,Oslo,Norway,javascript,,,,,0.0,0.0,0.0,0,,,https://reactnorway.com
+React Summit,2025-06-13,Amsterdam,Netherlands,javascript,,,,,0.0,0.0,0.0,0,,,https://reactsummit.com
+JSCraftCamp,2025-06-27,Munich,Germany,javascript,,,,,0.0,0.0,0.0,0,,,https://jscraftcamp.org
+enterJS Advanced Angular Day,2025-07-01,,,javascript,,,,,0.0,0.0,0.0,0,,,https://enterjs.de/advanced-angular.php
+React Nexus,2025-07-03,Bangalore,India,javascript,,,,,0.0,0.0,0.0,0,,,https://reactnexus.com
+Web Summer Camp,2025-07-03,Opatija,Croatia,javascript,,,,,0.0,0.0,0.0,0,,,https://websummercamp.com/2025
+Big Sky Dev Con,2025-08-02,"Bozeman, MT",U.S.A.,javascript,,,,,0.0,0.0,0.0,0,,,https://bigskydevcon.com
+KCDC,2025-08-13,"Kansas City, KS",U.S.A.,javascript,,,,,0.0,0.0,0.0,0,,,https://www.kcdc.info
+The Dutch JavaScript Conference,2025-09-26,Amsterdam,Netherlands,javascript,,,,,0.0,0.0,0.0,0,,,https://www.djsconf.com
+International JavaScript Conference New York,2025-09-29,"New York, NY",U.S.A.,javascript,,,,,0.0,0.0,0.0,0,,,https://javascript-conference.com/new-york
+ReactConf,2025-10-07,"Henderson, NV",U.S.A.,javascript,,,,,0.0,0.0,0.0,0,,,https://conf.react.dev
+enterJS Web Security Day,2025-10-09,,,javascript,,,,,0.0,0.0,0.0,0,,,https://enterjs.de/security.php
+ViteConf,2025-10-09,Amsterdam,Netherlands,javascript,,,,,0.0,0.0,0.0,0,,,https://viteconf.amsterdam
+React Bootcamp,2025-10-20,Berlin,Germany,javascript,,,,,0.0,0.0,0.0,0,,,https://javascript-days.de/berlin/react-bootcamp
+JSConf Chile,2025-10-24,Santiago,Chile,javascript,,,,,0.0,0.0,0.0,0,,,https://www.jsconf.cl
+JS Conf Armenia,2025-10-25,Yerevan,Armenia,javascript,,,,,0.0,0.0,0.0,0,,,https://jsconf.am
+International JavaScript Conference Munich,2025-10-27,Munich,Germany,javascript,,,,,0.0,0.0,0.0,0,,,https://javascript-conference.com/munich
+XtremeJS Online Conference,2025-11-11,,,javascript,,,,,0.0,0.0,0.0,0,,,https://xtremejs.dev
+React Summit US,2025-11-18,"New York, NY",U.S.A.,javascript,,,,,0.0,0.0,0.0,0,,,https://reactsummit.us
+React Advanced London,2025-11-28,London,U.K.,javascript,,,,,0.0,0.0,0.0,0,,,https://reactadvanced.com
+JSDC,2025-11-29,Taipei,Taiwan,javascript,,,,,0.0,0.0,0.0,0,,,https://2025.jsdc.tw
+KotlinConf,2025-05-21,Copenhagen,Denmark,kotlin,,,,,0.0,0.0,0.0,0,,,https://kotlinconf.com
+KKON,2025-09-16,,,kotlin,,,,,0.0,0.0,0.0,0,,,https://rheinwerk-kkon.de
+Prodacity,2025-02-04,"Nashville, TN",U.S.A.,leadership,,,,,0.0,0.0,0.0,0,,,https://www.rise8.us/resource/prodacity
+CTO Craft Con London,2025-03-10,London,U.K.,leadership,,,,,0.0,0.0,0.0,0,,,https://conference.ctocraft.com/london-2025/pre-register
+Leadership Ateliers Lisbon,2025-04-23,Lisbon,Portugal,leadership,,,,,0.0,0.0,0.0,0,,,https://www.leadershipateliers.com/lisbon
+Leadership Ateliers Barcelona,2025-05-05,Barcelona,Spain,leadership,,,,,0.0,0.0,0.0,0,,,https://www.leadershipateliers.com/barcelona
+Turing Fest,2025-05-07,Edinburgh,U.K.,leadership,,,,,0.0,0.0,0.0,0,,,https://turingfest.com/turingfest-2025
+Leadership Ateliers Berlin,2025-05-21,Berlin,Germany,leadership,,,,,0.0,0.0,0.0,0,,,https://www.leadershipateliers.com/berlin
+CTO Craft Con: Toronto,2025-05-27,Toronto,Canada,leadership,,,,,0.0,0.0,0.0,0,,,https://conference.ctocraft.com/toronto-2025
+Product Management Conference @ the coast,2025-06-30,Gdansk,Poland,leadership,,,,,0.0,0.0,0.0,0,,,https://pmc2025.treevent.pl
+Industry,2025-09-08,"Cleveland, OH",U.S.A.,leadership,,,,,0.0,0.0,0.0,0,,,https://www.industryconference.com
+HPE Nonstop Technology and Business Conference,2025-09-16,"Houston, TX",U.S.A.,leadership,,,,,0.0,0.0,0.0,0,,,https://nonstoptbc.com
+Manchester Tech Festival | Leadership Day,2025-10-02,Manchester,U.K.,leadership,,,,,0.0,0.0,0.0,0,,,https://www.manchestertechfestival.co.uk/leadership-day
+inside agile: Agile Leadership Conference,2025-11-27,,,leadership,,,,,0.0,0.0,0.0,0,,,https://alc.inside-agile.de
+Tech Leadership Summit,2025-12-01,"Clearwater, FL",U.S.A.,leadership,,,,,0.0,0.0,0.0,0,,,https://techleadersummit.io
+Unhacked International CyberSecurity,2025-02-10,Vienna,Austria,networking,,,,,0.0,0.0,0.0,0,,,https://momentera.org/conferences/unhacked-conference
+RuhrSec,2025-02-20,Bochum,Germany,networking,,,,,0.0,0.0,0.0,0,,,https://www.ruhrsec.de/2025
+Serverless Architecture Conference London,2025-05-12,London,U.K.,networking,,,,,0.0,0.0,0.0,0,,,https://serverless-architecture.io/london
+GITEX EUROPE,2025-05-21,Berlin,Germany,networking,,,,,0.0,0.0,0.0,0,,,https://www.gitex-europe.com/
+Blockchain Community Day,2025-06-09,,,networking,,,,,0.0,0.0,0.0,0,,,https://epa.ms/BlockchainConf-2025-25
+CTO Craft Con: Berlin,2025-09-23,Berlin,Germany,networking,,,,,0.0,0.0,0.0,0,,,https://conference.ctocraft.com/berlin-2025
+Manchester Tech Festival | Core Conference,2025-09-24,Manchester,U.K.,networking,,,,,0.0,0.0,0.0,0,,,https://www.manchestertechfestival.co.uk/main-festival
+Manchester Tech Festival | Cyber Security,2025-09-26,Manchester,U.K.,networking,,,,,0.0,0.0,0.0,0,,,https://www.manchestertechfestival.co.uk/cyber-security
+Manchester Tech Festival | Women In Tech [Unfiltered],2025-09-30,Manchester,U.K.,networking,,,,,0.0,0.0,0.0,0,,,https://www.manchestertechfestival.co.uk/wit
+JSNation US,2025-11-17,"New York, NY",U.S.A.,networking,,,,,0.0,0.0,0.0,0,,,https://jsnation.us
+CTO Craft Con: The Finance Edition,2025-11-18,London,U.K.,networking,,,,,0.0,0.0,0.0,0,,,https://conference.ctocraft.com/finance
+Cybersecurity Day,2025-12-09,,,networking,,,,,0.0,0.0,0.0,0,,,https://axence.net/en/cybersecurityday
+FOSDEM,2025-02-01,Brussels,Belgium,opensource,,,,,0.0,0.0,0.0,0,,,https://fosdem.org/2025
+FOSS Backstage,2025-03-10,Berlin,Germany,opensource,,,,,0.0,0.0,0.0,0,,,https://25.foss-backstage.de
+FOSSASIA Summit,2025-03-13,Bangkok,Thailand,opensource,,,,,0.0,0.0,0.0,0,,,https://eventyay.com/e/4c0e0c27
+stackconf,2025-04-29,Munich,Germany,opensource,,,,,0.0,0.0,0.0,0,,,https://stackconf.eu
+Shopware Community Day,2025-06-04,Cologne,Germany,opensource,,,,,0.0,0.0,0.0,0,,,https://scd.shopware.com/en-US
+Capital Series Poland,2025-06-11,Warsaw,Poland,opensource,,,,,0.0,0.0,0.0,0,,,https://openforumeurope.org/event/capital-series-poland/
+Open Source Summit North America,2025-06-23,"Denver, CO",U.S.A.,opensource,,,,,0.0,0.0,0.0,0,,,https://events.linuxfoundation.org/open-source-summit-north-america
+RustConf,2025-09-02,"Seattle, WA",U.S.A.,opensource,,,,,0.0,0.0,0.0,0,,,https://rustconf.com
+DjangoCon US,2025-09-08,"Chicago, IL",U.S.A.,opensource,,,,,0.0,0.0,0.0,0,,,https://2025.djangocon.us
+Frappeverse India,2025-09-11,Mumbai,India,opensource,,,,,0.0,0.0,0.0,0,,,https://frappe.io/frappeverse/india-2025
+FUN OCaml,2025-09-15,Warsaw,Poland,opensource,,,,,0.0,0.0,0.0,0,,,https://fun-ocaml.com
+SquiggleConf,2025-09-18,"Boston, MA",U.S.A.,opensource,,,,,0.0,0.0,0.0,0,,,https://2025.squiggleconf.com
+Open Tech Day: Grafana Edition,2025-09-23,Nürburgring,Germany,opensource,,,,,0.0,0.0,0.0,0,,,https://opentechday.de
+OpenSSL Conference,2025-10-07,Prague,Czech Republic,opensource,,,,,0.0,0.0,0.0,0,,,https://openssl-conference.org
+All Things Open,2025-10-12,"Raleigh, NC",U.S.A.,opensource,,,,,0.0,0.0,0.0,0,,,https://2025.allthingsopen.org
+Open Source Observability Day,2025-10-23,,,opensource,,,,,0.0,0.0,0.0,0,,,http://osoday.com
+ALASCA Summit,2025-11-03,Dresden,Germany,opensource,,,,,0.0,0.0,0.0,0,,,https://alasca.cloud/alasca-summit-2025
+SFSCON,2025-11-07,Bolzano,Italy,opensource,,,,,0.0,0.0,0.0,0,,,https://www.sfscon.it
+InnerSource Summit,2025-11-13,Berlin,Germany,opensource,,,,,0.0,0.0,0.0,0,,,https://innersourcecommons.org/events/isc-2025
+betterCode() ArchDoc,2025-05-12,,,performance,,,,,0.0,0.0,0.0,0,,,https://archdoc.bettercode.eu
+Global Software Architecture Summit,2025-10-13,Barcelona,Spain,performance,,,,,0.0,0.0,0.0,0,,,https://gsas.io
+SymfonyOnline,2025-01-16,,,php,,,,,0.0,0.0,0.0,0,,,https://live.symfony.com/2025-online-january
+PHP UK Conference,2025-02-19,London,U.K.,php,,,,,0.0,0.0,0.0,0,,,https://www.phpconference.co.uk
+SymfonyDay Chicago,2025-03-17,"Chicago, IL",U.S.A.,php,,,,,0.0,0.0,0.0,0,,,https://live.symfony.com/2025-chicago
+Dutch PHP Conference,2025-03-18,Amsterdam,Netherlands,php,,,,,0.0,0.0,0.0,0,,,https://phpconference.nl
+SymfonyLive Paris,2025-03-27,Paris,France,php,,,,,0.0,0.0,0.0,0,,,https://live.symfony.com/2025-paris
+SymfonyLive Berlin,2025-04-03,Berlin,Germany,php,,,,,0.0,0.0,0.0,0,,,https://live.symfony.com/2025-berlin
+php[tek],2025-05-20,"Chicago, IL",U.S.A.,php,,,,,0.0,0.0,0.0,0,,,https://phptek.io
+PHPers Day Poznań,2025-05-24,Lodz,Poland,php,,,,,0.0,0.0,0.0,0,,,https://phpers.day
+International PHP Conference,2025-06-02,Berlin,Germany,php,,,,,0.0,0.0,0.0,0,,,https://phpconference.com/berlin-en/
+SymfonyOnline,2025-06-12,,,php,,,,,0.0,0.0,0.0,0,,,https://live.symfony.com/2025-online-june
+JetBrains PHPverse,2025-06-17,,,php,,,,,0.0,0.0,0.0,0,,,https://lp.jetbrains.com/phpverse-2025
+CakeFest,2025-10-09,Madrid,Spain,php,,,,,0.0,0.0,0.0,0,,,https://cakefest.org
+betterCode() PHP,2025-11-25,,,php,,,,,0.0,0.0,0.0,0,,,https://php.bettercode.eu
+Digital Retail Africa,2025-01-30,Cape Town,South Africa,product,,,,,0.0,0.0,0.0,0,,,https://itnewsafrica.com/event/event/digital-retail-africa
+ProductWorld,2025-02-11,"Santa Clara, CA",U.S.A.,product,,,,,0.0,0.0,0.0,0,,,https://productworld.co
+Scrum Master Day,2025-02-19,,,product,,,,,0.0,0.0,0.0,0,,,https://scrum.inside-agile.de
+Product Owner Days,2025-04-02,Cologne,Germany,product,,,,,0.0,0.0,0.0,0,,,https://product-owner-day.de
+Config,2025-05-06,"San Francisco, CA",U.S.A.,product,,,,,0.0,0.0,0.0,0,,,https://config.figma.com/san-francisco
+Config,2025-05-14,London,U.K.,product,,,,,0.0,0.0,0.0,0,,,https://config.figma.com/london
+ProductLab Conference,2025-09-17,Berlin,Germany,product,,,,,0.0,0.0,0.0,0,,,https://productlab.app
+Make with Notion,2025-09-18,"San Francisco, CA",U.S.A.,product,,,,,0.0,0.0,0.0,0,,,https://makewithnotion.com
+Just Product,2025-10-10,Munich,Germany,product,,,,,0.0,0.0,0.0,0,,,https://www.justproduct.de
+PUSH UX,2025-10-23,Munich,Germany,product,,,,,0.0,0.0,0.0,0,,,https://push-conference.com
+Y Oslo,2025-10-27,Oslo,Norway,product,,,,,0.0,0.0,0.0,0,,,https://www.y-oslo.com
+Product Management Festival,2025-11-05,Zurich,Switzerland,product,,,,,0.0,0.0,0.0,0,,,https://productmanagementfestival.com
+Product Owner Day,2025-11-13,,,product,,,,,0.0,0.0,0.0,0,,,https://pod.inside-agile.de
+PyCon+Web,2025-01-24,Berlin,Germany,python,,,,,0.0,0.0,0.0,0,,,https://www.pyconweb.com
+pycascades,2025-02-08,"Portland, OR",U.S.A.,python,,,,,0.0,0.0,0.0,0,,,https://2025.pycascades.com
+PyCon US,2025-05-14,"Pittsburgh, PA",U.S.A.,python,,,,,0.0,0.0,0.0,0,,,https://us.pycon.org/2025
+PyCon Italia,2025-05-28,Bologna,Italy,python,,,,,0.0,0.0,0.0,0,,,https://2025.pycon.it/en
+PyCon Greece,2025-08-29,Athens,Greece,python,,,,,0.0,0.0,0.0,0,,,https://2025.pycon.gr/en
+XtremePython Online Conference,2025-11-18,,,python,,,,,0.0,0.0,0.0,0,,,https://xtremepython.dev
+Rubyconf India,2025-09-12,Jaipur,India,ruby,,,,,0.0,0.0,0.0,0,,,https://rubyconf.in
+Rust In Paris,2025-03-14,Paris,France,rust,,,,,0.0,0.0,0.0,0,,,https://www.rustinparis.com
+Rustikon,2025-03-26,Warsaw,Poland,rust,,,,,0.0,0.0,0.0,0,,,https://www.rustikon.dev
+RUST Asia,2025-03-28,Hong Kong,Hong Kong,rust,,,,,0.0,0.0,0.0,0,,,https://www.rustasiaconf.com
+Oxidize - the applied Rust conference,2025-09-16,Berlin,Germany,rust,,,,,0.0,0.0,0.0,0,,,https://oxidizeconf.com
+EuroRust,2025-10-09,Paris,France,rust,,,,,0.0,0.0,0.0,0,,,https://eurorust.eu
+betterCode() Rust,2025-11-10,,,rust,,,,,0.0,0.0,0.0,0,,,https://rust.bettercode.eu
+Scalar,2025-03-27,Warsaw,Poland,scala,,,,,0.0,0.0,0.0,0,,,https://www.scalar-conf.com
+NDC Security,2025-01-20,Oslo,Norway,security,,,,,0.0,0.0,0.0,0,,,https://ndc-security.com
+Gartner Identity & Access Management Summit,2025-03-24,London,U.K.,security,,,,,0.0,0.0,0.0,0,,,https://www.gartner.com/en/conferences/emea/identity-access-management-uk
+CWIC Building Resilience,2025-03-27,Cambridge,U.K.,security,,,,,0.0,0.0,0.0,0,,,https://www.cambridgewireless.co.uk/event-calendar/conferences/cwic.html
+CyberWiseCon Europe,2025-05-20,Vilnius,Lithuania,security,,,,,0.0,0.0,0.0,0,,,https://cyberwisecon.eu
+IT Security Summit,2025-06-16,Berlin,Germany,security,,,,,0.0,0.0,0.0,0,,,https://it-security-summit.de/berlin
+The Diana Initiative,2025-08-04,"Las Vegas, NV",U.S.A.,security,,,,,0.0,0.0,0.0,0,,,https://www.dianainitiative.org
+Skytalks at BSidesLV,2025-08-04,"Las Vegas, NV",U.S.A.,security,,,,,0.0,0.0,0.0,0,,,https://skytalks.info
+In Containers We Trust: Tech Talks Hosted by Chainguard,2025-08-20,,,security,,,,,0.0,0.0,0.0,0,,,https://events.chainguard.dev/a460f1f6-7ede-4868-b479-d21111a4b73b
+Nullcon Berlin,2025-09-04,Berlin,Germany,security,,,,,0.0,0.0,0.0,0,,,https://nullcon.net/berlin-2025
+Cohesity Catalyst 1: Data Security Summit,2025-09-17,,,security,,,,,0.0,0.0,0.0,0,,,https://www.cohesity.com/catalyst1
+BSides Edmonton,2025-09-22,Edmonton,Canada,security,,,,,0.0,0.0,0.0,0,,,https://www.bsidesedmonton.org
+HackAIcon,2025-09-25,Lisbon,Portugal,security,,,,,0.0,0.0,0.0,0,,,https://hackaicon.ethiack.com
+BSides Kraków,2025-09-27,Kraków,Poland,security,,,,,0.0,0.0,0.0,0,,,https://bsideskrakow.pl
+heise devSec,2025-09-30,Regensburg,Germany,security,,,,,0.0,0.0,0.0,0,,,https://www.heise-devsec.de
+BSides Mulhouse CFP,2025-10-07,Mulhouse,France,security,,,,,0.0,0.0,0.0,0,,,https://bsides-mulhouse.fr
+CISO Indonesia,2025-12-03,Jakarta,Indonesia,security,,,,,0.0,0.0,0.0,0,,,https://ciso-id.coriniumintelligence.com
+Conf42 Chaos Engineering,2025-02-13,,,sre,,,,,0.0,0.0,0.0,0,,,https://www.conf42.com/ce2025
+SREDay,2025-04-11,"San Francisco, CA",U.S.A.,sre,,,,,0.0,0.0,0.0,0,,,https://sreday.com/2025-san-francisco-q2
+SREDay,2025-04-14,"Redmond, WA",U.S.A.,sre,,,,,0.0,0.0,0.0,0,,,https://sreday.com/2025-redmond-q2
+SREDay - Cologne,2025-06-12,Cologne,Germany,sre,,,,,0.0,0.0,0.0,0,,,https://sreday.com/2025-cologne-q2
+SREDay - London,2025-09-18,London,U.K.,sre,,,,,0.0,0.0,0.0,0,,,https://sreday.com/2025-london-q3
+robocon,2025-02-13,Helsinki,Finland,testing,,,,,0.0,0.0,0.0,0,,,https://robocon.io
+Software Quality Days,2025-05-20,Munich,Germany,testing,,,,,0.0,0.0,0.0,0,,,https://www.software-quality-days.com
+EuroSTAR Conference,2025-06-03,Edinburgh,Scotland,testing,,,,,0.0,0.0,0.0,0,,,https://eurostarconferences.com
+STARWEST,2025-09-21,"Anaheim, CA",U.S.A.,testing,,,,,0.0,0.0,0.0,0,,,https://starwest.techwell.com
+STARCANADA,2025-10-27,Toronto,Canada,testing,,,,,0.0,0.0,0.0,0,,,https://starcanada.techwell.com
+AutomationSTAR,2025-11-10,Amsterdam,Netherlands,testing,,,,,0.0,0.0,0.0,0,,,https://automation.eurostarsoftwaretesting.com
+Tokyo Test Fest,2025-11-14,Tokyo,Japan,testing,,,,,0.0,0.0,0.0,0,,,https://tokyotestfest.com
+SquiggleConf,2025-09-18,"Boston, MA",U.S.A.,typescript,,,,,0.0,0.0,0.0,0,,,https://squiggleconf.com
+ConveyUX,2025-02-25,"Seattle, WA",U.S.A.,ux,,,,,0.0,0.0,0.0,0,,,https://conveyux.com
+UXDX,2025-05-12,"New York, NY",U.S.A.,ux,,,,,0.0,0.0,0.0,0,,,https://uxdx.com/usa/2025
+UXLx: User Experience Lisbon,2025-05-20,Lisbon,Portugal,ux,,,,,0.0,0.0,0.0,0,,,https://ux-lx.com
+Digital Design & UX (DDUX),2025-06-25,Dortmund,Germany,ux,,,,,0.0,0.0,0.0,0,,,https://dd-ux.de
+UXCON,2025-10-09,"Washington, DC",U.S.A.,ux,,,,,0.0,0.0,0.0,0,,,https://www.uxconference.org/home
+Unleashed Summit,2025-10-10,London,U.K.,ux,,,,,0.0,0.0,0.0,0,,,https://summit.productunleashed.co.uk
