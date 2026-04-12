@@ -75,6 +75,12 @@ EXHIBITOR_SEARCH_PROMPT = (
     "Return a list of objects with these fields."
 )
 
+CALENDAR_LINKS_PROMPT = (
+    "This is a conference calendar listing. Extract the full URL for every individual event's detail page. "
+    "Focus on links that go to events.linuxfoundation.org subpages. "
+    "Return only a list of URL strings."
+)
+
 GENERIC_EVENTS_PROMPT = (
     "This is a conference or event listing page. "
     "Extract all events visible on the page as a list. For each event extract: "
@@ -94,4 +100,5 @@ PROMPT_BY_SOURCE: dict[str, str] = {
     "cvent": CVENT_PROMPT,
     "eventlocations": EVENTLOCATIONS_PROMPT,
     "generic": GENERIC_EVENTS_PROMPT,  # for any public events listing page
+    "calendar_links": CALENDAR_LINKS_PROMPT,
 }
