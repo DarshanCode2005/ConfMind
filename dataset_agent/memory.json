@@ -1,0 +1,88 @@
+{
+  "epoch": 1,
+  "total_events_found": 16,
+  "strategies": [
+    {
+      "approach": "Direct canonical page crawl at mongodb.com",
+      "score": 0.9,
+      "fields_found": [
+        "event_name",
+        "date",
+        "city",
+        "country",
+        "category",
+        "source_url"
+      ],
+      "notes": "The official event page is the highest density source. It should contain the definitive date, location, and primary sponsors/speakers, allowing for immediate population of most core fields. We must verify the year (2026) and the specific venue details.",
+      "search_templates": [
+        "site:mongodb.com \"MongoDB .local\" San Francisco",
+        "site:mongodb.com /events/mongodb-local/san-francisco"
+      ]
+    },
+    {
+      "approach": "Canonical Event Listing Page (Meetup.com)",
+      "score": 0.9,
+      "fields_found": [
+        "event_name",
+        "date",
+        "city",
+        "country",
+        "category",
+        "venue_name",
+        "source_url"
+      ],
+      "notes": "Meetup.com is excellent for gathering core logistical details (date, location, basic description) for community-run events. It is a reliable source for the initial event parameters, though it may lack formal sponsor/speaker lists compared to a dedicated corporate site.",
+      "search_templates": [
+        "site:meetup.com \"DataGrillen\" Amsterdam 2026",
+        "site:meetup.com \"DataGrillen\""
+      ]
+    },
+    {
+      "approach": "General Search Engine Query (Corroboration)",
+      "score": 0.7,
+      "fields_found": [
+        "event_name",
+        "date",
+        "city",
+        "country",
+        "category",
+        "theme",
+        "venue_name"
+      ],
+      "notes": "A general search for the event name combined with the city/date is crucial for finding official press releases or news coverage that might list sponsors or speakers. It helps corroborate the details found on the community platform.",
+      "search_templates": [
+        "\"DataGrillen\" Amsterdam 2026 sponsors",
+        "\"DataGrillen\" Amsterdam 2026 speakers"
+      ]
+    },
+    {
+      "approach": "General search engine query for event details",
+      "score": 0.6,
+      "fields_found": [
+        "event_name",
+        "date",
+        "city",
+        "country"
+      ],
+      "notes": "Searching Google/Bing for the event name + city/date might pull up secondary listings (e.g., Eventbrite, Meetup). These are useful for cross-referencing dates and finding ticket links, but the data structure is often inconsistent.",
+      "search_templates": [
+        "\"MongoDB .local\" San Francisco 2026",
+        "MongoDB local meetup San Francisco"
+      ]
+    }
+  ],
+  "failed_sites": [
+    "waset.org"
+  ],
+  "best_search_templates": [
+    "site:mongodb.com \"MongoDB .local\" San Francisco",
+    "site:mongodb.com /events/mongodb-local/san-francisco",
+    "\"MongoDB .local\" San Francisco 2026",
+    "MongoDB local meetup San Francisco",
+    "site:meetup.com \"DataGrillen\" Amsterdam 2026",
+    "site:meetup.com \"DataGrillen\"",
+    "\"DataGrillen\" Amsterdam 2026 sponsors",
+    "\"DataGrillen\" Amsterdam 2026 speakers"
+  ],
+  "notes": []
+}

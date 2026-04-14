@@ -111,33 +111,33 @@ class SponsorAgent(BaseAgent):
         )
 
     def run(self, state: AgentState) -> AgentState:
-        """Fetch, score, and rank sponsors; generate proposals for top 3.
-
-        Args:
-            state: The shared LangGraph AgentState.  Reads ``event_config``.
-                   Writes ``sponsors`` and ``metadata``.
-
-        Returns:
-            Updated AgentState.
-        """
+        """Fetch, score, and rank sponsors; generate proposals for top 3."""
+        self._log_info("Starting sponsor discovery run...")
         try:
             cfg = state["event_config"]
             category = cfg.category
             geography = cfg.geography
 
             # ── 1. Fetch from ScrapeGraph-AI ──────────────────────────────────
+            self._log_info(f"Querying SearchGraph for {category} sponsors in {geography}...")
             scraper_sponsors: list[SponsorSchema] = search_sponsors_structured(category, geography)
+            self._log_info(f"Scraper found {len(scraper_sponsors)} sponsors.")
 
             # ── 2. Fetch from Serper + merge (dedup by name) ──────────────────
+            self._log_info("Querying Serper for additional candidates...")
             serper_results = search_sponsors(category, geography)
             seen_names: set[str] = {s.name.lower() for s in scraper_sponsors}
+            serper_count = 0
             for result in serper_results:
                 name = result.title.strip()
                 if name.lower() not in seen_names:
                     scraper_sponsors.append(SponsorSchema(name=name, geo=geography))
                     seen_names.add(name.lower())
+                    serper_count += 1
+            self._log_info(f"Added {serper_count} new candidates from Serper.")
 
             # ── 3. Score each sponsor ─────────────────────────────────────────
+            self._log_info("Executing deterministic scoring formula...")
             for sponsor in scraper_sponsors:
                 raw = _score_sponsor(sponsor, category, geography)
                 # normalise 0-20 -> 0-10 to stay inside schema bounds
@@ -149,6 +149,7 @@ class SponsorAgent(BaseAgent):
                 key=lambda s: s.relevance_score,
                 reverse=True,
             )[:_TOP_N]
+            self._log_info(f"Ranking complete. Top sponsor: {ranked[0].name if ranked else 'N/A'}")
 
             # ── 5. PDF proposals for top 3 ────────────────────────────────────
             event_name = cfg.event_name or f"{category} Summit"
@@ -160,17 +161,20 @@ class SponsorAgent(BaseAgent):
             }
             metadata: dict = dict(state.get("metadata", {}))
 
+            self._log_info(f"Generating PDF proposals for top {_PROPOSAL_TOP} candidates...")
             for sponsor in ranked[:_PROPOSAL_TOP]:
                 safe_name = sponsor.name.replace(" ", "_")
                 output_path = f"output/proposals/{safe_name}_proposal.pdf"
                 pdf_path = save_proposal(sponsor, event_meta, output_path)
                 metadata[f"proposal_{sponsor.name}"] = pdf_path
+                self._log_info(f"  - Proposal saved: {safe_name}_proposal.pdf")
 
             # ── 6. Write results ──────────────────────────────────────────────
-            state["sponsors"] = ranked
-            state["metadata"] = metadata
+            return {
+                "sponsors": ranked,
+                "metadata": metadata
+            }
 
         except Exception as exc:
-            state = self._log_error(state, f"SponsorAgent failed: {exc}")
-
-        return state
+            # We must return the dictionary format that _log_error now produces
+            return self._log_error({}, f"SponsorAgent failed: {exc}")

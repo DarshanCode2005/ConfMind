@@ -143,18 +143,18 @@ def _make_node(agent: Any, name: str):
     continue to the next node.
     """
     if agent is None:
-
-        def passthrough(state: AgentState) -> AgentState:
-            errors = list(state.get("errors", []))
-            errors.append(f"{name} not yet implemented — skipping")
-            state["errors"] = errors
-            return state
+        def passthrough(state: AgentState) -> dict[str, Any]:
+            return {"errors": [f"[{name}] not yet implemented — skipping"]}
 
         passthrough.__name__ = name
         return passthrough
 
-    def node_fn(state: AgentState) -> AgentState:
-        return agent.run(state)
+    def node_fn(state: AgentState) -> dict[str, Any]:
+        result = agent.run(state)
+        # Ensure it returns a dict for LangGraph merging
+        if isinstance(result, dict):
+            return result
+        return {}  # Fallback if agent returned something else
 
     node_fn.__name__ = name
     return node_fn

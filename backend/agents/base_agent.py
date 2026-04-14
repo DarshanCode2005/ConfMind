@@ -46,7 +46,6 @@ from abc import ABC, abstractmethod
 from typing import Any, ClassVar
 
 from langchain_core.prompts import ChatPromptTemplate  # type: ignore[import-untyped]
-from langchain_openai import ChatOpenAI  # type: ignore[import-untyped]
 
 from backend.memory.vector_store import embed_and_store, similarity_search
 from backend.models.schemas import AgentState
@@ -66,19 +65,22 @@ class BaseAgent(ABC):
     tools: ClassVar[list[Any]] = []
 
     # ── LLM ──────────────────────────────────────────────────────────────
+    
+    def _get_llm(self, temperature: float = 0.3) -> Any:
+        """Return a ChatOllama instance (local Gemma4) bound to this agent's tools.
 
-    def _get_llm(self, temperature: float = 0.3) -> ChatOpenAI:
-        """Return a ChatOpenAI instance bound to this agent's tool list.
-
-        Override in subclass if you need a different model or temperature.
-        Uses OPENAI_API_KEY from environment (loaded via .env).
+        Uses the 'confmind-gemma4' model installed in Ollama.
         """
-        api_key = os.getenv("OPENAI_API_KEY", "")
-        if not api_key:
-            raise OSError("OPENAI_API_KEY is not set — add it to your .env file.")
-        llm = ChatOpenAI(model="gpt-4o-mini", temperature=temperature, api_key=api_key)
+        from langchain_ollama import ChatOllama  # type: ignore[import-untyped]
+
+        model_name = os.getenv("OLLAMA_MODEL", "confmind-planner")
+        llm = ChatOllama(
+            model=model_name,
+            temperature=temperature,
+            num_ctx=32768,  # Sufficient for most planning tasks
+        )
         if self.tools:
-            return llm.bind_tools(self.tools)  # type: ignore[return-value]
+            return llm.bind_tools(self.tools)
         return llm
 
     # ── Prompt ────────────────────────────────────────────────────────────
@@ -157,25 +159,17 @@ class BaseAgent(ABC):
         """
         embed_and_store(docs, metadata, collection=collection)
 
-    # ── Error helper ──────────────────────────────────────────────────────
+    # ── Logging helpers ───────────────────────────────────────────────────
 
-    @staticmethod
-    def _log_error(state: AgentState, message: str) -> AgentState:
-        """Append an error message to state["errors"] and return state.
+    def _log_info(self, message: str) -> None:
+        """Print a formatted log message for real-time monitoring."""
+        print(f"  [DEBUG][{self.name}] {message}")
 
-        This keeps the graph running — other agents can still complete.
-
-        Args:
-            state:   Current AgentState.
-            message: Human-readable description of what went wrong.
-
-        Returns:
-            Updated state with the error appended.
-        """
-        errors = list(state.get("errors", []))
-        errors.append(message)
-        state["errors"] = errors
-        return state
+    def _log_error(self, state: AgentState, message: str) -> dict[str, Any]:
+        """Return a delta dict with the error message for LangGraph merging."""
+        msg = f"[{self.name}] {message}"
+        print(f"  [ERROR] {msg}")
+        return {"errors": [msg]}
 
     # ── String representation ─────────────────────────────────────────────
 

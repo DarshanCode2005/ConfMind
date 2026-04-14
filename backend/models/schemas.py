@@ -25,6 +25,7 @@ AgentState          The shared TypedDict flowing through the LangGraph graph
 
 from __future__ import annotations
 
+import operator
 from typing import Annotated, Any
 
 from langgraph.graph.message import add_messages  # type: ignore[import-untyped]
@@ -227,5 +228,5 @@ class AgentState(TypedDict):
     revenue: dict[str, Any]
     gtm_messages: dict[str, str]
     messages: Annotated[list[Any], add_messages]
-    errors: list[str]
-    metadata: dict[str, Any]
+    errors: Annotated[list[str], operator.add]
+    metadata: Annotated[dict[str, Any], operator.ior]

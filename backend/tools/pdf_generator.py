@@ -30,7 +30,13 @@ from pathlib import Path
 from typing import Any
 
 from jinja2 import Environment, FileSystemLoader, select_autoescape
-from weasyprint import HTML  # type: ignore[import-untyped]
+
+try:
+    from weasyprint import HTML  # type: ignore[import-untyped]
+    HAS_WEASYPRINT = True
+except (ImportError, OSError):
+    # This happens on Windows if GTK+ is not installed
+    HAS_WEASYPRINT = False
 
 from backend.models.schemas import SponsorSchema
 
@@ -61,6 +67,10 @@ def render_proposal(
     Returns:
         Raw PDF bytes (starts with b'%PDF').
     """
+    if not HAS_WEASYPRINT:
+        print("  [WARN] WeasyPrint not available. Returning empty PDF stub.")
+        return b"%PDF-1.4 Mock Content (GTK+ Missing)"
+    
     env = _get_jinja_env()
     template = env.get_template(_TEMPLATE_NAME)
     html_str = template.render(sponsor=sponsor, event=event_meta)
