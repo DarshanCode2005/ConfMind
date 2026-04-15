@@ -11,6 +11,13 @@ interface ScheduleTimelineProps {
   loading?: boolean;
 }
 
+interface NormalizedScheduleEntry {
+  time: string;
+  room?: string;
+  speaker?: string;
+  topic: string;
+}
+
 const SESSION_COLORS = [
   "border-l-blue-500",
   "border-l-purple-500",
@@ -50,8 +57,41 @@ export default function ScheduleTimeline({
 
   if (!schedule || schedule.length === 0) return null;
 
-  // Sort by time
-  const sorted = [...schedule].sort((a, b) => a.time.localeCompare(b.time));
+  const normalized: NormalizedScheduleEntry[] = schedule.map((entry) => {
+    const rawTime =
+      typeof entry.time === "string" && entry.time.trim().length > 0
+        ? entry.time.trim()
+        : "TBD";
+
+    const rawTopic =
+      typeof entry.topic === "string" && entry.topic.trim().length > 0
+        ? entry.topic.trim()
+        : "Session";
+
+    return {
+      time: rawTime,
+      topic: rawTopic,
+      speaker: typeof entry.speaker === "string" ? entry.speaker.trim() || undefined : undefined,
+      room: typeof entry.room === "string" ? entry.room.trim() || undefined : undefined,
+    };
+  });
+
+  // Sort by time, but keep unknown times at the end.
+  const sorted = normalized.sort((a, b) => {
+    const aHasTime = a.time !== "TBD";
+    const bHasTime = b.time !== "TBD";
+
+    if (aHasTime && bHasTime) {
+      return a.time.localeCompare(b.time);
+    }
+    if (aHasTime && !bHasTime) {
+      return -1;
+    }
+    if (!aHasTime && bHasTime) {
+      return 1;
+    }
+    return a.topic.localeCompare(b.topic);
+  });
 
   return (
     <Card className="border-border/50">
@@ -67,7 +107,7 @@ export default function ScheduleTimeline({
       <CardContent>
         <div className="relative">
           {/* Timeline track */}
-          <div className="absolute left-[72px] top-0 bottom-0 w-px bg-border/40" />
+          <div className="absolute left-18 top-0 bottom-0 w-px bg-border/40" />
 
           <div className="space-y-3">
             {sorted.map((entry, idx) => (

@@ -8,7 +8,7 @@
  */
 
 const BACKEND_URL =
-  process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:8000";
+  process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://127.0.0.1:8000";
 
 // ─── Input / Output Types ───────────────────────────────────────────────────
 
@@ -81,23 +81,53 @@ export interface ScheduleEntry {
 }
 
 export interface AgentState {
+  plan_id?: string;
   status?: string;
   sponsors?: SponsorSchema[];
   speakers?: SpeakerSchema[];
   venues?: VenueSchema[];
   exhibitors?: ExhibitorSchema[];
+  pricing?: TicketTierSchema[];
   ticket_tiers?: TicketTierSchema[];
   communities?: CommunitySchema[];
   schedule?: ScheduleEntry[];
+  revenue?: {
+    total_projected_revenue?: number;
+    break_even?: {
+      attendance_needed?: number;
+    };
+  };
   total_est_revenue?: number;
   break_even_price?: number;
   gtm_messages?: Record<string, string>;
   distribution_plan?: string[];
   conflicts?: string[];
+  errors?: string[];
   error?: string;
 }
 
 // ─── API Helpers ─────────────────────────────────────────────────────────────
+
+function normalizeAgentState(raw: AgentState): AgentState {
+  const ticketTiers = raw.ticket_tiers ?? raw.pricing ?? [];
+  const totalRevenue =
+    raw.total_est_revenue ?? raw.revenue?.total_projected_revenue;
+
+  // Keep backward-compatibility with older backend payloads that expose
+  // break-even attendance in nested revenue.break_even.
+  const breakEven =
+    raw.break_even_price ?? raw.revenue?.break_even?.attendance_needed;
+
+  return {
+    ...raw,
+    ticket_tiers: ticketTiers,
+    total_est_revenue: totalRevenue,
+    break_even_price: breakEven,
+    error:
+      raw.error ??
+      (raw.errors && raw.errors.length > 0 ? raw.errors.join(" | ") : undefined),
+  };
+}
 
 /**
  * POST /api/run-plan — Start or refine a conference plan.
@@ -114,14 +144,18 @@ export async function runPlan(input: EventConfigInput): Promise<AgentState> {
     throw new Error(`runPlan failed: ${res.status} — ${text}`);
   }
 
-  return res.json() as Promise<AgentState>;
+  const data = (await res.json()) as AgentState;
+  return normalizeAgentState(data);
 }
 
 /**
  * GET /api/output — Retrieve the full AgentState after agents have completed.
  */
-export async function getOutput(): Promise<AgentState> {
-  const res = await fetch(`${BACKEND_URL}/api/output`, {
+export async function getOutput(planId?: string): Promise<AgentState> {
+  const url = planId
+    ? `${BACKEND_URL}/api/output/${encodeURIComponent(planId)}`
+    : `${BACKEND_URL}/api/output`;
+  const res = await fetch(url, {
     cache: "no-store",
   });
 
@@ -130,7 +164,8 @@ export async function getOutput(): Promise<AgentState> {
     throw new Error(`getOutput failed: ${res.status} — ${text}`);
   }
 
-  return res.json() as Promise<AgentState>;
+  const data = (await res.json()) as AgentState;
+  return normalizeAgentState(data);
 }
 
 /**
@@ -141,10 +176,14 @@ export async function getOutput(): Promise<AgentState> {
  * @returns           Cleanup function — call this to close the EventSource.
  */
 export function subscribeToAgentStatus(
+  planId: string | undefined,
   onMessage: (line: string) => void,
   onError?: (e: Event) => void
 ): () => void {
-  const es = new EventSource(`${BACKEND_URL}/api/agent-status`);
+  const url = planId
+    ? `${BACKEND_URL}/api/agent-status?plan_id=${encodeURIComponent(planId)}`
+    : `${BACKEND_URL}/api/agent-status`;
+  const es = new EventSource(url);
 
   es.onmessage = (event) => {
     if (event.data) {
