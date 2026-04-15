@@ -98,8 +98,8 @@ class VenueSchema(BaseModel):
     """A physical event venue."""
 
     name: str
-    city: str
-    country: str = ""
+    city: str | None = None
+    country: str | None = None
     capacity: int | None = Field(default=None, ge=1)
     price_range: str = ""  # e.g. "$5,000-$15,000/day"
     past_events: list[str] = Field(default_factory=list)
@@ -200,9 +200,13 @@ class AgentState(TypedDict):
     Each agent node receives the full state, reads what it needs, writes
     its outputs into the relevant fields, and returns the updated state.
 
+    Agents ONLY return the keys they modify using operator.add / operator.ior.
+    No agent calls another agent's tools.
+
     Layout
     ──────
     event_config   Immutable user input — agents READ only
+    past_events    Written by Web Search Agents (N parallel instances)
     sponsors       Written by Sponsor Agent
     speakers       Written by Speaker Agent
     venues         Written by Venue Agent
@@ -211,13 +215,14 @@ class AgentState(TypedDict):
     communities    Written by Community GTM Agent
     schedule       Written by Event Ops Agent
     revenue        Written by Revenue Agent
-    gtm_messages   Written by Community GTM Agent (platform -> message mapping)
+    gtm_messages   Written by Community GTM Agent (platform -> [message variants])
     messages       LangGraph message history (used for LLM call logging)
-    errors         Any agent can append an error string here; orchestrator skips failed agents
+    errors         Any agent can append an error string here; orchestrator skips
     metadata       Free-form dict for agent-specific extras (proposal paths, etc.)
     """
 
     event_config: EventConfigInput
+    past_events: Annotated[list[dict[str, Any]], operator.add]
     sponsors: list[SponsorSchema]
     speakers: list[SpeakerSchema]
     venues: list[VenueSchema]
@@ -226,7 +231,7 @@ class AgentState(TypedDict):
     communities: list[CommunitySchema]
     schedule: list[dict[str, Any]]
     revenue: dict[str, Any]
-    gtm_messages: dict[str, str]
+    gtm_messages: dict[str, Any]
     messages: Annotated[list[Any], add_messages]
     errors: Annotated[list[str], operator.add]
     metadata: Annotated[dict[str, Any], operator.ior]

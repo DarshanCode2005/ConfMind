@@ -73,6 +73,13 @@ def _import_agents() -> dict[str, Any]:
     agents: dict[str, Any] = {}
 
     # P1 responsibility — base class only, no specialisation needed
+    try:
+        from backend.agents.web_search_agent import WebSearchAgent
+        # Single agent for now to satisfy the pipeline, fetching 10 events
+        agents["web_search_agent"] = WebSearchAgent(agent_id=1, limit=10)
+    except ImportError:
+        agents["web_search_agent"] = None
+
     # P2 responsibility
     try:
         from backend.agents.sponsor_agent import SponsorAgent
@@ -174,10 +181,13 @@ def _build_graph() -> Any:
         builder.add_node(name, _make_node(agent, name))
 
     # ── Edges ─────────────────────────────────────────────────────────────
-    # Parallel fan-out from START: venue, sponsor, speaker run simultaneously
-    builder.add_edge(START, "venue_agent")
-    builder.add_edge(START, "sponsor_agent")
-    builder.add_edge(START, "speaker_agent")
+    # Web search runs first to collect past_events data
+    builder.add_edge(START, "web_search_agent")
+
+    # Parallel fan-out from web_search_agent: venue, sponsor, speaker
+    builder.add_edge("web_search_agent", "venue_agent")
+    builder.add_edge("web_search_agent", "sponsor_agent")
+    builder.add_edge("web_search_agent", "speaker_agent")
 
     # After all three finish, exhibitor agent runs
     builder.add_edge("venue_agent", "exhibitor_agent")
@@ -206,6 +216,7 @@ def _initial_state(config: EventConfigInput) -> AgentState:
     """
     return AgentState(
         event_config=config,
+        past_events=[],
         sponsors=[],
         speakers=[],
         venues=[],

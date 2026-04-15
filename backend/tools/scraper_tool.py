@@ -1,5 +1,5 @@
 """
-scraper_tool.py — ScrapeGraph-AI wrappers for structured web extraction.
+scraper_tool.py — ScrapeGraph-AI wrappers for structured web extraction with multi-model fallback.
 """
 
 from __future__ import annotations
@@ -29,10 +29,7 @@ load_dotenv()
 
 T = TypeVar("T", bound=BaseModel)
 
-# ─────────────────────────────────────────────
-# Default prompts
-# ─────────────────────────────────────────────
-
+# ── Extraction Prompts ────────────────────────
 _EVENT_PAGE_PROMPT = (
     "Extract event details: event_name, date (ISO 8601), city, country, category, theme, "
     "list of sponsor names (sponsors), list of speaker names (speakers), "
@@ -48,33 +45,36 @@ _VENUE_PAGE_PROMPT = (
 )
 
 
-# ─────────────────────────────────────────────
-# Custom exception
-# ─────────────────────────────────────────────
-
 class ScraperError(Exception):
     """Raised when ScrapeGraph-AI returns empty or invalid data."""
 
 
-# ─────────────────────────────────────────────
-# Private helpers
-# ─────────────────────────────────────────────
+def _get_llm_candidates() -> list[dict[str, Any]]:
+    """Return a list of LLM configurations in order of preference."""
+    or_key = os.getenv("OPENROUTER_API_KEY") or os.getenv("openrouter_key")
+    candidates = []
 
-def _default_llm_config(api_key: str | None = None) -> dict[str, Any]:
-    """Build a ScrapeGraph-AI llm_config targeting local Ollama or OpenAI."""
-    if os.getenv("USE_OLLAMA", "true").lower() == "true":
-        return {
-            "model": "ollama/gemma4",
-            "base_url": "http://localhost:11434",
-        }
+    # 1. OpenRouter Gemma-2-27b
+    if or_key:
+        candidates.append({
+            "model": "openai/google/gemma-2-27b-it",
+            "api_key": or_key,
+            "base_url": "https://openrouter.ai/api/v1",
+        })
+        # 2. OpenRouter Gemma-2-9b
+        candidates.append({
+            "model": "openai/google/gemma-2-9b-it",
+            "api_key": or_key,
+            "base_url": "https://openrouter.ai/api/v1",
+        })
 
-    key = api_key or os.getenv("OPENAI_API_KEY", "")
-    if not key:
-        raise OSError("Neither Ollama nor OPENAI_API_KEY is available.")
-    return {
-        "model": "openai/gpt-4o-mini",
-        "api_key": key,
-    }
+    # 3. Local Ollama (Always available if Ollama is running)
+    candidates.append({
+        "model": "ollama/gemma4",
+        "base_url": "http://localhost:11434",
+    })
+
+    return candidates
 
 
 def _parse_json_result(result: Any) -> Any:
@@ -82,11 +82,9 @@ def _parse_json_result(result: Any) -> Any:
     if isinstance(result, (dict, list)):
         return result
     if isinstance(result, str):
-        # Strip markdown fences
         text = re.sub(r"```(?:json)?\s*", "", result)
         text = re.sub(r"```", "", text)
         text = text.strip()
-        # Find the first [ or {
         for start_char in ["[", "{"]:
             idx = text.find(start_char)
             if idx != -1:
@@ -97,36 +95,35 @@ def _parse_json_result(result: Any) -> Any:
     return result
 
 
-# ─────────────────────────────────────────────
-# Wrapper classes
-# ─────────────────────────────────────────────
-
 class SmartScraperWrapper:
     def __init__(self, llm_config: dict[str, Any] | None = None) -> None:
         self._llm_config = llm_config
 
-    def scrape(
-        self,
-        url: str,
-        prompt: str,
-        *,
-        api_key: str | None = None,
-    ) -> dict[str, Any]:
+    def scrape(self, url: str, prompt: str, *, api_key: str | None = None) -> dict[str, Any]:
         from scrapegraphai.graphs import SmartScraperGraph  # type: ignore[import-untyped]
 
-        print(f"  [SCRAPER] Scraping URL: {url}")
-        cfg = self._llm_config or _default_llm_config(api_key)
-        prompt_suffix = ""
-        if cfg.get("model", "").startswith("ollama"):
-            prompt_suffix = " IMPORTANT: Output ONLY valid JSON. No text before or after."
+        configs = [self._llm_config] if self._llm_config else _get_llm_candidates()
+        last_error = None
 
-        graph = SmartScraperGraph(prompt=f"{prompt}{prompt_suffix}", source=url, config={"llm": cfg})
-        raw_result: Any = graph.run()
-        result = _parse_json_result(raw_result)
+        for cfg in configs:
+            try:
+                print(f"  [SCRAPER] Trying {cfg['model']} for URL: {url}")
+                # Add strict directive for chatty models
+                prompt_suffix = ""
+                if "ollama" in cfg['model'] or "gemma" in cfg['model']:
+                    prompt_suffix = " IMPORTANT: Output ONLY valid JSON. No text before or after."
 
-        if not result:
-            raise ScraperError(f"SmartScraperGraph returned empty result for URL: {url}")
-        return dict(result)
+                graph = SmartScraperGraph(prompt=f"{prompt}{prompt_suffix}", source=url, config={"llm": cfg})
+                raw_result = graph.run()
+                result = _parse_json_result(raw_result)
+
+                if result:
+                    return dict(result)
+            except Exception as e:
+                print(f"  [SCRAPER][WARN] Model {cfg['model']} failed: {e}")
+                last_error = e
+
+        raise ScraperError(f"All models failed for URL {url}. Last error: {last_error}")
 
 
 class SearchGraphWrapper:
@@ -134,42 +131,42 @@ class SearchGraphWrapper:
         self._llm_config = llm_config
         self._max_results = max_results
 
-    def search(
-        self,
-        query: str,
-        prompt: str,
-        *,
-        api_key: str | None = None,
-    ) -> list[dict[str, Any]]:
+    def search(self, query: str, prompt: str, *, api_key: str | None = None) -> list[dict[str, Any]]:
         from scrapegraphai.graphs import SearchGraph  # type: ignore[import-untyped]
 
-        cfg = self._llm_config or _default_llm_config(api_key)
-        prompt_suffix = ""
-        if cfg.get("model", "").startswith("ollama"):
-            prompt_suffix = " IMPORTANT: Output ONLY valid JSON. No text before or after."
+        configs = [self._llm_config] if self._llm_config else _get_llm_candidates()
+        last_error = None
 
-        graph = SearchGraph(
-            prompt=f"{query}. {prompt}{prompt_suffix}",
-            config={"llm": cfg, "max_results": self._max_results},
-        )
-        raw_result: Any = graph.run()
-        result = _parse_json_result(raw_result)
+        for cfg in configs:
+            try:
+                print(f"  [SCRAPER] Trying {cfg['model']} for Search: {query}")
+                prompt_suffix = ""
+                if "ollama" in cfg['model'] or "gemma" in cfg['model']:
+                    prompt_suffix = " IMPORTANT: Output ONLY valid JSON. No text before or after."
 
-        if not result:
-            raise ScraperError(f"SearchGraph returned empty result for query: {query!r}")
-        
-        if isinstance(result, list):
-            return [item for item in result if isinstance(item, dict)]
-        if hasattr(result, "values"):
-            for v in result.values():
-                if isinstance(v, list):
-                    return [item for item in v if isinstance(item, dict)]
-        return [dict(result)]
+                graph = SearchGraph(
+                    prompt=f"{query}. {prompt}{prompt_suffix}",
+                    config={"llm": cfg, "max_results": self._max_results},
+                )
+                raw_result = graph.run()
+                result = _parse_json_result(raw_result)
+
+                if result:
+                    if isinstance(result, list):
+                        return [item for item in result if isinstance(item, dict)]
+                    if hasattr(result, "values"):
+                        for v in result.values():
+                            if isinstance(v, list):
+                                return [item for item in v if isinstance(item, dict)]
+                    return [dict(result)]
+            except Exception as e:
+                print(f"  [SCRAPER][WARN] Model {cfg['model']} search failed: {e}")
+                last_error = e
+
+        raise ScraperError(f"All models failed for query {query!r}. Last error: {last_error}")
 
 
-# ─────────────────────────────────────────────
-# Convenience functions
-# ─────────────────────────────────────────────
+# ── Convenience functions ─────────────────────
 
 def scrape_event_page(url: str, *, api_key: str | None = None) -> EventSchema:
     wrapper = SmartScraperWrapper()
