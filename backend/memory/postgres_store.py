@@ -56,10 +56,15 @@ def _get_connection_pool() -> Any:
             "DATABASE_URL is not set.  Add it to your .env file.\n"
             "Example: DATABASE_URL=postgresql+asyncpg://user:pass@host:5432/confmind"
         )
-    # Pool is initialised lazily on first use — no cost at import time
+    # asyncpg uses "postgresql://" or "postgres://" natively.
+    # Strip the "+asyncpg" SQLAlchemy driver suffix if present so both
+    # formats are accepted in .env without error.
+    dsn = _DATABASE_URL.replace("postgresql+asyncpg://", "postgresql://", 1)
+    dsn = dsn.replace("postgres+asyncpg://", "postgres://", 1)
+
     import asyncpg  # type: ignore[import-untyped]
 
-    return asyncpg.create_pool(_DATABASE_URL)
+    return asyncpg.create_pool(dsn)
 
 
 async def save_event(event: EventSchema) -> str:
