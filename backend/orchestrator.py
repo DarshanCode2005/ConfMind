@@ -73,6 +73,13 @@ def _import_agents() -> dict[str, Any]:
     agents: dict[str, Any] = {}
 
     # P1 responsibility — base class only, no specialisation needed
+    try:
+        from backend.agents.web_search_agent import WebSearchAgent
+        # Single agent for now to satisfy the pipeline, fetching 10 events
+        agents["web_search_agent"] = WebSearchAgent(agent_id=1, limit=10)
+    except ImportError:
+        agents["web_search_agent"] = None
+
     # P2 responsibility
     try:
         from backend.agents.sponsor_agent import SponsorAgent
@@ -143,18 +150,18 @@ def _make_node(agent: Any, name: str):
     continue to the next node.
     """
     if agent is None:
-
-        def passthrough(state: AgentState) -> AgentState:
-            errors = list(state.get("errors", []))
-            errors.append(f"{name} not yet implemented — skipping")
-            state["errors"] = errors
-            return state
+        def passthrough(state: AgentState) -> dict[str, Any]:
+            return {"errors": [f"[{name}] not yet implemented — skipping"]}
 
         passthrough.__name__ = name
         return passthrough
 
-    def node_fn(state: AgentState) -> AgentState:
-        return agent.run(state)
+    def node_fn(state: AgentState) -> dict[str, Any]:
+        result = agent.run(state)
+        # Ensure it returns a dict for LangGraph merging
+        if isinstance(result, dict):
+            return result
+        return {}  # Fallback if agent returned something else
 
     node_fn.__name__ = name
     return node_fn
@@ -174,10 +181,13 @@ def _build_graph() -> Any:
         builder.add_node(name, _make_node(agent, name))
 
     # ── Edges ─────────────────────────────────────────────────────────────
-    # Parallel fan-out from START: venue, sponsor, speaker run simultaneously
-    builder.add_edge(START, "venue_agent")
-    builder.add_edge(START, "sponsor_agent")
-    builder.add_edge(START, "speaker_agent")
+    # Web search runs first to collect past_events data
+    builder.add_edge(START, "web_search_agent")
+
+    # Parallel fan-out from web_search_agent: venue, sponsor, speaker
+    builder.add_edge("web_search_agent", "venue_agent")
+    builder.add_edge("web_search_agent", "sponsor_agent")
+    builder.add_edge("web_search_agent", "speaker_agent")
 
     # After all three finish, exhibitor agent runs
     builder.add_edge("venue_agent", "exhibitor_agent")
@@ -206,6 +216,7 @@ def _initial_state(config: EventConfigInput) -> AgentState:
     """
     return AgentState(
         event_config=config,
+        past_events=[],
         sponsors=[],
         speakers=[],
         venues=[],

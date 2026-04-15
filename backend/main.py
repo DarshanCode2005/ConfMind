@@ -58,6 +58,14 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
             "OPENAI_API_KEY is not set — agents will fail when called. Add it to your .env file.",
             stacklevel=1,
         )
+
+    if not os.getenv("LANGCHAIN_API_KEY"):
+        import warnings
+
+        warnings.warn(
+            "LANGCHAIN_API_KEY is not set — monitoring via LangSmith is disabled.",
+            stacklevel=1,
+        )
     yield
     # Teardown: nothing to clean up in dev mode
 

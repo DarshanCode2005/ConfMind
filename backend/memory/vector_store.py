@@ -34,11 +34,21 @@ _CHROMA_PERSIST_DIR = os.getenv("CHROMA_PERSIST_DIR", "./chroma_db")
 
 
 def _get_chroma_collection(collection: str) -> Any:
-    """Return (or create) a ChromaDB collection by name."""
+    """Return (or create) a ChromaDB collection by name using OpenAI embeddings."""
     import chromadb  # type: ignore[import-untyped]
+    from chromadb.utils import embedding_functions
+
+    # Use OpenAI to avoid blocking 1GB local ONNX model downloads
+    openai_ef = embedding_functions.OpenAIEmbeddingFunction(
+        api_key=os.getenv("OPENAI_API_KEY", ""),
+        model_name="text-embedding-3-small"
+    )
 
     client = chromadb.PersistentClient(path=_CHROMA_PERSIST_DIR)
-    return client.get_or_create_collection(name=collection)
+    return client.get_or_create_collection(
+        name=collection,
+        embedding_function=openai_ef
+    )
 
 
 def embed_and_store(

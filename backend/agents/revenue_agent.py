@@ -1,174 +1,202 @@
 """
-revenue_agent.py — Revenue calculation and what-if scenario generation.
+revenue_agent.py — Revenue Aggregation Agent for ConfMind.
 
-Reads AgentState.pricing (from PricingAgent) and AgentState.sponsors (from SponsorAgent),
-performs pure arithmetic to produce a revenue summary, and writes it to AgentState.revenue.
+System Prompt:
+  "You are the Revenue Agent. Aggregate only."
 
-No LLM, no external API — this agent runs entirely from existing state.
-
-Pipeline
---------
-  1. ticket_revenue   = sum(tier.revenue for tier in state["pricing"])
-  2. sponsor_revenue  = sum(_SPONSOR_VALUE[sponsor.tier] for sponsor in state["sponsors"])
-  3. total_revenue    = ticket_revenue + sponsor_revenue
-  4. profit           = total_revenue - event_config.budget_usd
-  5. break_even_price = event_config.budget_usd / event_config.audience_size
-  6. what_if_scenarios = ±20% ticket price variants
-
-Usage
------
-    agent = RevenueAgent()
-    updated_state = agent.run(state)
-    print(updated_state["revenue"])
+No tools. Compute totals, profit, ROI% from state.
 """
 
 from __future__ import annotations
 
-from langchain_core.prompts import ChatPromptTemplate  # type: ignore[import-untyped]
+from typing import Any
 
-from backend.models.schemas import AgentState, SponsorSchema, TicketTierSchema
+from langchain_core.prompts import ChatPromptTemplate
+
+from backend.models.schemas import AgentState
 
 from .base_agent import BaseAgent
 
-# ── Sponsor tier → revenue value (USD) ────────────────────────────────────────
+# ── Sponsor value assumptions ─────────────────────────────────────────────────
 
-_SPONSOR_VALUE: dict[str, float] = {
-    "Gold": 50_000.0,
-    "Silver": 20_000.0,
-    "Bronze": 5_000.0,
-    "General": 0.0,
+_SPONSOR_VALUES = {
+    "Gold": 25000.0,
+    "Silver": 10000.0,
+    "Bronze": 5000.0,
+    "General": 2000.0,
 }
-
-# What-if price multipliers (base ±20%)
-_WHAT_IF_MULTIPLIERS: list[tuple[str, float]] = [
-    ("-20%", 0.8),
-    ("base", 1.0),
-    ("+20%", 1.2),
-]
-
-
-# ── Private helpers ────────────────────────────────────────────────────────────
-
-
-def _calc_ticket_revenue(pricing: list[TicketTierSchema]) -> float:
-    """Sum the pre-computed revenue field across all ticket tiers.
-
-    Args:
-        pricing: List of TicketTierSchema objects produced by the PricingAgent.
-
-    Returns:
-        Total ticket revenue in USD.
-    """
-    return sum(tier.revenue for tier in pricing)
-
-
-def _calc_sponsor_revenue(sponsors: list[SponsorSchema]) -> float:
-    """Sum sponsor values based on tier using the fixed _SPONSOR_VALUE map.
-
-    Unknown tier strings are treated as 0 (same as General).
-
-    Args:
-        sponsors: List of SponsorSchema objects produced by the SponsorAgent.
-
-    Returns:
-        Total sponsor revenue in USD.
-    """
-    return sum(_SPONSOR_VALUE.get(s.tier, 0.0) for s in sponsors)
-
-
-def _calc_what_if(pricing: list[TicketTierSchema]) -> list[dict]:
-    """Generate what-if scenarios by scaling each tier's price ±20%.
-
-    For each multiplier, recalculates ticket revenue as:
-        sum(tier.price * multiplier * tier.est_sales)
-
-    Args:
-        pricing: List of TicketTierSchema objects.
-
-    Returns:
-        A list of scenario dicts, each with 'label', 'base_price_multiplier',
-        and 'estimated_ticket_revenue'.
-    """
-    scenarios: list[dict] = []
-    for label, multiplier in _WHAT_IF_MULTIPLIERS:
-        estimated = sum(tier.price * multiplier * tier.est_sales for tier in pricing)
-        scenarios.append(
-            {
-                "label": label,
-                "base_price_multiplier": multiplier,
-                "estimated_ticket_revenue": round(estimated, 2),
-            }
-        )
-    return scenarios
-
-
-# ── Agent ──────────────────────────────────────────────────────────────────────
+_EXHIBITOR_FEE = 2500.0  # Per exhibitor booth
+_COMMUNITY_BONUS = 500.0  # Estimated per community channel contribution
 
 
 class RevenueAgent(BaseAgent):
-    """Aggregates ticket and sponsor revenue, computes profit and break-even price.
+    """Pure aggregation agent — no external tools.
 
-    Sources (from AgentState — no external calls):
-        state["pricing"]     -- list[TicketTierSchema] from PricingAgent
-        state["sponsors"]    -- list[SponsorSchema]    from SponsorAgent
-        state["event_config"]-- EventConfigInput       (budget_usd, audience_size)
+    Collects revenue projections from all other agents:
+        1. Ticket revenue (from PricingAgent tiers)
+        2. Sponsor revenue (from SponsorAgent tier assignments)
+        3. Exhibitor revenue (from ExhibitorAgent count × booth fee)
+        4. Community-driven estimates (optional uplift)
+
+    Computes: total revenue, projected profit, ROI%, break-even status.
 
     Output:
-        state["revenue"] -- dict with the following keys:
-            ticket_revenue, sponsor_revenue, total_revenue,
-            profit, break_even_price, what_if_scenarios
+        state["revenue"] — complete financial projection dict
     """
 
     name: str = "revenue_agent"
 
     def _build_prompt(self) -> ChatPromptTemplate:
-        """Unused stub — RevenueAgent does not call an LLM.
-
-        Required by BaseAgent's abstract interface.
-        """
         return ChatPromptTemplate.from_messages(
-            [("system", "Revenue agent — no LLM required."), ("human", "{input}")]
+            [
+                (
+                    "system",
+                    "You are the Revenue Agent for ConfMind. You aggregate "
+                    "financial data — you use NO external tools.\n\n"
+                    "CRITICAL RULES:\n"
+                    "1. Aggregate ONLY — do not generate new data.\n"
+                    "2. Ticket revenue = sum(tier_price × estimated_sales) for all tiers.\n"
+                    "3. Sponsor revenue = sum(sponsor_tier_value) for all sponsors.\n"
+                    "4. Exhibitor revenue = exhibitor_count × booth_fee.\n"
+                    "5. Profit = total_revenue - total_budget.\n"
+                    "6. ROI% = (profit / budget) × 100.\n"
+                    "7. Include break-even analysis if available from PricingAgent.\n"
+                    "8. All values in USD, rounded to 2 decimal places.",
+                ),
+                ("human", "{input}"),
+            ]
         )
 
-    def run(self, state: AgentState) -> AgentState:
-        """Calculate revenue, profit, and what-if scenarios; write to state.
+    # ── Main run ──────────────────────────────────────────────────────────
 
-        Args:
-            state: The shared LangGraph AgentState. Reads ``pricing``,
-                   ``sponsors``, and ``event_config``. Writes ``revenue``.
+    def run(self, state: AgentState) -> dict[str, Any]:
+        """Aggregate all revenue streams. No tools."""
+        self._current_pass = 0
+        self._log_info("Starting revenue aggregation...")
 
-        Returns:
-            Updated AgentState with ``revenue`` populated.
-        """
         try:
             cfg = state["event_config"]
-            pricing: list[TicketTierSchema] = state.get("pricing", [])  # type: ignore[assignment]
-            sponsors: list[SponsorSchema] = state.get("sponsors", [])  # type: ignore[assignment]
+            budget = cfg.budget_usd
 
-            # ── 1. Revenue components ─────────────────────────────────────────
-            ticket_revenue = _calc_ticket_revenue(pricing)
-            sponsor_revenue = _calc_sponsor_revenue(sponsors)
-            total_revenue = ticket_revenue + sponsor_revenue
+            # ── 1. Ticket Revenue ─────────────────────────────────────────
+            with self._pass_context(
+                "Aggregate: Ticket revenue", state,
+                f"ticket revenue from pricing"
+            ):
+                ticket_revenue = 0.0
+                pricing = state.get("pricing", [])
+                ticket_breakdown = []
+                for tier in pricing:
+                    tier_revenue = getattr(tier, "revenue", 0.0) if hasattr(tier, "revenue") else 0.0
+                    tier_name = getattr(tier, "name", "Unknown") if hasattr(tier, "name") else "Unknown"
+                    tier_price = getattr(tier, "price", 0.0) if hasattr(tier, "price") else 0.0
+                    tier_sales = getattr(tier, "est_sales", 0) if hasattr(tier, "est_sales") else 0
 
-            # ── 2. Profit + break-even ────────────────────────────────────────
-            profit = total_revenue - cfg.budget_usd
-            audience = cfg.audience_size if cfg.audience_size > 0 else 1
-            break_even_price = cfg.budget_usd / audience
+                    ticket_revenue += tier_revenue
+                    ticket_breakdown.append({
+                        "tier": tier_name,
+                        "price": round(tier_price, 2),
+                        "estimated_sales": tier_sales,
+                        "revenue": round(tier_revenue, 2),
+                    })
+                self._log_info(f"  Ticket revenue: ${ticket_revenue:,.2f}")
 
-            # ── 3. What-if scenarios ──────────────────────────────────────────
-            what_if = _calc_what_if(pricing)
+            # ── 2. Sponsor Revenue ────────────────────────────────────────
+            with self._pass_context(
+                "Aggregate: Sponsor revenue", state,
+                f"sponsor revenue from sponsors"
+            ):
+                sponsor_revenue = 0.0
+                sponsor_breakdown = []
+                for s in state.get("sponsors", []):
+                    tier = getattr(s, "tier", "General") if hasattr(s, "tier") else "General"
+                    name = getattr(s, "name", "Unknown") if hasattr(s, "name") else "Unknown"
+                    value = _SPONSOR_VALUES.get(tier, 2000.0)
+                    sponsor_revenue += value
+                    sponsor_breakdown.append({
+                        "sponsor": name,
+                        "tier": tier,
+                        "value": round(value, 2),
+                    })
+                self._log_info(f"  Sponsor revenue: ${sponsor_revenue:,.2f} ({len(sponsor_breakdown)} sponsors)")
 
-            # ── 4. Write results ──────────────────────────────────────────────
-            state["revenue"] = {
+            # ── 3. Exhibitor Revenue ──────────────────────────────────────
+            with self._pass_context(
+                "Aggregate: Exhibitor revenue", state,
+                f"exhibitor revenue"
+            ):
+                exhibitors = state.get("exhibitors", [])
+                exhibitor_count = len(exhibitors)
+                exhibitor_revenue = exhibitor_count * _EXHIBITOR_FEE
+                self._log_info(f"  Exhibitor revenue: ${exhibitor_revenue:,.2f} ({exhibitor_count} exhibitors)")
+
+            # ── 4. Community/GTM uplift (optional) ────────────────────────
+            communities = state.get("communities", [])
+            community_count = len(communities)
+            community_uplift = community_count * _COMMUNITY_BONUS
+
+            # ── 5. Total, Profit, ROI ─────────────────────────────────────
+            total_revenue = ticket_revenue + sponsor_revenue + exhibitor_revenue + community_uplift
+            projected_profit = total_revenue - budget
+            roi_pct = round((projected_profit / budget) * 100, 2) if budget > 0 else 0.0
+
+            # ── 6. Break-even status ──────────────────────────────────────
+            pricing_analysis = state.get("metadata", {}).get("pricing_analysis", {})
+            break_even = pricing_analysis.get("break_even", {})
+            break_even_attendance = break_even.get("break_even_attendance", 0)
+
+            # Monte Carlo data
+            monte_carlo = pricing_analysis.get("monte_carlo", {})
+
+            # ── 7. Build comprehensive output ─────────────────────────────
+            projection = {
                 "ticket_revenue": round(ticket_revenue, 2),
+                "ticket_breakdown": ticket_breakdown,
                 "sponsor_revenue": round(sponsor_revenue, 2),
-                "total_revenue": round(total_revenue, 2),
-                "profit": round(profit, 2),
-                "break_even_price": round(break_even_price, 2),
-                "what_if_scenarios": what_if,
+                "sponsor_breakdown": sponsor_breakdown,
+                "exhibitor_revenue": round(exhibitor_revenue, 2),
+                "exhibitor_count": exhibitor_count,
+                "community_uplift": round(community_uplift, 2),
+                "community_count": community_count,
+                "total_projected_revenue": round(total_revenue, 2),
+                "budget_usd": round(budget, 2),
+                "projected_profit": round(projected_profit, 2),
+                "roi_percentage": roi_pct,
+                "break_even": {
+                    "attendance_needed": break_even_attendance,
+                    "is_profitable": projected_profit > 0,
+                    "profit_margin_pct": round(
+                        (projected_profit / total_revenue) * 100, 2
+                    ) if total_revenue > 0 else 0.0,
+                },
+                "monte_carlo_summary": {
+                    "revenue_p10": monte_carlo.get("revenue", {}).get("p10", 0),
+                    "revenue_p50": monte_carlo.get("revenue", {}).get("p50", 0),
+                    "revenue_p90": monte_carlo.get("revenue", {}).get("p90", 0),
+                    "attendance_mean": monte_carlo.get("attendance", {}).get("mean", 0),
+                },
+                "sources": {
+                    "pricing_tiers": len(ticket_breakdown),
+                    "sponsors": len(sponsor_breakdown),
+                    "exhibitors": exhibitor_count,
+                    "communities": community_count,
+                },
             }
 
-        except Exception as exc:
-            state = self._log_error(state, f"RevenueAgent failed: {exc}")
+            # Write to memory
+            docs = [
+                f"Revenue: Total ${total_revenue:,.2f} | "
+                f"Profit ${projected_profit:,.2f} | ROI {roi_pct}%"
+            ]
+            meta = [{"total": total_revenue, "profit": projected_profit, "roi": roi_pct}]
+            self._write_memory(docs, meta, collection="events")
 
-        return state
+            self._log_info(
+                f"Completed — Total: ${total_revenue:,.2f}, "
+                f"Profit: ${projected_profit:,.2f}, ROI: {roi_pct}%"
+            )
+
+            return {"revenue": projection}
+
+        except Exception as exc:
+            return self._log_error(state, f"RevenueAgent failed: {exc}")
