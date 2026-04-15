@@ -11,7 +11,15 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogDescription,
+} from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -175,6 +183,7 @@ export default function VenueTable({ venues, loading }: VenueTableProps) {
                 <TableHead>Price Range</TableHead>
                 <TableHead>Past Events</TableHead>
                 <ColHeader label="Score" col="score" />
+                <TableHead>Map</TableHead>
                 <TableHead>Link</TableHead>
               </TableRow>
             </TableHeader>
@@ -191,15 +200,15 @@ export default function VenueTable({ venues, loading }: VenueTableProps) {
                     {venue.city}
                   </TableCell>
                   <TableCell className="text-sm text-muted-foreground">
-                    {venue.country || "—"}
+                    {venue.country || "N/A"}
                   </TableCell>
                   <TableCell className="text-sm tabular-nums">
                     {venue.capacity
                       ? venue.capacity.toLocaleString()
-                      : "—"}
+                      : "N/A"}
                   </TableCell>
                   <TableCell className="text-xs text-muted-foreground max-w-[140px] truncate">
-                    {venue.price_range || "—"}
+                    {venue.price_range || "N/A"}
                   </TableCell>
                   <TableCell>
                     {venue.past_events && venue.past_events.length > 0 ? (
@@ -223,11 +232,40 @@ export default function VenueTable({ venues, loading }: VenueTableProps) {
                         )}
                       </div>
                     ) : (
-                      <span className="text-muted-foreground text-sm">—</span>
+                      <span className="text-muted-foreground text-sm">N/A</span>
                     )}
                   </TableCell>
                   <TableCell>
                     <ScoreBadge score={venue.score} />
+                  </TableCell>
+                  <TableCell>
+                    <Dialog>
+                      <DialogTrigger 
+                          className={`${buttonVariants({ size: "sm", variant: "outline" })} h-7 px-2 text-xs gap-1 whitespace-nowrap`}
+                      >
+                          <MapPin className="w-3 h-3" />
+                          Map
+                      </DialogTrigger>
+                      <DialogContent className="sm:max-w-[700px]">
+                        <DialogHeader>
+                          <DialogTitle>{venue.name}</DialogTitle>
+                          <DialogDescription>
+                            {venue.city}, {venue.country || "N/A"}
+                          </DialogDescription>
+                        </DialogHeader>
+                        <div className="w-full aspect-video rounded-xl overflow-hidden bg-muted/20 border border-border/50">
+                          <iframe
+                            width="100%"
+                            height="100%"
+                            style={{ border: 0 }}
+                            loading="lazy"
+                            allowFullScreen
+                            referrerPolicy="no-referrer-when-downgrade"
+                            src={`https://maps.google.com/maps?q=${encodeURIComponent(`${venue.name}, ${venue.city}`)}&t=&z=14&ie=UTF8&iwloc=&output=embed`}
+                          ></iframe>
+                        </div>
+                      </DialogContent>
+                    </Dialog>
                   </TableCell>
                   <TableCell>
                     {venue.source_url ? (
@@ -242,7 +280,7 @@ export default function VenueTable({ venues, loading }: VenueTableProps) {
                         <ExternalLink className="w-3.5 h-3.5" />
                       </Button>
                     ) : (
-                      <span className="text-muted-foreground">—</span>
+                      <span className="text-muted-foreground">N/A</span>
                     )}
                   </TableCell>
                 </TableRow>

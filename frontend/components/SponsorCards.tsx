@@ -74,7 +74,7 @@ export default function SponsorCards({ sponsors, loading }: SponsorCardsProps) {
         </h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {Array.from({ length: 6 }).map((_, i) => (
-            <Card key={i} className="border-border/50">
+            <Card key={i} className="border-border/50 bg-card/80">
               <CardContent className="pt-5 pb-5 space-y-3">
                 <Skeleton className="h-5 w-32" />
                 <Skeleton className="h-4 w-20" />
@@ -105,7 +105,7 @@ export default function SponsorCards({ sponsors, loading }: SponsorCardsProps) {
           return (
             <Card
               key={sponsor.name}
-              className={`border ${tier.border} bg-card/50 hover:bg-card transition-colors`}
+              className={`border ${tier.border} bg-card/80 hover:bg-card transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg`}
             >
               <CardHeader className="pb-2 pt-4 px-4">
                 <div className="flex items-start justify-between gap-2">
@@ -148,7 +148,7 @@ export default function SponsorCards({ sponsors, loading }: SponsorCardsProps) {
                   <Button
                     size="sm"
                     variant="outline"
-                    className="flex-1 text-xs h-8 gap-1"
+                    className="flex-1 text-xs h-8 gap-1 rounded-lg"
                     onClick={() =>
                       sponsor.website && window.open(sponsor.website, "_blank")
                     }
@@ -160,7 +160,7 @@ export default function SponsorCards({ sponsors, loading }: SponsorCardsProps) {
                   <Button
                     size="sm"
                     variant="default"
-                    className="flex-1 text-xs h-8 gap-1"
+                    className="flex-1 text-xs h-8 gap-1 rounded-lg bg-gradient-to-r from-primary to-cyan-500 text-primary-foreground shadow-md shadow-primary/20"
                     onClick={() =>
                       alert(
                         `Proposal PDF for ${sponsor.name} would download here.`

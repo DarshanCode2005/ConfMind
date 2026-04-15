@@ -120,7 +120,7 @@ export default function AgentLogs({ onAgentStatusChange }: AgentLogsProps) {
   }, [logs]);
 
   return (
-    <Card className="border-border/50">
+    <Card className="border-border/50 bg-card/80 backdrop-blur-sm shadow-sm">
       <CardHeader className="pb-3 flex flex-row items-center justify-between">
         <div className="flex items-center gap-2">
           <Terminal className="w-4 h-4 text-primary" />
@@ -166,7 +166,7 @@ export default function AgentLogs({ onAgentStatusChange }: AgentLogsProps) {
       <CardContent className="p-0">
         <div
           ref={scrollRef}
-          className="h-64 overflow-y-auto font-mono text-xs bg-black/40 rounded-b-lg border-t border-border/30 p-4 space-y-0.5"
+          className="h-64 overflow-y-auto font-mono text-xs bg-linear-to-b from-muted/20 to-background/70 rounded-b-lg border-t border-border/40 p-4 space-y-0.5"
         >
           {logs.length === 0 ? (
             <div className="flex items-center gap-2 text-muted-foreground">
@@ -178,7 +178,7 @@ export default function AgentLogs({ onAgentStatusChange }: AgentLogsProps) {
               const { agent, body, type } = parseLogLine(log.text);
               return (
                 <div key={log.id} className="flex items-start gap-2 leading-5">
-                  <span className="text-slate-600 shrink-0 w-[72px]">
+                  <span className="text-muted-foreground shrink-0 w-18">
                     {log.ts}
                   </span>
                   {agent && (
