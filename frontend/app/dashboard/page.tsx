@@ -15,6 +15,7 @@ import AttendanceChart from "@/components/AttendanceChart";
 import ScheduleTimeline from "@/components/ScheduleTimeline";
 import WhatIfPanel from "@/components/WhatIfPanel";
 import RefinementPanel from "@/components/RefinementPanel";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -76,11 +77,13 @@ export default function DashboardPage() {
       state.schedule?.length);
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Top Nav */}
-      <header className="sticky top-0 z-50 border-b border-border/50 bg-background/80 backdrop-blur-sm">
-        <div className="max-w-7xl mx-auto px-6 h-14 flex items-center justify-between">
+    <div className="min-h-screen relative max-w-[100vw] overflow-x-hidden pt-[72px]">
+      <header className="fixed top-0 left-0 right-0 z-30 border-b border-border/60 bg-background/75 backdrop-blur-xl shadow-sm">
+        <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
           <div className="flex items-center gap-3">
+            <h1 className="text-2xl font-bold tracking-tight bg-gradient-to-br from-slate-900 via-indigo-700 to-cyan-600 dark:from-white dark:via-indigo-200 dark:to-cyan-300 bg-clip-text text-transparent">
+              Event Dashboard
+            </h1>
             <Button
               variant="ghost"
               size="sm"
@@ -100,11 +103,11 @@ export default function DashboardPage() {
             {loading && (
               <Badge
                 variant="outline"
-                className="gap-1.5 text-xs bg-blue-400/10 text-blue-300 border-blue-400/20"
+                className="gap-1.5 text-xs bg-primary/10 text-primary border-primary/20"
               >
                 <span className="relative flex h-2 w-2">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75" />
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-400" />
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75" />
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-primary" />
                 </span>
                 Agents Running
               </Badge>
@@ -112,7 +115,7 @@ export default function DashboardPage() {
             {!loading && hasResults && (
               <Badge
                 variant="outline"
-                className="gap-1.5 text-xs bg-emerald-400/10 text-emerald-300 border-emerald-400/20"
+                className="gap-1.5 text-xs bg-emerald-500/10 text-emerald-600 dark:text-emerald-300 border-emerald-500/20"
               >
                 Plan Ready
               </Badge>
@@ -126,6 +129,7 @@ export default function DashboardPage() {
               <RefreshCw className="w-3.5 h-3.5" />
               Refresh
             </Button>
+            <ThemeToggle />
           </div>
         </div>
       </header>
@@ -151,17 +155,17 @@ export default function DashboardPage() {
           </div>
         )}
 
-        {/* ① Agent Logs — LIVE */}
+        {/* Agent Logs */}
         <section>
           <AgentLogs onAgentStatusChange={handleAgentStatus} />
         </section>
 
-        {/* ② Agent Graph */}
+        {/* Agent Graph */}
         <section>
           <AgentGraph agentStatuses={agentStatuses} />
         </section>
 
-        {/* ③ Results */}
+        {/* Results */}
         <section className="space-y-8">
           <div className="flex items-center gap-3">
             <h2 className="text-xl font-bold">Results</h2>
@@ -227,9 +231,9 @@ export default function DashboardPage() {
           {/* Revenue summary */}
           {state?.total_est_revenue && (
             <div className="flex gap-4 flex-wrap">
-              <div className="flex-1 min-w-[180px] bg-emerald-500/10 border border-emerald-500/20 rounded-lg px-5 py-4">
+              <div className="flex-1 min-w-[180px] bg-card/80 border border-border/60 rounded-xl px-5 py-4 shadow-sm">
                 <p className="text-xs text-muted-foreground">Total Est. Revenue</p>
-                <p className="text-2xl font-bold text-emerald-400 tabular-nums">
+                <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-300 tabular-nums">
                   $
                   {state.total_est_revenue >= 1_000_000
                     ? `${(state.total_est_revenue / 1_000_000).toFixed(2)}M`
@@ -237,9 +241,9 @@ export default function DashboardPage() {
                 </p>
               </div>
               {state.break_even_price != null && (
-                <div className="flex-1 min-w-[180px] bg-blue-500/10 border border-blue-500/20 rounded-lg px-5 py-4">
+                <div className="flex-1 min-w-[180px] bg-card/80 border border-border/60 rounded-xl px-5 py-4 shadow-sm">
                   <p className="text-xs text-muted-foreground">Break-even Price</p>
-                  <p className="text-2xl font-bold text-blue-400 tabular-nums">
+                  <p className="text-2xl font-bold text-primary tabular-nums">
                     ${state.break_even_price.toLocaleString()}
                   </p>
                 </div>
@@ -248,7 +252,7 @@ export default function DashboardPage() {
           )}
         </section>
 
-        {/* ④ Simulation + Refinement */}
+        {/* Simulation and Refinement */}
         <section className="space-y-8">
           <Separator />
           <h2 className="text-xl font-bold">Simulate & Refine</h2>

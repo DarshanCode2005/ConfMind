@@ -60,7 +60,7 @@ export default function PricingTiers({ tiers, loading }: PricingTiersProps) {
         </h3>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           {Array.from({ length: 3 }).map((_, i) => (
-            <Card key={i} className="border-border/50">
+            <Card key={i} className="border-border/50 bg-card/80">
               <CardContent className="pt-6 pb-6 space-y-4">
                 <Skeleton className="h-6 w-24" />
                 <Skeleton className="h-10 w-20" />
@@ -107,7 +107,7 @@ export default function PricingTiers({ tiers, loading }: PricingTiersProps) {
                 config.highlight
                   ? "border-primary/40 shadow-lg shadow-primary/10"
                   : "border-border/50"
-              }`}
+              } bg-card/80 hover:shadow-lg transition-shadow`}
             >
               {/* Gradient bg */}
               <div
@@ -150,7 +150,7 @@ export default function PricingTiers({ tiers, loading }: PricingTiersProps) {
                       <TrendingUp className="w-3.5 h-3.5" />
                       Revenue
                     </span>
-                    <span className="font-bold text-emerald-400 tabular-nums">
+                    <span className="font-bold text-emerald-600 dark:text-emerald-300 tabular-nums">
                       {formatRevenue(tier.revenue)}
                     </span>
                   </div>

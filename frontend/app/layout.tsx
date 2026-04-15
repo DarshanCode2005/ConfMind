@@ -1,20 +1,10 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
+import { ThemeProvider } from "@/components/ThemeProvider";
 
 export const metadata: Metadata = {
-  title: "ConfMind — AI Conference Planner",
+  title: "ConfMind AI Conference Planner",
   description:
     "AI-powered multi-agent conference planning system. Configure, run, and refine your conference plan in minutes.",
 };
@@ -27,12 +17,19 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} dark h-full antialiased`}
+      className="font-sans h-full antialiased"
       suppressHydrationWarning
     >
-      <body className="min-h-full flex flex-col bg-background text-foreground" suppressHydrationWarning>
-        {children}
-        <Toaster richColors position="top-right" />
+      <body
+        className="min-h-full flex flex-col bg-background text-foreground tracking-tight relative overflow-x-hidden"
+        suppressHydrationWarning
+      >
+        <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
+          <div className="relative z-0 min-h-full flex flex-col">
+            {children}
+          </div>
+          <Toaster richColors position="top-right" />
+        </ThemeProvider>
       </body>
     </html>
   );

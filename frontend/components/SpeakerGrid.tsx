@@ -58,7 +58,7 @@ export default function SpeakerGrid({ speakers, loading }: SpeakerGridProps) {
         </h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {Array.from({ length: 8 }).map((_, i) => (
-            <Card key={i} className="border-border/50">
+            <Card key={i} className="border-border/50 bg-card/80">
               <CardContent className="pt-5 pb-4 space-y-3">
                 <div className="flex items-center gap-3">
                   <Skeleton className="w-11 h-11 rounded-full" />
@@ -94,7 +94,7 @@ export default function SpeakerGrid({ speakers, loading }: SpeakerGridProps) {
           return (
             <Card
               key={speaker.name}
-              className="border-border/50 hover:border-purple-400/30 transition-colors bg-card/50"
+              className="border-border/50 hover:border-primary/30 transition-all duration-200 bg-card/80 hover:-translate-y-0.5 hover:shadow-lg"
             >
               <CardContent className="pt-4 pb-4 px-4 space-y-3">
                 {/* Avatar + Name */}
@@ -151,7 +151,7 @@ export default function SpeakerGrid({ speakers, loading }: SpeakerGridProps) {
                   <Button
                     variant="outline"
                     size="sm"
-                    className="w-full text-xs h-7 gap-1.5 text-blue-400 border-blue-400/30 hover:bg-blue-400/10"
+                    className="w-full text-xs h-7 gap-1.5 rounded-lg text-primary border-primary/30 hover:bg-primary/10"
                     onClick={() =>
                       window.open(speaker.linkedin_url, "_blank")
                     }
