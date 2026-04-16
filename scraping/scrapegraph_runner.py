@@ -67,32 +67,6 @@ def run_smart_scraper(
     return _with_retry(wrapper.scrape, url, prompt, api_key=api_key)
 
 
-def run_smart_scraper_list(
-    url: str,
-    source_name: str,
-    *,
-    api_key: str | None = None,
-) -> list[dict[str, Any]]:
-    """Scrape a URL that contains multiple entities (like a calendar).
-    Uses the prompt registered for source_name.
-
-    Args:
-        url:         Full URL to scrape.
-        source_name: One of the keys in prompts.PROMPT_BY_SOURCE.
-        api_key:     Override OPENAI_API_KEY.
-
-    Returns:
-        List of raw dicts from SmartScraperWrapper.
-    """
-    if source_name not in PROMPT_BY_SOURCE:
-        raise KeyError(
-            f"Unknown source {source_name!r}. Valid sources: {list(PROMPT_BY_SOURCE.keys())}"
-        )
-    prompt = PROMPT_BY_SOURCE[source_name]
-    wrapper = SmartScraperWrapper()
-    return _with_retry(wrapper.scrape_list, url, prompt, api_key=api_key)
-
-
 def run_search_graph(
     query: str,
     source_name: str = "sponsor",

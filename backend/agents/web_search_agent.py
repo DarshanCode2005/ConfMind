@@ -28,21 +28,27 @@ Stop: All assigned events done. Write delta to past_events.
 from __future__ import annotations
 
 import os
-import hashlib
 from typing import Any
 
 from langchain_core.prompts import ChatPromptTemplate
 
 from backend.models.schemas import AgentState
-from .base_agent import BaseAgent
 
+from .base_agent import BaseAgent
 
 # ── Constants ──────────────────────────────────────────────────────────────────
 
 _MAX_PASSES_PER_EVENT = 3
 _PHQ_REQUIRED_FIELDS = [
-    "title", "category", "phq_attendance", "predicted_event_spend",
-    "entities", "location", "start", "rank", "place_hierarchies",
+    "title",
+    "category",
+    "phq_attendance",
+    "predicted_event_spend",
+    "entities",
+    "location",
+    "start",
+    "rank",
+    "place_hierarchies",
 ]
 
 
@@ -187,7 +193,9 @@ class WebSearchAgent(BaseAgent):
 
     # ── Enrichment pass via Tavily ────────────────────────────────────────
 
-    def _enrich_event_tavily(self, event: dict[str, Any], category: str, geography: str) -> dict[str, Any]:
+    def _enrich_event_tavily(
+        self, event: dict[str, Any], category: str, geography: str
+    ) -> dict[str, Any]:
         """Pass 2: Enrich event with missing data via Tavily."""
         name = event.get("name", "")
         if not name:
@@ -251,7 +259,7 @@ class WebSearchAgent(BaseAgent):
                 f"- general (float, USD)\n"
                 f"- vip (float, USD)\n\n"
                 f"Text:\n{combined[:2000]}\n\n"
-                f"Output ONLY valid JSON like: {{\"early_bird\": 99.0, \"general\": 199.0, \"vip\": 499.0}}\n"
+                f'Output ONLY valid JSON like: {{"early_bird": 99.0, "general": 199.0, "vip": 499.0}}\n'
                 f"If price not found, use null."
             )
             pricing = self._invoke_llm_json(extraction_prompt)
@@ -265,7 +273,9 @@ class WebSearchAgent(BaseAgent):
     def run(self, state: AgentState) -> dict[str, Any]:
         """Execute the 3-pass loop for assigned events."""
         self._current_pass = 0
-        self._log_info(f"Starting (offset={self.offset}, limit={self.limit}, category={self.phq_category})")
+        self._log_info(
+            f"Starting (offset={self.offset}, limit={self.limit}, category={self.phq_category})"
+        )
 
         try:
             cfg = state.get("event_config")
@@ -274,8 +284,7 @@ class WebSearchAgent(BaseAgent):
 
             # ── Pass 1: PredictHQ Events API ──────────────────────────────────
             with self._pass_context(
-                "Pass 1: PredictHQ fetch", state,
-                f"past events for {category} in {geography}"
+                "Pass 1: PredictHQ fetch", state, f"past events for {category} in {geography}"
             ):
                 events = self._fetch_predicthq_events()
 
@@ -285,32 +294,32 @@ class WebSearchAgent(BaseAgent):
                     fallback_query = f"{category} events {geography} 2025 2026"
                     tavily_results = self._tavily_search(fallback_query, max_results=5)
                     for r in tavily_results:
-                        events.append({
-                            "name": r.get("content", "")[:100].split(".")[0].strip(),
-                            "location": geography,
-                            "category": category,
-                            "sponsors": [],
-                            "speakers": [],
-                            "exhibitors": [],
-                            "venue_name": None,
-                            "pricing": {},
-                            "attendance_estimate": None,
-                            "phq_rank": None,
-                            "source": "tavily_fallback",
-                        })
+                        events.append(
+                            {
+                                "name": r.get("content", "")[:100].split(".")[0].strip(),
+                                "location": geography,
+                                "category": category,
+                                "sponsors": [],
+                                "speakers": [],
+                                "exhibitors": [],
+                                "venue_name": None,
+                                "pricing": {},
+                                "attendance_estimate": None,
+                                "phq_rank": None,
+                                "source": "tavily_fallback",
+                            }
+                        )
 
             # ── Pass 2: Tavily enrichment ─────────────────────────────────────
             with self._pass_context(
-                "Pass 2: Tavily enrichment", state,
-                f"enriching {len(events)} events"
+                "Pass 2: Tavily enrichment", state, f"enriching {len(events)} events"
             ):
                 for i, event in enumerate(events):
                     events[i] = self._enrich_event_tavily(event, category, geography)
 
             # ── Pass 3: Pricing enrichment ────────────────────────────────────
             with self._pass_context(
-                "Pass 3: Pricing enrichment", state,
-                f"pricing for {category} events"
+                "Pass 3: Pricing enrichment", state, f"pricing for {category} events"
             ):
                 for i, event in enumerate(events):
                     events[i] = self._enrich_pricing_tavily(event)
@@ -320,9 +329,43 @@ class WebSearchAgent(BaseAgent):
                 f"{e.get('name', 'unknown')} | {e.get('location', '')} | {e.get('category', '')}"
                 for e in events
             ]
-            meta = [{"agent_id": self.agent_id, "source": e.get("source", "unknown")} for e in events]
+            meta = [
+                {"agent_id": self.agent_id, "source": e.get("source", "unknown")} for e in events
+            ]
             if docs:
                 self._write_memory(docs, meta, collection="events")
+
+            # Chat Agent Indexing Contract
+            run_id = state.get("metadata", {}).get("run_id", "unknown")
+            chat_docs = []
+            chat_meta = []
+            for e in events:
+                event_name = e.get("name", "Unknown Event")
+                location = e.get("location", "Unknown Location")
+                event_cat = e.get("category", category)
+                sponsors = ", ".join(e.get("sponsors", []))
+                speakers = ", ".join(e.get("speakers", []))
+                exhibitors = ", ".join(e.get("exhibitors", []))
+                venue_name = e.get("venue_name", "Unknown Venue")
+                pricing_info = str(e.get("pricing", {}))
+                attendance = e.get("attendance_estimate", "Unknown")
+
+                text = (
+                    f"Event {event_name} is a {event_cat} event located in {location} "
+                    f"at {venue_name}. Estimated attendance: {attendance}. "
+                    f"Sponsors: {sponsors}. Speakers: {speakers}. Exhibitors: {exhibitors}. "
+                    f"Pricing: {pricing_info}."
+                )
+                chat_docs.append(text)
+                chat_meta.append(
+                    {
+                        "agent": "web_search",
+                        "run_id": run_id,
+                    }
+                )
+
+            if chat_docs:
+                self.index_to_chroma(chat_docs, "chat_index", chat_meta)
 
             self._log_info(f"Completed — {len(events)} events processed")
 

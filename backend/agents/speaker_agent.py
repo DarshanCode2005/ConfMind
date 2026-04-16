@@ -10,7 +10,8 @@ Loop (5 passes):
   • Pass 2: Tavily "{speaker_name} speaker {category} LinkedIn followers
             publications 2025".
   • Pass 3: Score influence.
-  • Pass 4: Expansion → search for similar speakers to top candidates.
+  • Pass 4: If <10 speakers → one expansion Tavily "top {category} speakers
+            {geography} 2025 2026".
   • Pass 5: LLM agenda mapping (6–10 topics).
 
 Stop: ≥15 speakers OR 2 expansions.
@@ -160,68 +161,35 @@ class SpeakerAgent(BaseAgent):
     def _expand_speakers(
         self, speakers: list[dict], category: str, geography: str, expansion_round: int
     ) -> list[dict]:
-        """Discover new speakers via general search and "similar to" discovery."""
-        if len(speakers) >= _TARGET_SPEAKERS:
+        """If <10 speakers, discover new ones via Tavily."""
+        if len(speakers) >= _MIN_SPEAKERS:
             return speakers
 
-        self._log_info(f"Expanding speaker pool (round {expansion_round})")
-        
-        # 1. Search for similar speakers to the top 3
-        top_speakers = sorted(speakers, key=lambda s: s.get("influence_score", 0), reverse=True)[:3]
-        for ts in top_speakers:
-            name = ts["name"]
-            self._log_info(f"  Finding speakers similar to: {name}")
-            query = f"speakers similar to {name} {category} conference 2025"
-            results = self._tavily_search(query, max_results=3)
-            
-            if results:
-                combined = "\n".join(r.get("content", "") for r in results)
-                extract_prompt = (
-                    f"From the following text, extract names of speakers similar to '{name}' "
-                    f"for {category} events.\n\n"
-                    f"Text: {combined[:2000]}\n\n"
-                    f"Output ONLY a JSON list of strings."
-                )
-                names = self._invoke_llm_json(extract_prompt)
-                if names and isinstance(names, list):
-                    existing_names = {s["name"].lower() for s in speakers}
-                    for n in names:
-                        if isinstance(n, str) and n.strip().lower() not in existing_names:
-                            speakers.append({
-                                "name": n.strip(),
-                                "frequency": 0,
-                                "topics": [category],
-                                "enrichment": {},
-                                "influence_score": 2.0,
-                            })
-                            existing_names.add(n.strip().lower())
+        self._log_info(f"Only {len(speakers)} speakers — expanding (round {expansion_round})")
+        query = f"top {category} speakers {geography} 2025 2026 keynote"
+        results = self._tavily_search(query, max_results=5)
 
-        # 2. General expansion search if still low
-        if len(speakers) < _MIN_SPEAKERS:
-            query = f"top {category} speakers {geography} 2025 2026 keynote"
-            results = self._tavily_search(query, max_results=5)
-
-            if results:
-                combined = "\n".join(r.get("content", "") for r in results)
-                extract_prompt = (
-                    f"From the following text, extract speaker names "
-                    f"relevant to {category} events.\n\n"
-                    f"Text: {combined[:3000]}\n\n"
-                    f"Output ONLY a JSON list of strings."
-                )
-                names = self._invoke_llm_json(extract_prompt)
-                if names and isinstance(names, list):
-                    existing_names = {s["name"].lower() for s in speakers}
-                    for name in names:
-                        if isinstance(name, str) and name.strip().lower() not in existing_names:
-                            speakers.append({
-                                "name": name.strip(),
-                                "frequency": 0,
-                                "topics": [category],
-                                "enrichment": {},
-                                "influence_score": 1.5,
-                            })
-                            existing_names.add(name.strip().lower())
+        if results:
+            combined = "\n".join(r.get("content", "") for r in results)
+            extract_prompt = (
+                f"From the following text, extract a list of speaker/presenter names "
+                f"relevant to {category} events.\n\n"
+                f"Text: {combined[:3000]}\n\n"
+                f"Output ONLY a JSON list of strings. Example: [\"Name 1\", \"Name 2\"]"
+            )
+            names = self._invoke_llm_json(extract_prompt)
+            if names and isinstance(names, list):
+                existing_names = {s["name"].lower() for s in speakers}
+                for name in names:
+                    if isinstance(name, str) and name.strip().lower() not in existing_names:
+                        speakers.append({
+                            "name": name.strip(),
+                            "frequency": 0,
+                            "topics": [category],
+                            "enrichment": {},
+                            "influence_score": 2.0,  # Default for discovered speakers
+                        })
+                        existing_names.add(name.strip().lower())
 
         self._log_info(f"After expansion: {len(speakers)} speakers")
         return speakers
@@ -344,6 +312,29 @@ class SpeakerAgent(BaseAgent):
             docs = [f"Speaker: {s.name} | Score: {s.influence_score} | Topic: {s.topic}" for s in speaker_schemas]
             meta = [{"name": s.name, "score": s.influence_score} for s in speaker_schemas]
             self._write_memory(docs, meta, collection="speakers")
+
+            # Chat Agent Indexing Contract
+            run_id = state.get("metadata", {}).get("run_id", "unknown")
+            chat_docs = []
+            chat_meta = []
+            for s in speakers[:_TARGET_SPEAKERS]:
+                name = s["name"]
+                topics = ", ".join(s.get("topics", []))
+                score = min(10.0, s.get("influence_score", 0))
+                freq = s.get("frequency", 0)
+                # Find mapped agenda topics for this speaker
+                mapped = [a.get("topic", "") for a in agenda_draft if name in a.get("speakers", [])]
+                agenda_topics = ", ".join(mapped) if mapped else "none"
+                text = (
+                    f"{name}. Topics: {topics}. Score: {score}. "
+                    f"Past events: {freq}. Agenda: {agenda_topics}"
+                )
+                chat_docs.append(text)
+                chat_meta.append({
+                    "agent": "speaker",
+                    "run_id": run_id,
+                })
+            self.index_to_chroma(chat_docs, "chat_index", chat_meta)
 
             self._log_info(f"Completed — {len(speaker_schemas)} speakers ranked")
 

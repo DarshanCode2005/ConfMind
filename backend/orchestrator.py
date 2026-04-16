@@ -57,6 +57,14 @@ from typing import Any
 from langgraph.graph import END, START, StateGraph  # type: ignore[import-untyped]
 
 from backend.models.schemas import AgentState, EventConfigInput
+from backend.config import MAX_AGENTS
+
+import threading
+
+# ── Global Concurrency Control ────────────────────────────────────────────────
+# Ensures no more than MAX_AGENTS are active simultaneously across all requests.
+# This prevents resource exhaustion and respects the user's hard cap.
+_spawn_semaphore = threading.Semaphore(MAX_AGENTS)
 
 # ── Agent imports ─────────────────────────────────────────────────────────────
 # Each agent is imported lazily here.  At scaffolding time these modules are
@@ -75,13 +83,10 @@ def _import_agents() -> dict[str, Any]:
     # P1 responsibility — base class only, no specialisation needed
     try:
         from backend.agents.web_search_agent import WebSearchAgent
-        # Spawn 3 parallel agents per diagram
-        for i in range(1, 4):
-            # Stagger offsets so they fetch unique slices
-            agents[f"web_search_agent_{i}"] = WebSearchAgent(agent_id=i, offset=(i-1)*10, limit=10)
+        # Single agent for now to satisfy the pipeline, fetching 10 events
+        agents["web_search_agent"] = WebSearchAgent(agent_id=1, limit=10)
     except ImportError:
-        for i in range(1, 4):
-            agents[f"web_search_agent_{i}"] = None
+        agents["web_search_agent"] = None
 
     # P2 responsibility
     try:
@@ -145,27 +150,6 @@ def _import_agents() -> dict[str, Any]:
     return agents
 
 
-def phq_probe(state: AgentState) -> dict[str, Any]:
-    """PredictHQ probe node — decides search scope and parallelism logic."""
-    from backend.main import _agent_status
-    plan_id = state.get("metadata", {}).get("plan_id")
-    if plan_id:
-        _agent_status.setdefault(str(plan_id), {})["phq_probe"] = "running"
-
-    # Logic to Decide N agents or search windows based on config
-    cfg = state["event_config"]
-    # For now, we use a fixed 3 agents, but we could split by date or geography
-    if plan_id:
-        _agent_status.setdefault(str(plan_id), {})["phq_probe"] = "completed"
-
-    return {
-        "metadata": {
-            "web_agents_count": 3,
-            "search_query": f"{cfg.category} {cfg.geography}",
-        }
-    }
-
-
 def _make_node(agent: Any, name: str):
     """Wrap an agent's run() method as a LangGraph node function.
 
@@ -181,43 +165,12 @@ def _make_node(agent: Any, name: str):
         return passthrough
 
     def node_fn(state: AgentState) -> dict[str, Any]:
-        plan_id = None
-        metadata = state.get("metadata", {})
-        if isinstance(metadata, dict):
-            plan_id = metadata.get("plan_id")
-
-        if plan_id:
-            try:
-                from backend.main import _agent_status
-
-                _agent_status.setdefault(str(plan_id), {})[name] = "running"
-            except Exception:
-                pass
-
-        try:
+        with _spawn_semaphore:
             result = agent.run(state)
-        except Exception as exc:
-            if plan_id:
-                try:
-                    from backend.main import _agent_status
-
-                    _agent_status.setdefault(str(plan_id), {})[name] = "failed"
-                except Exception:
-                    pass
-            raise exc
-
-        if plan_id:
-            try:
-                from backend.main import _agent_status
-
-                _agent_status.setdefault(str(plan_id), {})[name] = "completed"
-            except Exception:
-                pass
-
-        # Ensure it returns a dict for LangGraph merging
-        if isinstance(result, dict):
-            return result
-        return {}  # Fallback if agent returned something else
+            # Ensure it returns a dict for LangGraph merging
+            if isinstance(result, dict):
+                return result
+            return {}  # Fallback if agent returned something else
 
     node_fn.__name__ = name
     return node_fn
@@ -227,41 +180,47 @@ def _build_graph() -> Any:
     """Build and compile the LangGraph StateGraph.
 
     The graph is compiled once at module load time and reused for all requests.
+    Enforces a hard cap of MAX_AGENTS concurrent agent nodes.
     """
     agents = _import_agents()
 
+    # ── MAX_AGENTS check ──────────────────────────────────────────────────────
+    # We no longer disable excess agents here. Instead, we use a global semaphore
+    # in _make_node to ensure only MAX_AGENTS run at any one time.
+    # This allows all 9 agents to finish, just under a concurrency cap.
+    active_agents = {k: v for k, v in agents.items() if v is not None}
+    if len(active_agents) > MAX_AGENTS:
+        import warnings
+        warnings.warn(
+            f"[Orchestrator] {len(active_agents)} agents registered. "
+            f"MAX_AGENTS={MAX_AGENTS} concurrency cap will be enforced via Semaphore. "
+            f"All agents will eventually run, but only {MAX_AGENTS} simultaneously.",
+            stacklevel=2,
+        )
+
     builder = StateGraph(AgentState)
 
-    # 1. PHQ Probe Node
-    builder.add_node("phq_probe", phq_probe)
-
-    # 2. Register all specialized agent nodes
+    # Register all agent nodes (excess become passthrough stubs)
     for name, agent in agents.items():
         builder.add_node(name, _make_node(agent, name))
 
     # ── Edges ─────────────────────────────────────────────────────────────
-    # START -> phq_probe -> parallel web searches
-    builder.add_edge(START, "phq_probe")
+    # Web search runs first to collect past_events data
+    builder.add_edge(START, "web_search_agent")
 
-    web_agents = [n for n in agents.keys() if n.startswith("web_search_agent_")]
-    for wa in web_agents:
-        builder.add_edge("phq_probe", wa)
+    # Parallel fan-out from web_search_agent: venue, sponsor, speaker
+    builder.add_edge("web_search_agent", "venue_agent")
+    builder.add_edge("web_search_agent", "sponsor_agent")
+    builder.add_edge("web_search_agent", "speaker_agent")
 
-    # Discovery agents (Fan-out from all web agents)
-    discovery_agents = ["venue_agent", "sponsor_agent", "speaker_agent", "exhibitor_agent"]
-    for wa in web_agents:
-        for da in discovery_agents:
-            builder.add_edge(wa, da)
+    # After all three finish, exhibitor agent runs
+    builder.add_edge("venue_agent", "exhibitor_agent")
+    builder.add_edge("sponsor_agent", "exhibitor_agent")
+    builder.add_edge("speaker_agent", "exhibitor_agent")
 
-    # Analytics / Strategy Pipeline
-    # Pricing runs after discovery is mostly done (venue/sponsor/speaker needed)
-    builder.add_edge("venue_agent", "pricing_agent")
-    builder.add_edge("sponsor_agent", "pricing_agent")
-    builder.add_edge("speaker_agent", "pricing_agent")
-
+    # Linear pipeline from exhibitor onwards
+    builder.add_edge("exhibitor_agent", "pricing_agent")
     builder.add_edge("pricing_agent", "community_gtm_agent")
-    builder.add_edge("exhibitor_agent", "community_gtm_agent")
-
     builder.add_edge("community_gtm_agent", "event_ops_agent")
     builder.add_edge("event_ops_agent", "revenue_agent")
     builder.add_edge("revenue_agent", END)
@@ -273,7 +232,7 @@ def _build_graph() -> Any:
 graph = _build_graph()
 
 
-def _initial_state(config: EventConfigInput, plan_id: str | None = None) -> AgentState:
+def _initial_state(config: EventConfigInput, run_id: str | None = None) -> AgentState:
     """Create a blank AgentState from the user's EventConfigInput.
 
     All list and dict fields are initialised to empty so agents that run first
@@ -293,31 +252,57 @@ def _initial_state(config: EventConfigInput, plan_id: str | None = None) -> Agen
         gtm_messages={},
         messages=[],
         errors=[],
-        metadata={"plan_id": plan_id} if plan_id else {},
+        metadata={"run_id": run_id} if run_id else {},
     )
 
 
-async def run_plan(config: EventConfigInput, plan_id: str | None = None) -> AgentState:
+async def run_plan(config: EventConfigInput, run_id: str | None = None) -> AgentState:
     """Run the full conference planning pipeline for a given EventConfigInput.
 
     Args:
         config: User's event configuration from the API or UI.
+        run_id: A unique identifier for the run.
 
     Returns:
         The final AgentState with all agent outputs filled in.
-
-    Usage::
-
-        state = await run_plan(
-            EventConfigInput(
-                category="AI",
-                geography="Europe",
-                audience_size=800,
-                budget_usd=50_000,
-                event_dates="2025-09-15",
-            )
-        )
     """
-    initial = _initial_state(config, plan_id=plan_id)
+    initial = _initial_state(config, run_id)
     final_state: AgentState = await graph.ainvoke(initial)  # type: ignore[assignment]
     return final_state
+
+async def rerun_nodes(node_names: list[str], current_state: AgentState) -> AgentState:
+    """Re-executes only the named nodes and merges deltas back into state.
+    
+    If "all" is in node_names, restarts the full workflow with the current config.
+    """
+    agents = _import_agents()
+    
+    if "all" in node_names:
+        run_id = current_state.get("metadata", {}).get("run_id")
+        return await run_plan(current_state["event_config"], run_id)
+        
+    import operator
+    
+    for name in node_names:
+        agent = agents.get(name)
+        if agent:
+            # We call the wrapped node function to get the delta dict
+            node_fn = _make_node(agent, name)
+            delta = node_fn(current_state)
+            
+            # Merge delta back into state according to AgentState reducers
+            for key, value in delta.items():
+                if key in ["past_events", "errors"]:
+                    current_state[key] = current_state.get(key, []) + value
+                elif key == "metadata":
+                    current_state["metadata"] = current_state.get("metadata", {}) | value
+                elif key == "messages":
+                    # Simple append for messages if any
+                    current_state["messages"].extend(value)
+                else:
+                    # Overwrite for lists/dicts like sponsors, speakers, revenue
+                    current_state[key] = value
+
+    return current_state
+
+

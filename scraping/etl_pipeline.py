@@ -178,44 +178,29 @@ def normalize_event(raw: dict[str, Any]) -> EventSchema:
     """
     cleaned: dict[str, Any] = {}
 
-    cleaned["event_name"] = raw.get("event_name") or "Unnamed Event"
-    cleaned["date"] = normalize_date(str(raw.get("date") or ""))
-    cleaned["city"] = raw.get("city") or ""
-    cleaned["country"] = normalize_country(str(raw.get("country") or ""))
-    cleaned["category"] = raw.get("category") or ""
-    cleaned["theme"] = raw.get("theme") or ""
-
-    # Ensure lists are actually lists
-    for list_field in ("sponsors", "speakers", "exhibitors"):
-        val = raw.get(list_field)
-        cleaned[list_field] = val if isinstance(val, list) else []
-
-    cleaned["venue_name"] = raw.get("venue_name") or ""
-    cleaned["source_url"] = raw.get("source_url") or ""
+    cleaned["event_name"] = raw.get("event_name", "")
+    cleaned["date"] = normalize_date(str(raw.get("date", "")))
+    cleaned["city"] = raw.get("city", "")
+    cleaned["country"] = normalize_country(str(raw.get("country", "")))
+    cleaned["category"] = raw.get("category", "")
+    cleaned["theme"] = raw.get("theme", "")
+    cleaned["sponsors"] = raw.get("sponsors", [])
+    cleaned["speakers"] = raw.get("speakers", [])
+    cleaned["exhibitors"] = raw.get("exhibitors", [])
+    cleaned["venue_name"] = raw.get("venue_name", "")
+    cleaned["source_url"] = raw.get("source_url", "")
 
     for price_field in ("ticket_price_early", "ticket_price_general", "ticket_price_vip"):
-        val = raw.get(price_field)
-        if val is None or val == "":
-            cleaned[price_field] = 0.0
-        else:
-            cleaned[price_field] = (
-                normalize_price(str(val)) if isinstance(val, str) else float(val or 0)
-            )
+        val = raw.get(price_field, 0)
+        cleaned[price_field] = (
+            normalize_price(str(val)) if isinstance(val, str) else float(val or 0)
+        )
 
-    attendance = raw.get("estimated_attendance")
-    cleaned["estimated_attendance"] = (
-        int(attendance) if attendance and str(attendance).isdigit() else 0
-    )
+    attendance = raw.get("estimated_attendance", 0)
+    cleaned["estimated_attendance"] = int(attendance) if attendance else 0
 
     capacity = raw.get("venue_capacity")
-    try:
-        if capacity:
-            val = int(capacity)
-            cleaned["venue_capacity"] = val if val >= 1 else None
-        else:
-            cleaned["venue_capacity"] = None
-    except (ValueError, TypeError):
-        cleaned["venue_capacity"] = None
+    cleaned["venue_capacity"] = int(capacity) if capacity else None
 
     return EventSchema(**cleaned)
 

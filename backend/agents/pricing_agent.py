@@ -243,55 +243,6 @@ class PricingAgent(BaseAgent):
             "VIP": round(base_price * 2.5, 2),             # p75
         }
 
-    def _fit_what_if_model(self, tiers: list[TicketTierSchema]) -> dict[str, Any]:
-        """Fit a simple linear regression model y = intercept + slope*x.
-
-        x = ticket price, y = estimated sales.
-        """
-        points = [
-            (float(tier.price), float(tier.est_sales))
-            for tier in tiers
-            if tier.price >= 0 and tier.est_sales >= 0
-        ]
-
-        if len(points) < 2:
-            return {
-                "slope": 0.0,
-                "intercept": 0.0,
-                "valid": False,
-                "sample_count": len(points),
-            }
-
-        n = len(points)
-        mean_x = sum(p[0] for p in points) / n
-        mean_y = sum(p[1] for p in points) / n
-
-        numerator = 0.0
-        denominator = 0.0
-        for x, y in points:
-            dx = x - mean_x
-            dy = y - mean_y
-            numerator += dx * dy
-            denominator += dx * dx
-
-        if denominator == 0:
-            return {
-                "slope": 0.0,
-                "intercept": round(mean_y, 6),
-                "valid": False,
-                "sample_count": len(points),
-            }
-
-        slope = numerator / denominator
-        intercept = mean_y - slope * mean_x
-
-        return {
-            "slope": round(slope, 6),
-            "intercept": round(intercept, 6),
-            "valid": math.isfinite(slope) and math.isfinite(intercept),
-            "sample_count": len(points),
-        }
-
     # ── Step 5: Monte Carlo ──────────────────────────────────────────────
 
     def _monte_carlo_simulation(
@@ -464,8 +415,6 @@ class PricingAgent(BaseAgent):
                     revenue=revenue,
                 ))
 
-            what_if_model = self._fit_what_if_model(tiers)
-
             # ── Step 7: Break-even ────────────────────────────────────────
             with self._pass_context(
                 "Step 7: Break-even analysis", state,
@@ -481,7 +430,6 @@ class PricingAgent(BaseAgent):
                 "monte_carlo": mc_results,
                 "break_even": break_even,
                 "historical_pairs_count": len(pairs),
-                "what_if_model": what_if_model,
             }
 
             # Write to memory
@@ -491,6 +439,23 @@ class PricingAgent(BaseAgent):
             ]
             meta = [{"category": category, "geography": geography, "base_price": base_price}]
             self._write_memory(docs, meta, collection="events")
+
+            # Chat Agent Indexing Contract
+            run_id = state.get("metadata", {}).get("run_id", "unknown")
+            tier_texts = []
+            for t in tiers:
+                tier_texts.append(f"{t.name} tier is ${t.price} with {t.est_sales} estimated sales.")
+            
+            pricing_doc = (
+                f"Pricing Analysis: {', '.join(tier_texts)} "
+                f"Demand ratio is {demand_ratio:.2f}. Base price is ${base_price:.2f}. "
+                f"Expected attendance: {expected_attendance}. Break-even attendance: {break_even.get('break_even_attendance')}."
+            )
+            self.index_to_chroma(
+                [pricing_doc], 
+                "chat_index", 
+                [{"agent": "pricing", "run_id": run_id, "category": category, "geography": geography}]
+            )
 
             self._log_info(
                 f"Completed — Base: ${base_price:.2f}, "

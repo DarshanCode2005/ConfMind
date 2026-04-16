@@ -14,9 +14,10 @@ Then open http://localhost:8000/docs for the interactive Swagger UI.
 
 Environment variables (all from .env)
 ──────────────────────────────────────
-    OPENAI_API_KEY   Required — used by agents
-    DATABASE_URL     Optional — Supabase/PostgreSQL for plan persistence
-    ALLOWED_ORIGINS  Comma-separated CORS origins (default: http://localhost:3000)
+    ANTHROPIC_API_KEY  Primary LLM — used by all agents (preferred)
+    OPENAI_API_KEY     Secondary/tool LLM — scraper and fallback agents
+    DATABASE_URL       Optional — Supabase/PostgreSQL for plan persistence
+    ALLOWED_ORIGINS    Comma-separated CORS origins (default: http://localhost:3000)
 """
 
 from __future__ import annotations
@@ -26,18 +27,14 @@ import json
 import os
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
-from importlib import import_module
 from typing import Any
 
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
-from pydantic import BaseModel
 
-import openai
-
-from backend.models.schemas import AgentState, EventConfigInput
+from backend.models.schemas import AgentState, ChatInput, EventConfigInput
 
 load_dotenv()
 
@@ -46,7 +43,6 @@ load_dotenv()
 # Replaced by Postgres in production — see backend/memory/postgres_store.py.
 _plan_cache: dict[str, Any] = {}
 _agent_status: dict[str, dict[str, str]] = {}  # plan_id -> {agent_name -> status}
-_latest_plan_id: str | None = None
 
 
 # ── Lifespan ──────────────────────────────────────────────────────────────────
@@ -56,11 +52,20 @@ _latest_plan_id: str | None = None
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     """FastAPI lifespan: runs on startup and teardown."""
     # Validate required environment variables on startup
-    if not os.getenv("OPENAI_API_KEY"):
+    if not os.getenv("ANTHROPIC_API_KEY"):
         import warnings
 
         warnings.warn(
-            "OPENAI_API_KEY is not set — agents will fail when called. Add it to your .env file.",
+            "ANTHROPIC_API_KEY is not set — agents will fall back to OpenRouter/Gemini. "
+            "Add it to your .env file for best performance.",
+            stacklevel=1,
+        )
+    elif not os.getenv("OPENAI_API_KEY"):
+        import warnings
+
+        warnings.warn(
+            "OPENAI_API_KEY is not set — scraper_tool and OpenAI fallback will fail. "
+            "Anthropic is primary, so the pipeline may still run.",
             stacklevel=1,
         )
 
@@ -121,16 +126,13 @@ async def run_plan_endpoint(config: EventConfigInput) -> dict[str, Any]:
     """
     import uuid
 
-    orchestrator = import_module("backend.orchestrator")
+    from backend.orchestrator import run_plan
 
-    global _latest_plan_id
     plan_id = str(uuid.uuid4())
     _agent_status[plan_id] = {}
-    _latest_plan_id = plan_id
 
     try:
-        run_plan_fn = orchestrator.run_plan
-        final_state: AgentState = await run_plan_fn(config, plan_id=plan_id)
+        final_state: AgentState = await run_plan(config)
     except Exception as exc:
         raise HTTPException(status_code=500, detail=str(exc)) from exc
 
@@ -159,6 +161,12 @@ async def run_plan_endpoint(config: EventConfigInput) -> dict[str, Any]:
     _bg_task = asyncio.create_task(_persist_plan_silently(final_state))
     _bg_task.add_done_callback(lambda _: None)  # suppress RUF006 "unhandled task"
 
+    # Generate Chat summary asynchronously
+    from backend.agents.chat_agent import generate_workflow_completion_summary
+
+    _bg_task_summary = asyncio.create_task(generate_workflow_completion_summary(plan_id, response))
+    _bg_task_summary.add_done_callback(lambda _: None)
+
     return response
 
 
@@ -167,7 +175,7 @@ async def run_plan_endpoint(config: EventConfigInput) -> dict[str, Any]:
     summary="Stream agent execution status via Server-Sent Events",
     response_class=StreamingResponse,
 )
-async def agent_status_stream(plan_id: str | None = None) -> StreamingResponse:
+async def agent_status_stream(plan_id: str) -> StreamingResponse:
     """SSE endpoint — the frontend polls this while /api/run-plan is executing.
 
     Each event is a JSON object: `{ "agent": "sponsor_agent", "status": "done" }`
@@ -176,17 +184,10 @@ async def agent_status_stream(plan_id: str | None = None) -> StreamingResponse:
     - `plan_id` — the UUID returned by /api/run-plan
     """
 
-    resolved_plan_id = plan_id or _latest_plan_id
-    if not resolved_plan_id:
-        raise HTTPException(
-            status_code=400,
-            detail="plan_id is required. Call /api/run-plan first and use the returned plan_id.",
-        )
-
     async def event_generator() -> AsyncGenerator[str, None]:
         last_count = 0
         while True:
-            status = _agent_status.get(resolved_plan_id, {})
+            status = _agent_status.get(plan_id, {})
             items = list(status.items())
             for agent_name, agent_status_val in items[last_count:]:
                 data = json.dumps({"agent": agent_name, "status": agent_status_val})
@@ -198,81 +199,6 @@ async def agent_status_stream(plan_id: str | None = None) -> StreamingResponse:
             await asyncio.sleep(0.5)
 
     return StreamingResponse(event_generator(), media_type="text/event-stream")
-
-
-class ChatRequest(BaseModel):
-    session_id: str
-    message: str
-    plan_id: str | None = None
-
-
-@api.post(
-    "/api/chat",
-    summary="Chat with the ConfMind assistant",
-    response_description="A single assistant answer for the current session and plan.",
-)
-async def chat_endpoint(request: ChatRequest) -> dict[str, str]:
-    """Respond to the frontend chat widget.
-
-    This returns a quick assistant message and uses OpenAI/OpenRouter if available.
-    """
-    if not request.message.strip():
-        return {
-            "message": (
-                "Hello! I'm your ConfMind assistant. Ask me about sponsors, venues, pricing, "
-                "schedule, or revenue planning."
-            )
-        }
-
-    openai_key = os.getenv("OPENAI_API_KEY")
-    openrouter_key = os.getenv("OPENROUTER_API_KEY") or os.getenv("openrouter_key")
-
-    if not openai_key and not openrouter_key:
-        return {
-            "message": (
-                "Chat is currently unavailable because no LLM credentials are configured. "
-                "Please set OPENAI_API_KEY or OPENROUTER_API_KEY in your .env file."
-            )
-        }
-
-    try:
-        if openrouter_key:
-            openai.api_key = openrouter_key
-            openai.api_base = "https://openrouter.ai/api/v1"
-            model = os.getenv("OPENROUTER_MODEL", "gemma-2-27b")
-        else:
-            openai.api_key = openai_key
-            model = os.getenv("OPENAI_MODEL", "gpt-3.5-turbo")
-
-        response = openai.ChatCompletion.create(
-            model=model,
-            messages=[
-                {"role": "system", "content": "You are ConfMind, a conference planning assistant."},
-                {"role": "user", "content": request.message},
-            ],
-            max_tokens=250,
-            temperature=0.7,
-        )
-
-        answer = response.choices[0].message.content.strip()
-        return {"message": answer}
-    except Exception:
-        return {
-            "message": (
-                "Sorry, the chat backend is temporarily unavailable. Please try again later."
-            )
-        }
-
-
-@api.get(
-    "/api/output",
-    summary="Retrieve the most recently generated conference plan",
-)
-async def get_latest_output() -> dict[str, Any]:
-    """Return the latest cached plan when the caller does not provide an ID."""
-    if _latest_plan_id and _latest_plan_id in _plan_cache:
-        return _plan_cache[_latest_plan_id]
-    raise HTTPException(status_code=404, detail="No completed plan is available yet.")
 
 
 @api.get(
@@ -301,6 +227,47 @@ async def get_output(plan_id: str) -> dict[str, Any]:
 async def health() -> dict[str, str]:
     """Simple liveness probe used by Railway/Render deployment checks."""
     return {"status": "ok", "service": "confmind-api"}
+
+
+@api.post(
+    "/api/chat",
+    summary="Chat with the ConfMind agent",
+)
+async def chat_endpoint(input_data: ChatInput) -> dict[str, Any]:
+    """Handle user queries, intent classification, and tool routing for the Chat Agent."""
+    from backend.agents.chat_agent import chat_agent_host, get_chat_state
+    from backend.orchestrator import rerun_nodes
+
+    response_text = await chat_agent_host.invoke(
+        session_id=input_data.session_id,
+        message=input_data.message,
+        plan_id=input_data.plan_id,
+    )
+
+    state = get_chat_state(input_data.session_id)
+
+    # Check if we need to trigger any agent reruns based on the chat tools
+    if state.get("pending_rerun") and input_data.plan_id:
+        nodes_to_rerun = state["pending_rerun"]
+        state["pending_rerun"] = None
+
+        if input_data.plan_id in _plan_cache:
+            current_plan_state = _plan_cache[input_data.plan_id]
+
+            async def do_rerun() -> None:
+                try:
+                    new_state = await rerun_nodes(nodes_to_rerun, current_plan_state)
+                    _plan_cache[input_data.plan_id] = new_state
+                    await _persist_plan_silently(new_state)
+                except Exception as e:
+                    import logging
+
+                    logging.error(f"Rerun failed: {e}")
+
+            task = asyncio.create_task(do_rerun())
+            task.add_done_callback(lambda _: None)
+
+    return {"message": response_text}
 
 
 # ── Internal helpers ──────────────────────────────────────────────────────────

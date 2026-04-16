@@ -29,26 +29,73 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+# Moved inside functions to avoid early import overhead, but need types for class
+import chromadb.utils.embedding_functions as embedding_functions
+
 _USE_PINECONE = os.getenv("USE_PINECONE", "false").lower() == "true"
 _CHROMA_PERSIST_DIR = os.getenv("CHROMA_PERSIST_DIR", "./chroma_db")
 
 
+class OpenRouterEmbeddingFunction(embedding_functions.EmbeddingFunction):
+    """Custom embedding function for OpenRouter to handle the free NVIDIA model."""
+
+    def __init__(self, api_key: str, model_name: str):
+        self._api_key = api_key
+        self._model_name = model_name
+
+    def __call__(self, input: list[str]) -> Any:
+        import requests
+
+        response = requests.post(
+            "https://openrouter.ai/api/v1/embeddings",
+            headers={
+                "Authorization": f"Bearer {self._api_key}",
+                "Content-Type": "application/json",
+            },
+            json={
+                "model": self._model_name,
+                "input": input,
+            },
+            timeout=30,
+        )
+        response.raise_for_status()
+        data = response.json()
+        embeddings = [item["embedding"] for item in data.get("data", [])]
+        if not embeddings:
+            raise ValueError(f"OpenRouter returned no embeddings for model {self._model_name}")
+        return embeddings
+
+
 def _get_chroma_collection(collection: str) -> Any:
-    """Return (or create) a ChromaDB collection by name using OpenAI embeddings."""
+    """Return (or create) a ChromaDB collection by name using local or API embeddings."""
     import chromadb  # type: ignore[import-untyped]
     from chromadb.utils import embedding_functions
 
-    # Use OpenAI to avoid blocking 1GB local ONNX model downloads
-    openai_ef = embedding_functions.OpenAIEmbeddingFunction(
-        api_key=os.getenv("OPENAI_API_KEY", ""),
-        model_name="text-embedding-3-small"
-    )
+    # Priority:
+    # 1. OpenRouter (Free model suggested by user)
+    # 2. OpenAI (Default, but may hit quota)
+    # 3. Local (Fallback if keys are missing)
+
+    or_key = os.getenv("OPENROUTER_API_KEY")
+    openai_key = os.getenv("OPENAI_API_KEY")
+
+    # Use OpenRouter free model if available, else OpenAI
+    if or_key and os.getenv("USE_OPENROUTER_EMBEDDINGS", "true").lower() == "true":
+        model = os.getenv("EMBEDDING_MODEL", "nvidia/llama-nemotron-embed-vl-1b-v2:free")
+        ef = OpenRouterEmbeddingFunction(api_key=or_key, model_name=model)
+        # Suffix collection to avoid dimension mismatch with OpenAI 1536-dim vectors
+        collection = f"{collection}_or"
+    elif openai_key:
+        ef = embedding_functions.OpenAIEmbeddingFunction(
+            api_key=openai_key, model_name="text-embedding-3-small"
+        )
+    else:
+        # Last resort fallback to local embeddings
+        ef = embedding_functions.SentenceTransformerEmbeddingFunction(model_name="all-MiniLM-L6-v2")
+        collection = f"{collection}_local"
 
     client = chromadb.PersistentClient(path=_CHROMA_PERSIST_DIR)
-    return client.get_or_create_collection(
-        name=collection,
-        embedding_function=openai_ef
-    )
+    return client.get_or_create_collection(name=collection, embedding_function=ef)
 
 
 def embed_and_store(
@@ -96,32 +143,39 @@ def similarity_search(
     query: str,
     collection: str = "events",
     k: int = 5,
+    agents: list[str] | None = None,
 ) -> list[dict[str, Any]]:
-    """Retrieve the k most semantically similar documents to a query.
-
-    Args:
-        query:      Natural language query string.
-        collection: Collection / namespace to search in.
-        k:          Number of results to return.
-
-    Returns:
-        List of dicts, each with:
-            - "document": the original text that was stored
-            - "metadata": the metadata dict that was stored alongside it
-            - "distance": cosine distance (0 = identical, 2 = opposite)
-
-    Usage::
-
-        results = similarity_search("AI sponsors Europe", collection="sponsors", k=3)
-        for r in results:
-            print(r["metadata"]["name"], r["distance"])
-    """
     if _USE_PINECONE:
-        return _pinecone_query(query, collection, k)
-    return _chroma_query(query, collection, k)
+        return _pinecone_query(query, collection, k, agents)
+    return _chroma_query(query, collection, k, agents)
 
-
-# ── ChromaDB backend ──────────────────────────────────────────────────────────
+def _chroma_query(query: str, collection: str, k: int, agents: list[str] | None = None) -> list[dict[str, Any]]:
+    coll = _get_chroma_collection(collection)
+    
+    where = None
+    if agents:
+        if len(agents) == 1:
+            where = {"agent": agents[0]}
+        else:
+            where = {"agent": {"$in": agents}}
+            
+    results = coll.query(
+        query_texts=[query], n_results=k, include=["documents", "metadatas", "distances"], where=where
+    )
+    output: list[dict[str, Any]] = []
+    
+    # Handle empty results
+    if not results.get("documents") or not results["documents"][0]:
+        return output
+        
+    for doc, meta, dist in zip(
+        results["documents"][0],
+        results["metadatas"][0],
+        results["distances"][0],
+        strict=False,
+    ):
+        output.append({"document": doc, "metadata": meta, "distance": dist})
+    return output
 
 
 def _chroma_upsert(
@@ -132,24 +186,15 @@ def _chroma_upsert(
     import hashlib
 
     coll = _get_chroma_collection(collection)
-    ids = [hashlib.md5(d.encode()).hexdigest() for d in docs]
-    coll.upsert(documents=docs, metadatas=metadata, ids=ids)
-
-
-def _chroma_query(query: str, collection: str, k: int) -> list[dict[str, Any]]:
-    coll = _get_chroma_collection(collection)
-    results = coll.query(
-        query_texts=[query], n_results=k, include=["documents", "metadatas", "distances"]
+    
+    # Generate stable IDs based on content to prevent duplicates
+    ids = [hashlib.md5(doc.encode()).hexdigest() for doc in docs]
+    
+    coll.upsert(
+        documents=docs,
+        metadatas=metadata,
+        ids=ids
     )
-    output: list[dict[str, Any]] = []
-    for doc, meta, dist in zip(
-        results["documents"][0],
-        results["metadatas"][0],
-        results["distances"][0],
-        strict=True,
-    ):
-        output.append({"document": doc, "metadata": meta, "distance": dist})
-    return output
 
 
 # ── Pinecone backend (production) ─────────────────────────────────────────────
@@ -194,10 +239,18 @@ def _pinecone_upsert(
     index.upsert(vectors=vectors)
 
 
-def _pinecone_query(query: str, collection: str, k: int) -> list[dict[str, Any]]:
+def _pinecone_query(query: str, collection: str, k: int, agents: list[str] | None = None) -> list[dict[str, Any]]:
     index = _get_pinecone_index(collection)
     emb = _embed_texts([query])[0]
-    res = index.query(vector=emb, top_k=k, include_metadata=True)
+    
+    filter = None
+    if agents:
+        if len(agents) == 1:
+            filter = {"agent": {"$eq": agents[0]}}
+        else:
+            filter = {"agent": {"$in": agents}}
+            
+    res = index.query(vector=emb, top_k=k, include_metadata=True, filter=filter)
     return [
         {
             "document": match["metadata"].pop("_document", ""),
