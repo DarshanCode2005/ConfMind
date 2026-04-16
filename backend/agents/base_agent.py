@@ -35,18 +35,20 @@ Global Rules (enforced by BaseAgent)
 
 from __future__ import annotations
 
+import json
 import os
 import time
-import json
 from abc import ABC, abstractmethod
 from contextlib import contextmanager
 from typing import Any, ClassVar
 
+from dotenv import load_dotenv
 from langchain_core.prompts import ChatPromptTemplate  # type: ignore[import-untyped]
 
 from backend.memory.vector_store import embed_and_store, similarity_search
 from backend.models.schemas import AgentState
 
+load_dotenv()
 
 class BaseAgent(ABC):
     """Abstract base for all ConfMind specialized agents.
@@ -70,6 +72,7 @@ class BaseAgent(ABC):
         """Return a Chat LLM with Anthropic-first fallback chain.
 
         Priority:
+<<<<<<< anthropic_llm
         1. Anthropic Claude (claude-3-haiku)      — PRIMARY   (max_tokens=ANTHROPIC_MAX_TOKENS)
         2. OpenRouter: google/gemma-2-27b-it       — SECONDARY (max_tokens=MAX_TOKENS_FALLBACK)
         3. OpenRouter: google/gemma-2-9b-it        — TERTIARY  (max_tokens=MAX_TOKENS_FALLBACK)
@@ -124,14 +127,87 @@ class BaseAgent(ABC):
         )
 
         # ── 4. Last resort: Local Ollama (always available offline) ──────────
+=======
+        1. Anthropic: claude-3-5-sonnet-20240620 (Primary if ANTHROPIC_API_KEY is set)
+        2. OpenRouter: google/gemma-2-27b-it
+        3. OpenRouter: google/gemma-2-9b-it (Fallback)
+        4. OpenAI-compatible model from OPENAI_* env (if configured)
+        5. Local Ollama: confmind-planner (Tertiary fallback)
+        """
+        from langchain_anthropic import ChatAnthropic
+        from langchain_ollama import ChatOllama
+        from langchain_openai import ChatOpenAI
+
+        anthropic_key = os.getenv("ANTHROPIC_API_KEY")
+        or_key = os.getenv("OPENROUTER_API_KEY") or os.getenv("openrouter_key")
+        openai_key = os.getenv("OPENAI_API_KEY")
+        openai_base = os.getenv("OPENAI_BASE_URL")
+        openai_model = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
+
+        llm_candidates: list[Any] = []
+
+        # ── 1. Absolute Primary: Claude 3.5 Sonnet (Direct) ──────────────────
+        if anthropic_key:
+            llm_candidates.append(
+                ChatAnthropic(
+                    model="claude-3-5-sonnet-20240620",
+                    temperature=temperature,
+                    anthropic_api_key=anthropic_key,
+                    max_retries=1,
+                )
+            )
+
+        if or_key:
+            # ── 2. Primary: Gemma 2 27B via OpenRouter ───────────────────────
+            primary_kwargs: dict[str, Any] = {
+                "model": "google/gemma-2-27b-it",
+                "temperature": temperature,
+                "max_retries": 1,
+            }
+            primary_kwargs["openai_api_key"] = or_key
+            primary_kwargs["openai_api_base"] = "https://openrouter.ai/api/v1"
+            llm_candidates.append(ChatOpenAI(**primary_kwargs))
+
+            # ── 3. Secondary: Gemma 2 9B via OpenRouter ──────────────────────
+            secondary_kwargs: dict[str, Any] = {
+                "model": "google/gemma-2-9b-it",
+                "temperature": temperature,
+                "max_retries": 1,
+            }
+            secondary_kwargs["openai_api_key"] = or_key
+            secondary_kwargs["openai_api_base"] = "https://openrouter.ai/api/v1"
+            llm_candidates.append(ChatOpenAI(**secondary_kwargs))
+
+        elif openai_key:
+            # Fallback to direct OpenAI-compatible endpoint when OpenRouter is absent.
+            openai_kwargs: dict[str, Any] = {
+                "model": openai_model,
+                "temperature": temperature,
+                "max_retries": 1,
+            }
+            openai_kwargs["openai_api_key"] = openai_key
+            if openai_base:
+                openai_kwargs["openai_api_base"] = openai_base
+            llm_candidates.append(ChatOpenAI(**openai_kwargs))
+
+        # ── 4. Tertiary: Local Ollama (Always available) ─────────────────────
+        local_model = os.getenv("OLLAMA_MODEL", "confmind-planner")
+>>>>>>> main
         local_llm = ChatOllama(
             model=LOCAL_MODEL,
             temperature=effective_temp,
             num_ctx=OLLAMA_NUM_CTX,
         )
+        llm_candidates.append(local_llm)
 
+<<<<<<< anthropic_llm
         # Build fallback chain: Claude -> OR 27B -> OR 9B -> Ollama
         llm = primary_llm.with_fallbacks([secondary_llm, tertiary_llm, local_llm])
+=======
+        primary_llm = llm_candidates[0]
+        fallback_llms = llm_candidates[1:]
+        llm = primary_llm.with_fallbacks(fallback_llms) if fallback_llms else primary_llm
+>>>>>>> main
 
         if self.tools:
             return llm.bind_tools(self.tools)
@@ -315,29 +391,46 @@ class BaseAgent(ABC):
         - Only use the "content" field
         - On 429: wait 3s, retry once → return empty list
         """
-        try:
-            from tavily import TavilyClient  # type: ignore[import-untyped]
-        except ImportError:
-            self._log_info("Tavily not installed, skipping search")
-            return []
-
         api_key = os.getenv("TAVILY_API_KEY", "")
         if not api_key:
             self._log_info("TAVILY_API_KEY not set, skipping search")
             return []
 
-        client = TavilyClient(api_key=api_key)
-
         for attempt in range(2):
             try:
-                response = client.search(
-                    query=query,
-                    search_depth="advanced",
-                    max_results=max_results,
-                )
+                try:
+                    from tavily import TavilyClient  # type: ignore[import-untyped]
+
+                    response = TavilyClient(api_key=api_key).search(
+                        query=query,
+                        search_depth="advanced",
+                        max_results=max_results,
+                    )
+                except ImportError:
+                    import requests
+
+                    response = requests.post(
+                        "https://api.tavily.com/search",
+                        json={
+                            "api_key": api_key,
+                            "query": query,
+                            "search_depth": "advanced",
+                            "max_results": max_results,
+                        },
+                        timeout=20,
+                    )
+                    if response.status_code >= 400:
+                        raise RuntimeError(
+                            f"Tavily HTTP {response.status_code}: {response.text[:200]}"
+                        )
+                    response = response.json()
+
                 results = response.get("results", [])
                 # Return only the content field per spec
-                return [{"content": r.get("content", ""), "url": r.get("url", "")} for r in results]
+                return [
+                    {"content": r.get("content", ""), "url": r.get("url", "")}
+                    for r in results
+                ]
             except Exception as e:
                 err_str = str(e).lower()
                 if "429" in err_str or "rate" in err_str:
@@ -345,12 +438,11 @@ class BaseAgent(ABC):
                         self._log_info("Tavily 429 — waiting 3s before retry...")
                         time.sleep(3)
                         continue
-                    else:
-                        self._log_info("Tavily 429 — retry exhausted, skipping query")
-                        return []
-                else:
-                    self._log_info(f"Tavily search failed: {e}")
+                    self._log_info("Tavily 429 — retry exhausted, skipping query")
                     return []
+
+                self._log_info(f"Tavily search failed: {e}")
+                return []
 
         return []
 

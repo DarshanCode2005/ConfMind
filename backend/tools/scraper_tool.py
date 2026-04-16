@@ -179,7 +179,8 @@ def scrape_event_page(url: str, *, api_key: str | None = None) -> EventSchema:
     wrapper = SmartScraperWrapper()
     raw = wrapper.scrape(url, _EVENT_PAGE_PROMPT, api_key=api_key)
     raw.setdefault("source_url", url)
-    return EventSchema(**{k: v for k, v in raw.items() if k in EventSchema.model_fields})
+
+    return normalize_event(raw)
 
 def scrape_venue_page(url: str, *, api_key: str | None = None) -> VenueSchema:
     wrapper = SmartScraperWrapper()
