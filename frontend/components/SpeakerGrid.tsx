@@ -56,19 +56,11 @@ export default function SpeakerGrid({ speakers, loading }: SpeakerGridProps) {
           <Mic className="w-5 h-5 text-purple-400" />
           Speakers
         </h3>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {Array.from({ length: 8 }).map((_, i) => (
             <Card key={i} className="border-border/50 bg-card/80">
-              <CardContent className="pt-5 pb-4 space-y-3">
-                <div className="flex items-center gap-3">
-                  <Skeleton className="w-11 h-11 rounded-full" />
-                  <div className="space-y-1.5 flex-1">
-                    <Skeleton className="h-4 w-28" />
-                    <Skeleton className="h-3 w-20" />
-                  </div>
-                </div>
-                <Skeleton className="h-3 w-full" />
-                <Skeleton className="h-3 w-3/4" />
+              <CardContent className="pt-6 pb-6">
+                <Skeleton className="h-6 w-40" />
               </CardContent>
             </Card>
           ))}
@@ -88,82 +80,26 @@ export default function SpeakerGrid({ speakers, loading }: SpeakerGridProps) {
           {speakers.length}
         </Badge>
       </h3>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-        {speakers.map((speaker, idx) => {
-          const gradClass = AVATAR_COLORS[idx % AVATAR_COLORS.length];
-          return (
-            <Card
-              key={speaker.name}
-              className="border-border/50 hover:border-primary/30 transition-all duration-200 bg-card/80 hover:-translate-y-0.5 hover:shadow-lg"
-            >
-              <CardContent className="pt-4 pb-4 px-4 space-y-3">
-                {/* Avatar + Name */}
-                <div className="flex items-center gap-3">
-                  <div
-                    className={`w-11 h-11 rounded-full bg-gradient-to-br ${gradClass} flex items-center justify-center text-white font-bold text-sm shrink-0`}
-                  >
-                    {getInitials(speaker.name)}
-                  </div>
-                  <div className="min-w-0">
-                    <p className="font-semibold text-sm truncate">
-                      {speaker.name}
-                    </p>
-                    {speaker.region && (
-                      <p className="text-xs text-muted-foreground flex items-center gap-1 truncate">
-                        <MapPin className="w-2.5 h-2.5 shrink-0" />
-                        {speaker.region}
-                      </p>
-                    )}
-                  </div>
-                </div>
-
-                {/* Topic */}
-                {speaker.topic && (
-                  <div className="flex items-start gap-1.5 text-xs text-muted-foreground">
-                    <BookOpen className="w-3 h-3 mt-0.5 shrink-0" />
-                    <span className="line-clamp-2">{speaker.topic}</span>
-                  </div>
-                )}
-
-                {/* Bio */}
-                {speaker.bio && (
-                  <p className="text-xs text-muted-foreground line-clamp-2">
-                    {speaker.bio}
-                  </p>
-                )}
-
-                {/* Influence score */}
-                <div>
-                  <div className="flex items-center gap-1 mb-1">
-                    <Star className="w-3 h-3 text-purple-400" />
-                    <span className="text-xs text-muted-foreground">
-                      Influence
-                    </span>
-                    <span className="ml-auto text-xs text-muted-foreground">
-                      {speaker.speaking_experience} talks
-                    </span>
-                  </div>
-                  <InfluenceBar score={speaker.influence_score} />
-                </div>
-
-                {/* LinkedIn */}
-                {speaker.linkedin_url && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="w-full text-xs h-7 gap-1.5 rounded-lg text-primary border-primary/30 hover:bg-primary/10"
-                    onClick={() =>
-                      window.open(speaker.linkedin_url, "_blank")
-                    }
-                  >
-                    <ExternalLink className="w-3 h-3" />
-                    View LinkedIn
-                  </Button>
-                )}
-              </CardContent>
-            </Card>
-          );
-        })}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        {speakers.map((speaker) => (
+          <Card
+            key={speaker.name}
+            className="border-border/50 hover:border-primary/30 transition-all duration-200 bg-card/80 hover:-translate-y-0.5 hover:shadow-lg"
+          >
+            <CardContent className="pt-6 pb-6 px-5">
+              <p className="font-semibold text-base leading-relaxed break-words">{speaker.name}</p>
+              {speaker.topic && (
+                <p className="text-xs text-muted-foreground mt-2 line-clamp-2">{speaker.topic}</p>
+              )}
+              {speaker.region && (
+                <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
+                  <MapPin className="w-3 h-3" />
+                  {speaker.region}
+                </p>
+              )}
+            </CardContent>
+          </Card>
+        ))}
       </div>
     </div>
   );

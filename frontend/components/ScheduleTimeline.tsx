@@ -109,7 +109,7 @@ export default function ScheduleTimeline({
           {/* Timeline track */}
           <div className="absolute left-18 top-0 bottom-0 w-px bg-border/40" />
 
-          <div className="space-y-3">
+          <div className="max-h-64 overflow-y-auto space-y-3">
             {sorted.map((entry, idx) => (
               <div key={idx} className="flex gap-4 group">
                 {/* Time column */}

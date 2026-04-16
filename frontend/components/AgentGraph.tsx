@@ -21,28 +21,32 @@ interface AgentGraphProps {
 }
 
 const AGENT_NODES: Array<{ id: string; label: string; x: number; y: number }> = [
-  { id: "orchestrator", label: "🧠 Orchestrator", x: 380, y: 20 },
-  { id: "sponsor", label: "💰 Sponsor Agent", x: 60, y: 160 },
-  { id: "speaker", label: "🎤 Speaker Agent", x: 220, y: 160 },
-  { id: "venue", label: "📍 Venue Agent", x: 380, y: 160 },
-  { id: "pricing", label: "🎟️ Pricing Agent", x: 540, y: 160 },
-  { id: "exhibitor", label: "🏢 Exhibitor Agent", x: 700, y: 160 },
-  { id: "gtm", label: "📢 GTM Agent", x: 220, y: 300 },
-  { id: "eventops", label: "📅 Event Ops", x: 540, y: 300 },
+  { id: "orchestrator", label: "🧠 Orchestrator", x: 300, y: 20 },
+  { id: "web_search_agent", label: "🌐 Web Search", x: 300, y: 140 },
+  { id: "sponsor_agent", label: "💰 Sponsor", x: 80, y: 280 },
+  { id: "speaker_agent", label: "🎤 Speaker", x: 300, y: 280 },
+  { id: "venue_agent", label: "📍 Venue", x: 520, y: 280 },
+  { id: "exhibitor_agent", label: "🏢 Exhibitor", x: 300, y: 420 },
+  { id: "pricing_agent", label: "🎟️ Pricing", x: 300, y: 520 },
+  { id: "community_gtm_agent", label: "📢 Community & GTM", x: 300, y: 620 },
+  { id: "event_ops_agent", label: "📅 Event Ops", x: 300, y: 720 },
+  { id: "revenue_agent", label: "💵 Revenue", x: 300, y: 820 },
 ];
 
 const EDGES: Edge[] = [
-  "sponsor",
-  "speaker",
-  "venue",
-  "pricing",
-  "exhibitor",
-  "gtm",
-  "eventops",
-].map((target) => ({
-  id: `orchestrator-${target}`,
-  source: "orchestrator",
-  target,
+  { id: "orchestrator-web_search_agent", source: "orchestrator", target: "web_search_agent" },
+  { id: "web_search_agent-sponsor_agent", source: "web_search_agent", target: "sponsor_agent" },
+  { id: "web_search_agent-speaker_agent", source: "web_search_agent", target: "speaker_agent" },
+  { id: "web_search_agent-venue_agent", source: "web_search_agent", target: "venue_agent" },
+  { id: "sponsor_agent-exhibitor_agent", source: "sponsor_agent", target: "exhibitor_agent" },
+  { id: "speaker_agent-exhibitor_agent", source: "speaker_agent", target: "exhibitor_agent" },
+  { id: "venue_agent-exhibitor_agent", source: "venue_agent", target: "exhibitor_agent" },
+  { id: "exhibitor_agent-pricing_agent", source: "exhibitor_agent", target: "pricing_agent" },
+  { id: "pricing_agent-community_gtm_agent", source: "pricing_agent", target: "community_gtm_agent" },
+  { id: "community_gtm_agent-event_ops_agent", source: "community_gtm_agent", target: "event_ops_agent" },
+  { id: "event_ops_agent-revenue_agent", source: "event_ops_agent", target: "revenue_agent" },
+].map((edge) => ({
+  ...edge,
   animated: true,
   markerEnd: { type: MarkerType.ArrowClosed },
   style: { stroke: "#475569", strokeWidth: 1.5 },
@@ -82,15 +86,18 @@ function statusStyle(status: AgentStatus): {
 // Normalize agent name from SSE message to node id
 function normalizeAgentName(name: string): string {
   const lower = name.toLowerCase();
-  if (lower.includes("sponsor")) return "sponsor";
-  if (lower.includes("speaker") || lower.includes("artist")) return "speaker";
-  if (lower.includes("venue")) return "venue";
+  if (lower.includes("sponsor")) return "sponsor_agent";
+  if (lower.includes("speaker") || lower.includes("artist")) return "speaker_agent";
+  if (lower.includes("venue")) return "venue_agent";
   if (lower.includes("pricing") || lower.includes("footfall") || lower.includes("ticket"))
-    return "pricing";
-  if (lower.includes("exhibitor")) return "exhibitor";
-  if (lower.includes("gtm") || lower.includes("community")) return "gtm";
+    return "pricing_agent";
+  if (lower.includes("exhibitor")) return "exhibitor_agent";
+  if (lower.includes("gtm") || lower.includes("community")) return "community_gtm_agent";
   if (lower.includes("event ops") || lower.includes("eventops") || lower.includes("schedule"))
-    return "eventops";
+    return "event_ops_agent";
+  if (lower.includes("revenue")) return "revenue_agent";
+  if (lower.includes("web_search")) return "web_search_agent";
+  if (lower.includes("web search")) return "web_search_agent";
   if (lower.includes("orchestrat")) return "orchestrator";
   return "";
 }
@@ -158,7 +165,7 @@ export default function AgentGraph({ agentStatuses }: AgentGraphProps) {
         </div>
       </CardHeader>
       <CardContent className="p-0">
-        <div className="h-[380px] w-full rounded-b-lg overflow-hidden border-t border-border/30">
+        <div className="h-[720px] w-full rounded-b-lg overflow-hidden border-t border-border/30">
           <ReactFlow
             nodes={nodes}
             edges={edges}

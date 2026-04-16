@@ -72,14 +72,11 @@ export default function SponsorCards({ sponsors, loading }: SponsorCardsProps) {
           <Award className="w-5 h-5 text-yellow-400" />
           Sponsors
         </h3>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {Array.from({ length: 6 }).map((_, i) => (
             <Card key={i} className="border-border/50 bg-card/80">
-              <CardContent className="pt-5 pb-5 space-y-3">
-                <Skeleton className="h-5 w-32" />
-                <Skeleton className="h-4 w-20" />
-                <Skeleton className="h-3 w-full" />
-                <Skeleton className="h-8 w-full" />
+              <CardContent className="pt-6 pb-6">
+                <Skeleton className="h-6 w-40" />
               </CardContent>
             </Card>
           ))}
@@ -99,82 +96,25 @@ export default function SponsorCards({ sponsors, loading }: SponsorCardsProps) {
           {sponsors.length}
         </Badge>
       </h3>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {sponsors.map((sponsor) => {
-          const tier = TIER_CONFIG[sponsor.tier] ?? TIER_CONFIG.General;
-          return (
-            <Card
-              key={sponsor.name}
-              className={`border ${tier.border} bg-card/80 hover:bg-card transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg`}
-            >
-              <CardHeader className="pb-2 pt-4 px-4">
-                <div className="flex items-start justify-between gap-2">
-                  <CardTitle className="text-sm font-semibold leading-tight">
-                    {sponsor.name}
-                  </CardTitle>
-                  <Badge
-                    variant="outline"
-                    className={`text-xs shrink-0 ${tier.color}`}
-                  >
-                    {tier.icon} {sponsor.tier}
-                  </Badge>
-                </div>
-              </CardHeader>
-              <CardContent className="px-4 pb-4 space-y-3">
-                <div className="space-y-1 text-xs text-muted-foreground">
-                  {sponsor.industry && (
-                    <div className="flex items-center gap-1.5">
-                      <Building2 className="w-3 h-3" />
-                      {sponsor.industry}
-                    </div>
-                  )}
-                  {sponsor.geo && (
-                    <div className="flex items-center gap-1.5">
-                      <Globe className="w-3 h-3" />
-                      {sponsor.geo}
-                    </div>
-                  )}
-                </div>
-                <div>
-                  <div className="flex items-center gap-1 mb-1">
-                    <Star className="w-3 h-3 text-yellow-400" />
-                    <span className="text-xs text-muted-foreground">
-                      Relevance
-                    </span>
-                  </div>
-                  <ScoreBar score={sponsor.relevance_score} />
-                </div>
-                <div className="flex gap-2">
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="flex-1 text-xs h-8 gap-1 rounded-lg"
-                    onClick={() =>
-                      sponsor.website && window.open(sponsor.website, "_blank")
-                    }
-                    disabled={!sponsor.website}
-                  >
-                    <ExternalLink className="w-3 h-3" />
-                    Website
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="default"
-                    className="flex-1 text-xs h-8 gap-1 rounded-lg bg-gradient-to-r from-primary to-cyan-500 text-primary-foreground shadow-md shadow-primary/20"
-                    onClick={() =>
-                      alert(
-                        `Proposal PDF for ${sponsor.name} would download here.`
-                      )
-                    }
-                  >
-                    <Download className="w-3 h-3" />
-                    Proposal
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          );
-        })}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        {sponsors.map((sponsor) => (
+          <Card
+            key={sponsor.name}
+            className="border border-border/50 bg-card/80 hover:bg-card transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg"
+          >
+            <CardContent className="pt-6 pb-6 px-5">
+              <p className="text-base font-semibold leading-relaxed break-words">{sponsor.name}</p>
+              {sponsor.industry && (
+                <p className="text-xs text-muted-foreground mt-2">{sponsor.industry}</p>
+              )}
+              {sponsor.tier && (
+                <Badge variant="outline" className="mt-3 text-xs">
+                  {sponsor.tier}
+                </Badge>
+              )}
+            </CardContent>
+          </Card>
+        ))}
       </div>
     </div>
   );

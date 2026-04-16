@@ -149,112 +149,120 @@ export default function InputWizard() {
 
   return (
     <div className="min-h-screen bg-background flex flex-col items-center justify-center px-4 py-16 relative overflow-hidden">
-      <div className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(circle_at_16%_10%,hsl(var(--primary)/0.12),transparent_30rem),radial-gradient(circle_at_86%_18%,hsl(var(--secondary)/0.12),transparent_28rem),linear-gradient(180deg,hsl(var(--background)),hsl(var(--muted)/0.46))]" />
+      <div className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(circle_at_14%_12%,hsl(var(--primary)/0.18),transparent_24rem),radial-gradient(circle_at_86%_18%,hsl(var(--secondary)/0.16),transparent_26rem),linear-gradient(180deg,hsl(var(--background)),hsl(var(--muted)/0.55))]" />
       <div className="absolute top-6 right-6">
         <ThemeToggle />
       </div>
 
-      <div className="mb-12 text-center max-w-3xl">
-        <div className="inline-flex items-center gap-2 rounded-lg border border-primary/25 bg-linear-to-r from-primary/10 via-secondary/15 to-accent px-4 py-1.5 mb-6 shadow-sm">
-          <Brain className="w-4 h-4 text-primary" />
-          <span className="text-sm font-medium text-primary">
-            AI Powered Conference Planner
-          </span>
+      <div className="mb-10 text-center max-w-3xl space-y-5">
+        <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-4 py-2 text-sm font-semibold text-primary shadow-sm shadow-primary/10">
+          <Brain className="w-4 h-4" />
+          AI Conference Setup
         </div>
-        <h1 className="text-5xl md:text-6xl font-bold tracking-tight mb-4 text-foreground">
-          Plan your <span className="text-primary">conference</span>
-          <br />
-          with <span className="text-chart-4">AI agents</span>
-        </h1>
-        <p className="text-muted-foreground text-lg max-w-2xl mx-auto leading-7">
-          8 specialized agents working in parallel to find sponsors, speakers,
-          venues, pricing, and revenue opportunities in minutes.
-        </p>
+        <div>
+          <h1 className="text-4xl sm:text-5xl font-semibold tracking-tight text-foreground">
+            Start your conference plan with a clean, modern setup
+          </h1>
+          <p className="mx-auto mt-4 max-w-2xl text-base leading-7 text-muted-foreground sm:text-lg">
+            Answer a few guided questions and launch your AI-driven event plan with sponsors, speakers, venues, pricing, and GTM recommendations.
+          </p>
+        </div>
       </div>
 
-      <div className="w-full max-w-2xl mb-8">
-        <div className="flex items-center justify-between mb-3 gap-2">
+      <div className="w-full max-w-3xl mb-8 rounded-[2rem] border border-border/70 bg-card/90 p-5 shadow-2xl shadow-slate-900/5 backdrop-blur-xl">
+        <div className="flex flex-col gap-4 rounded-3xl bg-muted/80 p-5 shadow-inner shadow-black/5 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className="text-xs uppercase tracking-[0.25em] text-muted-foreground">
+              Step {step + 1} of {TOTAL_STEPS}
+            </p>
+            <h2 className="text-xl font-semibold text-foreground">
+              {STEP_META[step].label}
+            </h2>
+          </div>
+          <div className="flex items-center gap-3">
+            <span className="inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-primary/10 text-primary shadow-sm">
+              {(() => {
+                const StepIcon = STEP_META[step].icon;
+                return <StepIcon className="h-5 w-5" />;
+              })()}
+            </span>
+            <span className="text-sm font-medium text-foreground">
+              {STEP_META[step].label}
+            </span>
+          </div>
+        </div>
+
+        <div className="mt-5 grid gap-3 sm:grid-cols-5">
           {STEP_META.map((s, i) => {
-            const Icon = s.icon;
-            const done = i < step;
-            const active = i === step;
+            const progress = i < step ? "bg-primary text-primary-foreground" : i === step ? "bg-secondary text-secondary-foreground" : "bg-muted text-muted-foreground";
             return (
-              <div key={s.label} className="flex flex-col items-center gap-1">
-                <div
-                  className={`w-10 h-10 rounded-full flex items-center justify-center border-2 transition-all duration-300 ${
-                    done
-                      ? "bg-primary border-primary text-primary-foreground shadow-md shadow-primary/20"
-                      : active
-                        ? "border-secondary text-foreground bg-secondary/25 shadow-sm"
-                        : "border-border bg-card text-muted-foreground"
-                  }`}
-                >
-                  {done ? (
-                    <CheckCircle2 className="w-5 h-5" />
-                  ) : (
-                    <Icon className="w-4 h-4" />
-                  )}
-                </div>
-                <span
-                  className={`text-xs font-medium ${active ? "text-primary" : done ? "text-foreground" : "text-muted-foreground"}`}
-                >
-                  {s.label}
-                </span>
+              <div key={s.label} className={`rounded-3xl border border-border/60 px-3 py-4 text-center text-[11px] font-semibold uppercase tracking-[0.2em] ${progress}`}>
+                {s.label}
               </div>
             );
           })}
         </div>
-        <div className="relative h-2 bg-muted rounded-full overflow-hidden border border-border/70">
-          <div
-            className="absolute left-0 top-0 h-full bg-linear-to-r from-primary via-secondary to-chart-4 rounded-full transition-all duration-500"
-            style={{ width: `${((step) / (TOTAL_STEPS - 1)) * 100}%` }}
-          />
-        </div>
       </div>
 
-      <Card className="w-full max-w-2xl border-t-4 border-t-primary bg-card shadow-[0_28px_80px_-38px_rgba(15,23,42,0.62)]">
-        <CardContent className="pt-9 pb-9 px-8 md:px-10">
+      <Card className="w-full max-w-3xl border border-border/80 bg-card/95 shadow-[0_28px_80px_-38px_rgba(15,23,42,0.6)]">
+        <CardContent className="pt-10 pb-10 px-8 md:px-10">
           {step === 0 && (
-            <div>
-              <h2 className="text-xl font-semibold mb-2">
-                What type of event are you planning?
-              </h2>
-              <p className="text-muted-foreground text-sm mb-6">
-                Agents will tailor sponsor and speaker searches to this domain.
-              </p>
-              <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-6">
+              <div className="space-y-2">
+                <p className="text-sm uppercase tracking-[0.32em] text-muted-foreground">
+                  Choose your event focus
+                </p>
+                <h3 className="text-2xl font-semibold text-foreground">
+                  What kind of conference is this?
+                </h3>
+                <p className="text-sm leading-6 text-muted-foreground">
+                  The agents will optimize sponsor, speaker, and venue searches for this theme.
+                </p>
+              </div>
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 {CATEGORIES.map((cat) => (
-                  <Button
+                  <button
                     key={cat}
-                    variant={category === cat ? "default" : "outline"}
-                    className={`h-auto py-3 px-4 text-left justify-start transition-all duration-200 rounded-lg border ${
-                      category === cat
-                        ? "bg-primary text-primary-foreground border-transparent ring-2 ring-secondary/60 ring-offset-2 ring-offset-background shadow-md shadow-primary/20"
-                        : "bg-card border-input border-l-primary/60 border-l-4 text-foreground hover:border-primary/60 hover:bg-primary/10"
-                    }`}
+                    type="button"
                     onClick={() => setCategory(cat)}
+                    className={`group relative rounded-[1.75rem] border p-5 text-left transition-all duration-200 shadow-sm ${
+                      category === cat
+                        ? "border-primary bg-primary/10 text-primary shadow-primary/10"
+                        : "border-border bg-card hover:border-primary/60 hover:bg-primary/5 text-foreground"
+                    }`}
                   >
-                    {cat}
-                  </Button>
+                    <span className="block text-base font-semibold mb-2">{cat}</span>
+                    <span className="text-sm leading-6 text-muted-foreground">
+                      Tailor the event experience with this focus area.
+                    </span>
+                    <span className={`pointer-events-none absolute right-4 top-4 inline-flex h-10 w-10 items-center justify-center rounded-2xl border ${category === cat ? "border-primary bg-primary text-primary-foreground" : "border-border bg-muted text-muted-foreground"}`}>
+                      {category === cat ? <CheckCircle2 className="h-4 w-4" /> : <Brain className="h-4 w-4" />}
+                    </span>
+                  </button>
                 ))}
               </div>
             </div>
           )}
 
           {step === 1 && (
-            <div className="flex flex-col gap-6">
-              <div className="relative z-30">
-                <h2 className="text-xl font-semibold mb-2">
-                  Where will this event be held?
-                </h2>
-                <p className="text-muted-foreground text-sm mb-4">
-                  Venue agents will search within this region.
+            <div className="grid gap-6">
+              <div className="space-y-2">
+                <p className="text-sm uppercase tracking-[0.32em] text-muted-foreground">
+                  Choose a location
                 </p>
-                <Label className="mb-2 block">Select a country</Label>
+                <h3 className="text-2xl font-semibold text-foreground">
+                  Which geography should the agents focus on?
+                </h3>
+                <p className="text-sm leading-6 text-muted-foreground">
+                  Select your target country to narrow venue and local community searches.
+                </p>
+              </div>
+              <div className="space-y-4">
+                <Label className="mb-2 block text-sm font-medium text-foreground">Select a country</Label>
                 <Select value={geography} onValueChange={handleGeographyChange}>
                   <SelectTrigger
                     id="geography-select"
-                    className="w-full h-12 rounded-lg border-input bg-card text-base shadow-sm"
+                    className="w-full h-14 rounded-3xl border border-border bg-background px-4 text-base shadow-sm"
                   >
                     <SelectValue placeholder="Choose a country" />
                   </SelectTrigger>
@@ -263,7 +271,7 @@ export default function InputWizard() {
                     align="start"
                     sideOffset={8}
                     alignItemWithTrigger={false}
-                    className="z-100 rounded-lg"
+                    className="z-50 rounded-3xl border border-border bg-card shadow-lg"
                     style={{ maxHeight: 300 }}
                   >
                     {ALL_COUNTRIES.map((g) => (
@@ -274,14 +282,12 @@ export default function InputWizard() {
                   </SelectContent>
                 </Select>
               </div>
-
-              <div className="w-full rounded-lg overflow-hidden border border-border bg-muted/45 relative z-0 shadow-inner">
-                <ComposableMap projection="geoMercator" className="w-full" style={{ height: 250 }} projectionConfig={{ scale: 100, center: [0, 20] }}>
+              <div className="overflow-hidden rounded-[1.75rem] border border-border/60 bg-muted/70 shadow-inner">
+                <ComposableMap projection="geoMercator" className="w-full" style={{ height: 280 }} projectionConfig={{ scale: 100, center: [0, 20] }}>
                   <Geographies geography={geoUrl}>
                     {({ geographies }) =>
                       geographies.map((geo) => {
                         const geoName = geo.properties.name;
-                        // World-atlas json sometimes uses "United States of America"
                         const isSelected = geography === geoName || (geography === "United States" && geoName === "United States of America");
                         const isSelectable = ALL_COUNTRIES.some(c => c.value === geoName || (c.value === "United States" && geoName === "United States of America"));
 
@@ -297,17 +303,17 @@ export default function InputWizard() {
                             }}
                             style={{
                               default: {
-                                fill: isSelected ? "hsl(var(--primary))" : isSelectable ? "hsl(var(--primary) / 0.28)" : "hsl(var(--muted-foreground) / 0.16)",
+                                fill: isSelected ? "hsl(var(--primary))" : isSelectable ? "hsl(var(--primary) / 0.28)" : "hsl(var(--muted-foreground) / 0.18)",
                                 outline: "none",
-                                stroke: "hsl(var(--card))",
-                                strokeWidth: 0.7,
+                                stroke: "hsl(var(--border))",
+                                strokeWidth: 0.6,
                                 cursor: isSelectable ? "pointer" : "default"
                               },
                               hover: {
-                                fill: isSelectable ? "hsl(var(--secondary))" : "hsl(var(--muted-foreground) / 0.16)",
+                                fill: isSelectable ? "hsl(var(--secondary))" : "hsl(var(--muted-foreground) / 0.18)",
                                 outline: "none",
-                                stroke: "hsl(var(--card))",
-                                strokeWidth: 0.7,
+                                stroke: "hsl(var(--border))",
+                                strokeWidth: 0.6,
                                 cursor: isSelectable ? "pointer" : "default"
                               },
                               pressed: {
@@ -321,142 +327,158 @@ export default function InputWizard() {
                     }
                   </Geographies>
                 </ComposableMap>
-                <div className="absolute bottom-2 right-2 flex gap-2">
-                  <span className="text-[10px] text-foreground flex items-center gap-1 rounded-lg bg-card px-2 py-1 border border-border shadow-sm">
-                    <span className="w-2 h-2 rounded-full bg-primary/40 inline-block"></span> Supported regions
-                  </span>
-                </div>
               </div>
             </div>
           )}
 
           {step === 2 && (
-            <div>
-              <h2 className="text-xl font-semibold mb-2">
-                How many attendees are you targeting?
-              </h2>
-              <p className="text-muted-foreground text-sm mb-6">
-                Pricing and venue agents use this to calculate capacity and
-                revenue tiers.
-              </p>
-              <div className="flex items-center justify-between mb-4">
-                <Label>Audience Size</Label>
-                <span className="text-3xl font-bold text-primary tabular-nums">
-                  {audienceSize.toLocaleString()}
-                </span>
+            <div className="space-y-6">
+              <div className="space-y-2">
+                <p className="text-sm uppercase tracking-[0.32em] text-muted-foreground">
+                  Audience sizing
+                </p>
+                <h3 className="text-2xl font-semibold text-foreground">
+                  How many attendees do you expect?
+                </h3>
+                <p className="text-sm leading-6 text-muted-foreground">
+                  This helps agents design sponsorship value, venue capacity, and pricing tiers.
+                </p>
               </div>
-              <Slider
-                id="audience-slider"
-                min={50}
-                max={5000}
-                step={50}
-                value={[audienceSize]}
-                onValueChange={(v) => { const val = Array.isArray(v) ? v[0] : v as number; if (typeof val === "number") setAudienceSize(val); }}
-                className="mb-3"
-              />
-              <div className="flex justify-between text-xs text-muted-foreground">
-                <span>50</span>
-                <span>2,500</span>
-                <span>5,000</span>
+              <div className="rounded-[1.75rem] border border-border/60 bg-muted/60 p-6 shadow-sm">
+                <div className="flex items-center justify-between gap-4 mb-5">
+                  <Label className="text-sm">Audience size</Label>
+                  <span className="text-3xl font-bold text-primary tabular-nums">
+                    {audienceSize.toLocaleString()}
+                  </span>
+                </div>
+                <Slider
+                  id="audience-slider"
+                  min={50}
+                  max={5000}
+                  step={50}
+                  value={[audienceSize]}
+                  onValueChange={(v) => { const val = Array.isArray(v) ? v[0] : v as number; if (typeof val === "number") setAudienceSize(val); }}
+                  className="mb-3"
+                />
+                <div className="flex justify-between text-xs text-muted-foreground">
+                  <span>50</span>
+                  <span>2,500</span>
+                  <span>5,000</span>
+                </div>
               </div>
             </div>
           )}
 
           {step === 3 && (
-            <div>
-              <h2 className="text-xl font-semibold mb-2">
-                What is your total event budget?
-              </h2>
-              <p className="text-muted-foreground text-sm mb-6">
-                Used to filter venues, plan sponsorship targets, and validate
-                break even.
-              </p>
-              <div className="flex items-center justify-between mb-4">
-                <Label>Budget Amount</Label>
-                <span className="text-3xl font-bold text-primary tabular-nums">
-                  {formatBudget(budgetVal)}
-                </span>
+            <div className="space-y-6">
+              <div className="space-y-2">
+                <p className="text-sm uppercase tracking-[0.32em] text-muted-foreground">
+                  Budget planning
+                </p>
+                <h3 className="text-2xl font-semibold text-foreground">
+                  What is your total event budget?
+                </h3>
+                <p className="text-sm leading-6 text-muted-foreground">
+                  This helps define sponsorship targets, venue tiers, and revenue forecasts.
+                </p>
               </div>
-              <Slider
-                id="budget-slider"
-                min={5_000}
-                max={500_000}
-                step={5_000}
-                value={[budgetVal]}
-                onValueChange={(v) => { const val = Array.isArray(v) ? v[0] : v as number; if (typeof val === "number") setBudgetVal(val); }}
-                className="mb-3"
-              />
-              <div className="flex justify-between text-xs text-muted-foreground">
-                <span>{formatBudget(5_000)}</span>
-                <span>{formatBudget(250_000)}</span>
-                <span>{formatBudget(500_000)}</span>
+              <div className="rounded-[1.75rem] border border-border/60 bg-muted/60 p-6 shadow-sm">
+                <div className="flex items-center justify-between gap-4 mb-5">
+                  <Label className="text-sm">Budget amount</Label>
+                  <span className="text-3xl font-bold text-primary tabular-nums">
+                    {formatBudget(budgetVal)}
+                  </span>
+                </div>
+                <Slider
+                  id="budget-slider"
+                  min={5_000}
+                  max={500_000}
+                  step={5_000}
+                  value={[budgetVal]}
+                  onValueChange={(v) => { const val = Array.isArray(v) ? v[0] : v as number; if (typeof val === "number") setBudgetVal(val); }}
+                  className="mb-3"
+                />
+                <div className="flex justify-between text-xs text-muted-foreground">
+                  <span>{formatBudget(5_000)}</span>
+                  <span>{formatBudget(250_000)}</span>
+                  <span>{formatBudget(500_000)}</span>
+                </div>
+                <p className="mt-3 text-xs text-muted-foreground">
+                  Budget values follow the selected country currency.
+                </p>
               </div>
-              <p className="mt-3 text-xs text-muted-foreground">
-                Budget values follow the selected country currency.
-              </p>
             </div>
           )}
 
           {step === 4 && (
-            <div>
-              <h2 className="text-xl font-semibold mb-2">
-                When will the event take place?
-              </h2>
-              <p className="text-muted-foreground text-sm mb-6">
-                The Event Ops agent will build a schedule around this date.
-              </p>
-              <Label htmlFor="event-date" className="mb-2 block">
-                Event date range
-              </Label>
-              <Input
-                id="event-date"
-                type="date"
-                min={todayInputValue}
-                value={eventDates}
-                onChange={(e) => handleDateChange(e.target.value)}
-                className="h-12 text-base w-full"
-              />
-              <p className="mt-2 text-xs text-muted-foreground">
-                Choose today or a future date. Past dates are disabled.
-              </p>
-              {eventDates && (
-                <div className="mt-6 p-4 rounded-lg bg-muted/50 border border-border/50 space-y-2 text-sm">
-                  <p className="font-semibold text-foreground mb-3">
-                    Ready to launch your plan
+            <div className="space-y-6">
+              <div className="space-y-2">
+                <p className="text-sm uppercase tracking-[0.32em] text-muted-foreground">
+                  Schedule kickoff
+                </p>
+                <h3 className="text-2xl font-semibold text-foreground">
+                  When will your conference happen?
+                </h3>
+                <p className="text-sm leading-6 text-muted-foreground">
+                  The event ops agent uses this to create a realistic agenda and timeline.
+                </p>
+              </div>
+              <div className="grid gap-4 sm:grid-cols-[1fr_auto] items-end">
+                <div>
+                  <Label htmlFor="event-date" className="mb-2 block text-sm font-medium text-foreground">
+                    Event date range
+                  </Label>
+                  <Input
+                    id="event-date"
+                    type="date"
+                    min={todayInputValue}
+                    value={eventDates}
+                    onChange={(e) => handleDateChange(e.target.value)}
+                    className="h-14 text-base w-full rounded-3xl border border-border bg-background px-4"
+                  />
+                  <p className="mt-2 text-xs text-muted-foreground">
+                    Choose today or a future date. Past dates are disabled.
                   </p>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Category</span>
-                    <span className="font-medium">{category}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Geography</span>
-                    <span className="font-medium">{geography}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Audience</span>
-                    <span className="font-medium">
-                      {audienceSize.toLocaleString()} attendees
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Budget</span>
-                    <span className="font-medium">{formatBudget(budgetVal)}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Date</span>
-                    <span className="font-medium">{eventDates}</span>
-                  </div>
                 </div>
-              )}
+                {eventDates && (
+                  <div className="rounded-[1.75rem] border border-border/60 bg-muted/55 p-4 shadow-sm">
+                    <p className="text-sm font-semibold text-foreground mb-3">
+                      Plan summary
+                    </p>
+                    <div className="space-y-2 text-sm text-muted-foreground">
+                      <div className="flex justify-between">
+                        <span>Category</span>
+                        <span className="text-foreground font-medium">{category}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Geography</span>
+                        <span className="text-foreground font-medium">{geography}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Audience</span>
+                        <span className="text-foreground font-medium">{audienceSize.toLocaleString()} attendees</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Budget</span>
+                        <span className="text-foreground font-medium">{formatBudget(budgetVal)}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Date</span>
+                        <span className="text-foreground font-medium">{eventDates}</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           )}
 
-          <div className="flex items-center justify-between mt-8">
+          <div className="mt-10 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <Button
               variant="ghost"
               onClick={() => setStep((s) => s - 1)}
               disabled={step === 0}
-              className="gap-2 rounded-lg"
+              className="gap-2 rounded-3xl px-5 py-3"
             >
               <ArrowLeft className="w-4 h-4" />
               Back
@@ -466,7 +488,7 @@ export default function InputWizard() {
               <Button
                 onClick={() => setStep((s) => s + 1)}
                 disabled={!canAdvance()}
-                className="gap-2 px-6 rounded-lg shadow-sm"
+                className="gap-2 rounded-3xl px-6 py-3 shadow-sm"
               >
                 Continue
                 <ArrowRight className="w-4 h-4" />
@@ -476,7 +498,7 @@ export default function InputWizard() {
                 id="launch-plan-btn"
                 onClick={handleSubmit}
                 disabled={!canAdvance() || loading}
-                className="gap-2 px-8 rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground shadow-md shadow-primary/20"
+                className="gap-2 rounded-3xl px-8 py-3 bg-primary text-primary-foreground shadow-md shadow-primary/30 hover:bg-primary/90"
               >
                 {loading ? (
                   <>
@@ -495,9 +517,9 @@ export default function InputWizard() {
         </CardContent>
       </Card>
 
-      <p className="mt-8 text-xs text-muted-foreground text-center max-w-sm">
-        8 specialized agents will run in parallel for sponsor discovery, speaker
-        enrichment, venue scoring, pricing optimization, and more.
+      <p className="mt-8 max-w-2xl text-center text-sm leading-6 text-muted-foreground">
+        8 specialized agents will run in parallel for sponsor discovery, speaker enrichment, venue scoring,
+        pricing optimization, and revenue planning.
       </p>
     </div>
   );

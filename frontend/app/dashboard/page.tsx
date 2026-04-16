@@ -1,7 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { getOutput, runPlan, type AgentState, type EventConfigInput } from "@/lib/api";
 import type { AgentStatus } from "@/components/AgentGraph";
 
@@ -21,10 +20,9 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Brain, RefreshCw, ArrowLeft, AlertTriangle } from "lucide-react";
+import { Brain, RefreshCw, AlertTriangle, Sparkles, Megaphone, Layers } from "lucide-react";
 
 export default function DashboardPage() {
-  const router = useRouter();
   const launchStartedRef = useRef(false);
   const [state, setState] = useState<AgentState | null>(null);
   const [loading, setLoading] = useState(true);
@@ -33,6 +31,47 @@ export default function DashboardPage() {
   const [agentStatuses, setAgentStatuses] = useState<
     Record<string, AgentStatus>
   >({});
+
+  const summaryCount = (value?: number | null) => value ?? 0;
+  const gtmCount = Object.keys(state?.gtm_messages ?? {}).length;
+
+  const hasResults = Boolean(
+    state &&
+      (state.sponsors?.length ||
+        state.speakers?.length ||
+        state.venues?.length ||
+        state.ticket_tiers?.length ||
+        state.schedule?.length ||
+        state.exhibitors?.length ||
+        state.communities?.length ||
+        gtmCount ||
+        state.distribution_plan?.length ||
+        state.total_est_revenue != null ||
+        state.break_even_price != null)
+  );
+
+  const renderSummaryCard = (
+    title: string,
+    value: string | number,
+    icon: ReactNode,
+    accent?: string
+  ) => (
+    <div className="rounded-[1.8rem] border border-border/60 bg-card/80 p-5 shadow-xl shadow-black/5 transition-all hover:-translate-y-0.5">
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <div className={`grid place-items-center rounded-2xl p-3 ${accent ?? "bg-primary/10 text-primary"}`}>
+            {icon}
+          </div>
+          <div>
+            <p className="text-xs uppercase tracking-[0.24em] text-muted-foreground">
+              {title}
+            </p>
+            <p className="text-2xl font-semibold tracking-tight">{value}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 
   const fetchOutput = useCallback(async () => {
     if (!planId) {
@@ -139,195 +178,279 @@ export default function DashboardPage() {
     setLoading(false);
   }, []);
 
-  const hasResults =
-    state &&
-    (state.sponsors?.length ||
-      state.speakers?.length ||
-      state.venues?.length ||
-      state.ticket_tiers?.length ||
-      state.schedule?.length);
-
   return (
-    <div className="min-h-screen relative max-w-[100vw] overflow-x-hidden pt-18">
-      <header className="fixed top-0 left-0 right-0 z-30 border-b border-border/60 bg-background/75 backdrop-blur-xl shadow-sm">
-        <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <h1 className="text-2xl font-bold tracking-tight bg-linear-to-br from-slate-900 via-indigo-700 to-cyan-600 dark:from-white dark:via-indigo-200 dark:to-cyan-300 bg-clip-text text-transparent">
-              Event Dashboard
-            </h1>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="gap-1.5 text-muted-foreground"
-              onClick={() => router.push("/")}
-            >
-              <ArrowLeft className="w-4 h-4" />
-              Back
-            </Button>
-            <Separator orientation="vertical" className="h-5" />
-            <div className="flex items-center gap-2">
-              <Brain className="w-5 h-5 text-primary" />
-              <span className="font-semibold text-sm">ConfMind Dashboard</span>
+    <div className="min-h-screen bg-background text-foreground transition-colors duration-500 selection:bg-primary/20 selection:text-primary">
+      <main className="max-w-7xl mx-auto px-6 py-10 space-y-10">
+        <section className="rounded-[2rem] border border-border/60 bg-card/80 p-8 shadow-2xl shadow-black/5 backdrop-blur-xl">
+          <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
+            <div className="max-w-3xl space-y-4">
+              <p className="text-sm uppercase tracking-[0.35em] text-muted-foreground">
+                MMU Dashboard
+              </p>
+              <h1 className="text-4xl font-heading tracking-tight text-foreground">
+                Conference results in one central view
+              </h1>
+              <p className="max-w-2xl text-sm leading-7 text-muted-foreground">
+                This dashboard surfaces the latest backend outputs, including GTM agent recommendations,
+                exhibitor opportunities, venue insights, pricing, and schedule suggestions.
+              </p>
+            </div>
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+              <Button variant="outline" className="gap-2" onClick={fetchOutput}>
+                <RefreshCw className="w-4 h-4" />
+                Refresh
+              </Button>
+              <ThemeToggle />
             </div>
           </div>
-          <div className="flex items-center gap-3">
-            {loading && (
-              <Badge
-                variant="outline"
-                className="gap-1.5 text-xs bg-primary/10 text-primary border-primary/20"
-              >
-                <span className="relative flex h-2 w-2">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75" />
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-primary" />
-                </span>
-                Agents Running
-              </Badge>
-            )}
-            {!loading && hasResults && (
-              <Badge
-                variant="outline"
-                className="gap-1.5 text-xs bg-emerald-500/10 text-emerald-600 dark:text-emerald-300 border-emerald-500/20"
-              >
-                Plan Ready
-              </Badge>
-            )}
-            <Button
-              variant="ghost"
-              size="sm"
-              className="gap-1.5 text-xs"
-              onClick={fetchOutput}
-            >
-              <RefreshCw className="w-3.5 h-3.5" />
-              Refresh
-            </Button>
-            <ThemeToggle />
-          </div>
-        </div>
-      </header>
 
-      <main className="max-w-7xl mx-auto px-6 py-8 space-y-8">
-        {/* Error state */}
+          <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            {renderSummaryCard(
+              "Sponsors",
+              summaryCount(state?.sponsors?.length),
+              <Sparkles className="h-5 w-5" />, 
+              "bg-amber-500/10 text-amber-500"
+            )}
+            {renderSummaryCard(
+              "Speakers",
+              summaryCount(state?.speakers?.length),
+              <Brain className="h-5 w-5" />,
+              "bg-cyan-500/10 text-cyan-500"
+            )}
+            {renderSummaryCard(
+              "Exhibitors",
+              summaryCount(state?.exhibitors?.length),
+              <Layers className="h-5 w-5" />,
+              "bg-violet-500/10 text-violet-500"
+            )}
+            {renderSummaryCard(
+              "GTM Plans",
+              Object.keys(state?.gtm_messages ?? {}).length || 0,
+              <Megaphone className="h-5 w-5" />,
+              "bg-emerald-500/10 text-emerald-500"
+            )}
+          </div>
+        </section>
+
         {error && !hasResults && (
-          <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-4 flex items-start gap-3">
-            <AlertTriangle className="w-5 h-5 text-destructive mt-0.5" />
-            <div>
-              <p className="font-semibold text-sm text-destructive">
-                Failed to load output
-              </p>
-              <p className="text-xs text-muted-foreground mt-1">{error}</p>
-              <p className="text-xs text-muted-foreground mt-1">
-                Make sure the FastAPI backend is running at{" "}
-                <code className="bg-muted rounded px-1">
-                  {process.env.NEXT_PUBLIC_BACKEND_URL ??
-                    "http://localhost:8000"}
-                </code>
-              </p>
+          <div className="rounded-[1.8rem] border border-destructive/30 bg-destructive/10 p-5 shadow-sm">
+            <div className="flex gap-4 items-start">
+              <AlertTriangle className="w-5 h-5 text-destructive mt-0.5" />
+              <div>
+                <p className="font-semibold text-sm text-destructive">Failed to load output</p>
+                <p className="text-sm text-muted-foreground mt-2">{error}</p>
+                <p className="text-sm text-muted-foreground mt-2">
+                  Confirm backend is available at{' '}
+                  <code className="rounded bg-muted px-1 py-0.5">
+                    {process.env.NEXT_PUBLIC_BACKEND_URL ?? 'http://localhost:8000'}
+                  </code>
+                </p>
+              </div>
             </div>
           </div>
         )}
 
-        {/* Agent Logs */}
-        <section>
-          <AgentLogs planId={planId ?? undefined} onAgentStatusChange={handleAgentStatus} />
+        <section className="grid gap-6 xl:grid-cols-[1.7fr_0.95fr]">
+          <div className="space-y-6">
+            <AgentLogs planId={planId ?? undefined} onAgentStatusChange={handleAgentStatus} />
+            <AgentGraph agentStatuses={agentStatuses} />
+          </div>
+          <div className="space-y-6">
+            <div className="rounded-[2rem] border border-border/60 bg-card/80 p-6 shadow-sm">
+              <div className="mb-4 flex items-center justify-between gap-4">
+                <div>
+                  <p className="text-xs uppercase tracking-[0.35em] text-muted-foreground">
+                    Live GTM insight
+                  </p>
+                  <h3 className="text-xl font-semibold">GTM Messages</h3>
+                </div>
+                <Badge variant="outline" className="text-xs">
+                  {Object.keys(state?.gtm_messages ?? {}).length || 0}
+                </Badge>
+              </div>
+              {state?.gtm_messages ? (
+                <div className="space-y-3">
+                  {Object.entries(state?.gtm_messages ?? {}).map(([key, message]) => (
+                    <div key={key} className="rounded-3xl border border-border/50 bg-muted/30 p-4">
+                      <p className="text-[11px] uppercase tracking-[0.25em] text-muted-foreground">
+                        {key}
+                      </p>
+                      <p className="mt-2 text-sm leading-6 text-foreground">
+                        {message}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-muted-foreground">GTM results will appear here once the agent completes.</p>
+              )}
+            </div>
+          </div>
         </section>
 
-        {/* Agent Graph */}
-        <section>
-          <AgentGraph agentStatuses={agentStatuses} />
-        </section>
-
-        {/* Results */}
         <section className="space-y-8">
-          <div className="flex items-center gap-3">
-            <h2 className="text-xl font-bold">Results</h2>
-            {loading && !hasResults && (
-              <Badge variant="outline" className="text-xs text-muted-foreground">
-                Waiting for agents...
-              </Badge>
+          <div className="grid gap-6 lg:grid-cols-3">
+            {((state?.sponsors?.length ?? 0) > 0 || (loading && hasResults)) && (
+              <SponsorCards sponsors={state?.sponsors} loading={loading && !state?.sponsors?.length} />
+            )}
+
+            {((state?.speakers?.length ?? 0) > 0 || (loading && hasResults)) && (
+              <SpeakerGrid speakers={state?.speakers} loading={loading && !state?.speakers?.length} />
             )}
           </div>
 
-          {/* Loading skeletons */}
-          {loading && !hasResults && (
-            <div className="space-y-6">
-              {/* Sponsor skeletons */}
-              <div>
-                <Skeleton className="h-6 w-32 mb-4" />
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {Array.from({ length: 6 }).map((_, i) => (
-                    <Skeleton key={i} className="h-44 rounded-xl" />
-                  ))}
+          {(state?.exhibitors?.length ?? 0) > 0 && (
+            <div className="rounded-[2rem] border border-border/60 bg-card/80 p-6 shadow-sm">
+              <div className="mb-4 flex items-center justify-between gap-4">
+                <div>
+                  <p className="text-xs uppercase tracking-[0.35em] text-muted-foreground">Exhibitor Agent</p>
+                  <h3 className="text-xl font-semibold">Exhibitor opportunities</h3>
                 </div>
+                <Badge variant="outline" className="text-xs">
+                  {state?.exhibitors?.length ?? 0}
+                </Badge>
               </div>
-              {/* Speaker skeletons */}
-              <div>
-                <Skeleton className="h-6 w-28 mb-4" />
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                  {Array.from({ length: 8 }).map((_, i) => (
-                    <Skeleton key={i} className="h-52 rounded-xl" />
-                  ))}
-                </div>
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                {state?.exhibitors?.map((exhibitor) => (
+                  <div key={exhibitor.name} className="rounded-2xl border border-border/40 bg-muted/30 p-4 hover:bg-muted/40 transition-colors">
+                    <div className="flex items-start justify-between gap-3 mb-3">
+                      <p className="font-semibold text-foreground text-sm leading-tight break-words flex-1">{exhibitor.name}</p>
+                      <Badge variant="outline" className="text-[11px] shrink-0">
+                        {exhibitor.relevance?.toFixed?.(1) ?? exhibitor.relevance}
+                      </Badge>
+                    </div>
+                    <p className="text-xs text-muted-foreground mb-3">
+                      {exhibitor.cluster ?? 'Cluster unknown'}
+                    </p>
+                    {exhibitor.website && (
+                      <a
+                        href={exhibitor.website}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:text-primary/80 underline"
+                      >
+                        Visit website
+                      </a>
+                    )}
+                  </div>
+                ))}
               </div>
             </div>
           )}
 
-          {/* Sponsors */}
-          {((state?.sponsors?.length ?? 0) > 0 || (loading && hasResults)) && (
-            <SponsorCards sponsors={state?.sponsors} loading={loading && !state?.sponsors?.length} />
-          )}
-
-          {/* Speakers */}
-          {((state?.speakers?.length ?? 0) > 0 || (loading && hasResults)) && (
-            <SpeakerGrid speakers={state?.speakers} loading={loading && !state?.speakers?.length} />
-          )}
-
-          {/* Venue Table */}
           {((state?.venues?.length ?? 0) > 0 || (loading && hasResults)) && (
             <VenueTable venues={state?.venues} loading={loading && !state?.venues?.length} />
           )}
-
-          {/* Pricing + Attendance in a 2-col grid */}
-          {(state?.ticket_tiers?.length ?? 0) > 0 && (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <PricingTiers tiers={state?.ticket_tiers} />
-              <AttendanceChart tiers={state?.ticket_tiers} />
-            </div>
-          )}
-
-          {/* Schedule */}
-          {(state?.schedule?.length ?? 0) > 0 && (
-            <ScheduleTimeline schedule={state?.schedule} />
-          )}
-
-          {/* Revenue summary */}
-          {state?.total_est_revenue && (
-            <div className="flex gap-4 flex-wrap">
-              <div className="flex-1 min-w-45 bg-card/80 border border-border/60 rounded-xl px-5 py-4 shadow-sm">
-                <p className="text-xs text-muted-foreground">Total Est. Revenue</p>
-                <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-300 tabular-nums">
-                  $
-                  {state.total_est_revenue >= 1_000_000
-                    ? `${(state.total_est_revenue / 1_000_000).toFixed(2)}M`
-                    : `${(state.total_est_revenue / 1_000).toFixed(1)}k`}
-                </p>
-              </div>
-              {state.break_even_price != null && (
-                <div className="flex-1 min-w-45 bg-card/80 border border-border/60 rounded-xl px-5 py-4 shadow-sm">
-                  <p className="text-xs text-muted-foreground">Break-even Price</p>
-                  <p className="text-2xl font-bold text-primary tabular-nums">
-                    ${state.break_even_price.toLocaleString()}
-                  </p>
-                </div>
-              )}
-            </div>
-          )}
         </section>
 
-        {/* Simulation and Refinement */}
+        <section className="grid gap-6 lg:grid-cols-[2fr_1fr]">
+          <div className="space-y-6">
+            {(state?.ticket_tiers?.length ?? 0) > 0 && (
+              <div className="rounded-[2rem] border border-border/60 bg-card/80 p-6 shadow-sm">
+                <div className="mb-4 flex items-center justify-between gap-4">
+                  <div>
+                    <p className="text-xs uppercase tracking-[0.35em] text-muted-foreground">Pricing</p>
+                    <h3 className="text-xl font-semibold">Ticket tiers</h3>
+                  </div>
+                  <Badge variant="outline" className="text-xs">
+                    {state?.ticket_tiers?.length ?? 0}
+                  </Badge>
+                </div>
+                <PricingTiers tiers={state?.ticket_tiers} />
+              </div>
+            )}
+
+            {(state?.schedule?.length ?? 0) > 0 && (
+              <div className="rounded-[2rem] border border-border/60 bg-card/80 p-6 shadow-sm">
+                <div className="mb-4 flex items-center justify-between gap-4">
+                  <div>
+                    <p className="text-xs uppercase tracking-[0.35em] text-muted-foreground">Event ops</p>
+                    <h3 className="text-xl font-semibold">Schedule</h3>
+                  </div>
+                  <Badge variant="outline" className="text-xs">
+                    {state?.schedule?.length ?? 0}
+                  </Badge>
+                </div>
+                <ScheduleTimeline schedule={state?.schedule} />
+              </div>
+            )}
+          </div>
+
+          <div className="space-y-6">
+            {(state?.communities?.length ?? 0) > 0 && (
+              <div className="rounded-[2rem] border border-border/60 bg-card/80 p-6 shadow-sm">
+                <div className="mb-4 flex items-center justify-between gap-4">
+                  <div>
+                    <p className="text-xs uppercase tracking-[0.35em] text-muted-foreground">Community GTM</p>
+                    <h3 className="text-xl font-semibold">Community channels</h3>
+                  </div>
+                  <Badge variant="outline" className="text-xs">
+                    {state?.communities?.length ?? 0}
+                  </Badge>
+                </div>
+                <div className="space-y-3">
+                  {state?.communities?.map((community) => (
+                    <div key={`${community.platform}-${community.name}`} className="rounded-3xl border border-border/40 bg-muted/30 p-4">
+                      <p className="text-sm font-semibold text-foreground">{community.name}</p>
+                      <p className="text-sm text-muted-foreground">{community.platform} • {community.size?.toLocaleString() ?? community.size} members</p>
+                      {community.invite_url && (
+                        <a href={community.invite_url} target="_blank" rel="noreferrer" className="mt-2 inline-flex text-sm text-primary underline">
+                          Join
+                        </a>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {(state?.distribution_plan?.length ?? 0) > 0 && (
+              <div className="rounded-[2rem] border border-border/60 bg-card/80 p-6 shadow-sm">
+                <div className="mb-4 flex items-center justify-between gap-4">
+                  <div>
+                    <p className="text-xs uppercase tracking-[0.35em] text-muted-foreground">Channel plan</p>
+                    <h3 className="text-xl font-semibold">Distribution plan</h3>
+                  </div>
+                  <Badge variant="outline" className="text-xs">
+                    {state?.distribution_plan?.length ?? 0}
+                  </Badge>
+                </div>
+                <ul className="space-y-3">
+                  {state?.distribution_plan?.map((item, index) => (
+                    <li key={`${item}-${index}`} className="rounded-3xl bg-muted/30 p-4 text-sm leading-6 text-foreground">
+                      <span className="font-semibold text-primary">{index + 1}.</span> {item}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {(state?.conflicts?.length ?? 0) > 0 && (
+              <div className="rounded-[2rem] border border-border/60 bg-card/80 p-6 shadow-sm">
+                <div className="mb-4 flex items-center justify-between gap-4">
+                  <div>
+                    <p className="text-xs uppercase tracking-[0.35em] text-muted-foreground">Validation</p>
+                    <h3 className="text-xl font-semibold">Conflicts</h3>
+                  </div>
+                  <Badge variant="outline" className="text-xs text-destructive">
+                    {state?.conflicts?.length ?? 0}
+                  </Badge>
+                </div>
+                <div className="space-y-3 text-sm text-foreground">
+                  {state?.conflicts?.map((conflict, index) => (
+                    <div key={`${conflict}-${index}`} className="rounded-3xl bg-muted/30 p-4 border border-border/40">
+                      {conflict}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </section>
+
         <section className="space-y-8">
           <Separator />
-          <h2 className="text-xl font-bold">Simulate & Refine</h2>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="grid gap-6 lg:grid-cols-2">
             <WhatIfPanel tiers={state?.ticket_tiers} />
             <RefinementPanel onRefined={handleRefined} />
           </div>

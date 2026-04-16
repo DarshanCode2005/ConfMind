@@ -324,10 +324,9 @@ class BaseAgent(ABC):
                         timeout=20,
                     )
                     if response.status_code >= 400:
-                        except Exception as err:
-                            raise RuntimeError(
-                                f"Tavily HTTP {response.status_code}: {response.text[:200]}"
-                            ) from err
+                        raise RuntimeError(
+                            f"Tavily HTTP {response.status_code}: {response.text[:200]}"
+                        )
                     response = response.json()
 
                 results = response.get("results", [])

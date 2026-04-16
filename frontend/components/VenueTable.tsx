@@ -172,21 +172,20 @@ export default function VenueTable({ venues, loading }: VenueTableProps) {
         </CardTitle>
       </CardHeader>
       <CardContent className="p-0">
-        <div className="overflow-x-auto rounded-b-lg">
-          <Table>
-            <TableHeader className="bg-muted/20">
-              <TableRow>
-                <ColHeader label="Venue" col="name" />
-                <ColHeader label="City" col="city" />
-                <TableHead>Country</TableHead>
-                <ColHeader label="Capacity" col="capacity" />
-                <TableHead>Price Range</TableHead>
-                <TableHead>Past Events</TableHead>
-                <ColHeader label="Score" col="score" />
-                <TableHead>Map</TableHead>
-                <TableHead>Link</TableHead>
-              </TableRow>
-            </TableHeader>
+        <Table>
+          <TableHeader className="bg-muted/20">
+            <TableRow>
+              <ColHeader label="Venue" col="name" />
+              <ColHeader label="City" col="city" />
+              <TableHead>Country</TableHead>
+              <ColHeader label="Capacity" col="capacity" />
+              <TableHead>Price Range</TableHead>
+              <TableHead>Past Events</TableHead>
+              <ColHeader label="Score" col="score" />
+              <TableHead>Map</TableHead>
+              <TableHead>Link</TableHead>
+            </TableRow>
+          </TableHeader>
             <TableBody>
               {sorted.map((venue) => (
                 <TableRow
@@ -287,7 +286,6 @@ export default function VenueTable({ venues, loading }: VenueTableProps) {
               ))}
             </TableBody>
           </Table>
-        </div>
       </CardContent>
     </Card>
   );
