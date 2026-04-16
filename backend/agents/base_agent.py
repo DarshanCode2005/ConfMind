@@ -72,14 +72,17 @@ class BaseAgent(ABC):
         """Return a Chat LLM with fallback logic.
 
         Priority:
-        1. OpenRouter: google/gemma-2-27b-it
-        2. OpenRouter: google/gemma-2-9b-it (Fallback)
-        3. OpenAI-compatible model from OPENAI_* env (if configured)
-        4. Local Ollama: confmind-planner (Tertiary fallback)
+        1. Anthropic: claude-3-5-sonnet-20240620 (Primary if ANTHROPIC_API_KEY is set)
+        2. OpenRouter: google/gemma-2-27b-it
+        3. OpenRouter: google/gemma-2-9b-it (Fallback)
+        4. OpenAI-compatible model from OPENAI_* env (if configured)
+        5. Local Ollama: confmind-planner (Tertiary fallback)
         """
+        from langchain_anthropic import ChatAnthropic
         from langchain_ollama import ChatOllama
         from langchain_openai import ChatOpenAI
 
+        anthropic_key = os.getenv("ANTHROPIC_API_KEY")
         or_key = os.getenv("OPENROUTER_API_KEY") or os.getenv("openrouter_key")
         openai_key = os.getenv("OPENAI_API_KEY")
         openai_base = os.getenv("OPENAI_BASE_URL")
@@ -87,8 +90,19 @@ class BaseAgent(ABC):
 
         llm_candidates: list[Any] = []
 
+        # ── 1. Absolute Primary: Claude 3.5 Sonnet (Direct) ──────────────────
+        if anthropic_key:
+            llm_candidates.append(
+                ChatAnthropic(
+                    model="claude-3-5-sonnet-20240620",
+                    temperature=temperature,
+                    anthropic_api_key=anthropic_key,
+                    max_retries=1,
+                )
+            )
+
         if or_key:
-            # ── 1. Primary: Gemma 2 27B via OpenRouter ───────────────────────
+            # ── 2. Primary: Gemma 2 27B via OpenRouter ───────────────────────
             primary_kwargs: dict[str, Any] = {
                 "model": "google/gemma-2-27b-it",
                 "temperature": temperature,
@@ -98,7 +112,7 @@ class BaseAgent(ABC):
             primary_kwargs["openai_api_base"] = "https://openrouter.ai/api/v1"
             llm_candidates.append(ChatOpenAI(**primary_kwargs))
 
-            # ── 2. Secondary: Gemma 2 9B via OpenRouter ──────────────────────
+            # ── 3. Secondary: Gemma 2 9B via OpenRouter ──────────────────────
             secondary_kwargs: dict[str, Any] = {
                 "model": "google/gemma-2-9b-it",
                 "temperature": temperature,

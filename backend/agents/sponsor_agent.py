@@ -5,19 +5,22 @@ System Prompt:
   "You are the Sponsor Agent. Extract, enrich, score, and propose.
    Use historical data only for scoring."
 
-Loop (4 passes):
+Loop (5 passes):
   • Pass 1: Extract sponsors from past_events → deduplicate.
   • Pass 2: For top 20 by frequency → Tavily "{sponsor_name} event
             sponsorship {geography} 2025 marketing spend".
-  • Pass 3: Score = 0.35*industry_relevance(LLM) + 0.25*geography_match
+  • Pass 3: PredictHQ Entity Xref → Search company as entity, find related
+            entities and categories.
+  • Pass 4: Score = 0.35*industry_relevance + 0.25*geography_match
             + 0.25*frequency_norm + 0.15*spend_proxy_norm.
-  • Pass 4: Top 3 → generate markdown proposal.
+  • Pass 5: Top 3 → generate markdown proposal.
 
 Stop: Top 15 scored. One retry per sponsor if enrichment fails.
 """
 
 from __future__ import annotations
 
+import os
 import json
 from collections import Counter
 from typing import Any
@@ -48,7 +51,8 @@ class SponsorAgent(BaseAgent):
     Sources:
         1. past_events from WebSearchAgent (primary)
         2. Tavily enrichment for top candidates
-        3. LLM for industry relevance scoring
+        3. PredictHQ Entity Xref for industry alignment
+        4. LLM for industry relevance scoring
 
     Output:
         state["sponsors"]  — top-N SponsorSchema list, sorted by relevance_score
@@ -138,7 +142,39 @@ class SponsorAgent(BaseAgent):
 
         return sponsors
 
-    # ── Pass 3: Scoring ───────────────────────────────────────────────────
+    # ── Pass 3: PredictHQ Entity Xref ─────────────────────────────────────
+
+    def _phq_entity_xref(self, sponsors: list[dict]) -> list[dict]:
+        """Cross-reference sponsors with PredictHQ entities to find related categories."""
+        try:
+            from predicthq import Client  # type: ignore[import-untyped]
+        except ImportError:
+            return sponsors
+
+        api_key = os.getenv("PREDICTHQ_API_KEY", "")
+        if not api_key:
+            return sponsors
+
+        phq = Client(access_token=api_key)
+        for sponsor in sponsors[:_ENRICH_TOP]:
+            name = sponsor["name"]
+            try:
+                # Search for the sponsor as an entity
+                entity_results = phq.entities.search(q=name, type="organization")
+                for entity in entity_results:
+                    if getattr(entity, "name", "").lower() == name.lower():
+                        # Enrich with industry info from PHQ if found
+                        phq_industry = getattr(entity, "industry", None)
+                        if phq_industry:
+                            sponsor["categories"].append(phq_industry)
+                        self._log_info(f"  PHQ Xref found for: {name}")
+                        break
+            except Exception:
+                continue
+
+        return sponsors
+
+    # ── Pass 4: Scoring ───────────────────────────────────────────────────
 
     def _score_sponsors(
         self,
@@ -200,7 +236,7 @@ class SponsorAgent(BaseAgent):
 
         return sponsors
 
-    # ── Pass 4: Generate proposals ────────────────────────────────────────
+    # ── Pass 5: Generate proposals ────────────────────────────────────────
 
     def _generate_proposals(
         self,
@@ -245,6 +281,7 @@ class SponsorAgent(BaseAgent):
                     tier=tier,
                     relevance_score=sponsor.get("relevance_score", 0),
                     industry=", ".join(sponsor.get("categories", [])),
+                    website="",
                 )
                 safe_name = name.replace(" ", "_")
                 output_path = f"output/proposals/{safe_name}_proposal.pdf"
@@ -266,7 +303,7 @@ class SponsorAgent(BaseAgent):
     # ── Main run ──────────────────────────────────────────────────────────
 
     def run(self, state: AgentState) -> dict[str, Any]:
-        """Execute the 4-pass sponsor discovery pipeline."""
+        """Execute the 5-pass sponsor discovery pipeline."""
         self._current_pass = 0
         self._log_info("Starting sponsor discovery run...")
 
@@ -317,9 +354,16 @@ class SponsorAgent(BaseAgent):
             ):
                 sponsors = self._enrich_sponsors(sponsors, geography)
 
-            # ── Pass 3: Score all sponsors ────────────────────────────────
+            # ── Pass 3: PredictHQ Entity Xref ──────────────────────────────
             with self._pass_context(
-                "Pass 3: Scoring", state,
+                "Pass 3: PredictHQ Entity Xref", state,
+                f"cross-referencing sponsors for {category}"
+            ):
+                sponsors = self._phq_entity_xref(sponsors)
+
+            # ── Pass 4: Score all sponsors ────────────────────────────────
+            with self._pass_context(
+                "Pass 4: Scoring", state,
                 f"scoring sponsors for {category} in {geography}"
             ):
                 max_freq = max((s.get("frequency", 1) for s in sponsors), default=1)
@@ -329,9 +373,9 @@ class SponsorAgent(BaseAgent):
                 sponsors.sort(key=lambda s: s.get("relevance_score", 0), reverse=True)
                 sponsors = sponsors[:_TOP_N]
 
-            # ── Pass 4: Generate proposals for top 3 ─────────────────────
+            # ── Pass 5: Generate proposals for top 3 ─────────────────────
             with self._pass_context(
-                "Pass 4: Generate proposals", state,
+                "Pass 5: Generate proposals", state,
                 f"proposals for top sponsors"
             ):
                 metadata = self._generate_proposals(sponsors, cfg, geography)

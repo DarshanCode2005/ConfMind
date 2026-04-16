@@ -148,27 +148,14 @@ export default function SponsorCards({ sponsors, loading }: SponsorCardsProps) {
                   <Button
                     size="sm"
                     variant="outline"
-                    className="flex-1 text-xs h-8 gap-1 rounded-lg"
+                    className="w-full text-xs h-8 gap-1.5 rounded-lg border-border/60 hover:bg-muted/50"
                     onClick={() =>
                       sponsor.website && window.open(sponsor.website, "_blank")
                     }
                     disabled={!sponsor.website}
                   >
-                    <ExternalLink className="w-3 h-3" />
-                    Website
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="default"
-                    className="flex-1 text-xs h-8 gap-1 rounded-lg bg-gradient-to-r from-primary to-cyan-500 text-primary-foreground shadow-md shadow-primary/20"
-                    onClick={() =>
-                      alert(
-                        `Proposal PDF for ${sponsor.name} would download here.`
-                      )
-                    }
-                  >
-                    <Download className="w-3 h-3" />
-                    Proposal
+                    <ExternalLink className="w-3.5 h-3.5" />
+                    Visit Website
                   </Button>
                 </div>
               </CardContent>

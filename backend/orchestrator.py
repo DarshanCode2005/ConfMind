@@ -75,10 +75,13 @@ def _import_agents() -> dict[str, Any]:
     # P1 responsibility — base class only, no specialisation needed
     try:
         from backend.agents.web_search_agent import WebSearchAgent
-        # Single agent for now to satisfy the pipeline, fetching 10 events
-        agents["web_search_agent"] = WebSearchAgent(agent_id=1, limit=10)
+        # Spawn 3 parallel agents per diagram
+        for i in range(1, 4):
+            # Stagger offsets so they fetch unique slices
+            agents[f"web_search_agent_{i}"] = WebSearchAgent(agent_id=i, offset=(i-1)*10, limit=10)
     except ImportError:
-        agents["web_search_agent"] = None
+        for i in range(1, 4):
+            agents[f"web_search_agent_{i}"] = None
 
     # P2 responsibility
     try:
@@ -140,6 +143,27 @@ def _import_agents() -> dict[str, Any]:
         agents["event_ops_agent"] = None
 
     return agents
+
+
+def phq_probe(state: AgentState) -> dict[str, Any]:
+    """PredictHQ probe node — decides search scope and parallelism logic."""
+    from backend.main import _agent_status
+    plan_id = state.get("metadata", {}).get("plan_id")
+    if plan_id:
+        _agent_status.setdefault(str(plan_id), {})["phq_probe"] = "running"
+
+    # Logic to Decide N agents or search windows based on config
+    cfg = state["event_config"]
+    # For now, we use a fixed 3 agents, but we could split by date or geography
+    if plan_id:
+        _agent_status.setdefault(str(plan_id), {})["phq_probe"] = "completed"
+
+    return {
+        "metadata": {
+            "web_agents_count": 3,
+            "search_query": f"{cfg.category} {cfg.geography}",
+        }
+    }
 
 
 def _make_node(agent: Any, name: str):
@@ -208,27 +232,36 @@ def _build_graph() -> Any:
 
     builder = StateGraph(AgentState)
 
-    # Register all 8 agent nodes
+    # 1. PHQ Probe Node
+    builder.add_node("phq_probe", phq_probe)
+
+    # 2. Register all specialized agent nodes
     for name, agent in agents.items():
         builder.add_node(name, _make_node(agent, name))
 
     # ── Edges ─────────────────────────────────────────────────────────────
-    # Web search runs first to collect past_events data
-    builder.add_edge(START, "web_search_agent")
+    # START -> phq_probe -> parallel web searches
+    builder.add_edge(START, "phq_probe")
 
-    # Parallel fan-out from web_search_agent: venue, sponsor, speaker
-    builder.add_edge("web_search_agent", "venue_agent")
-    builder.add_edge("web_search_agent", "sponsor_agent")
-    builder.add_edge("web_search_agent", "speaker_agent")
+    web_agents = [n for n in agents.keys() if n.startswith("web_search_agent_")]
+    for wa in web_agents:
+        builder.add_edge("phq_probe", wa)
 
-    # After all three finish, exhibitor agent runs
-    builder.add_edge("venue_agent", "exhibitor_agent")
-    builder.add_edge("sponsor_agent", "exhibitor_agent")
-    builder.add_edge("speaker_agent", "exhibitor_agent")
+    # Discovery agents (Fan-out from all web agents)
+    discovery_agents = ["venue_agent", "sponsor_agent", "speaker_agent", "exhibitor_agent"]
+    for wa in web_agents:
+        for da in discovery_agents:
+            builder.add_edge(wa, da)
 
-    # Linear pipeline from exhibitor onwards
-    builder.add_edge("exhibitor_agent", "pricing_agent")
+    # Analytics / Strategy Pipeline
+    # Pricing runs after discovery is mostly done (venue/sponsor/speaker needed)
+    builder.add_edge("venue_agent", "pricing_agent")
+    builder.add_edge("sponsor_agent", "pricing_agent")
+    builder.add_edge("speaker_agent", "pricing_agent")
+
     builder.add_edge("pricing_agent", "community_gtm_agent")
+    builder.add_edge("exhibitor_agent", "community_gtm_agent")
+
     builder.add_edge("community_gtm_agent", "event_ops_agent")
     builder.add_edge("event_ops_agent", "revenue_agent")
     builder.add_edge("revenue_agent", END)

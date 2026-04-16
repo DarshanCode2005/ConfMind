@@ -18,6 +18,7 @@ export default function RootLayout({
     <html
       lang="en"
       className="font-sans h-full antialiased"
+      data-scroll-behavior="smooth"
       suppressHydrationWarning
     >
       <body
