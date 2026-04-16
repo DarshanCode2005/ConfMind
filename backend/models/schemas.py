@@ -251,4 +251,5 @@ class ChatState(TypedDict):
     chat_history: list[dict[str, str]]
     run_id: str
     current_summary: str
-    pending_rerun: dict[str, Any] | None
+    pending_rerun: list[str] | None
+    pending_updates: dict[str, Any] | None

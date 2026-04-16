@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { subscribeToAgentStatus } from "@/lib/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 import { Terminal, Circle } from "lucide-react";
 
 interface LogLine {
@@ -219,7 +220,7 @@ export default function AgentLogs({ planId, onAgentStatusChange }: AgentLogsProp
       <CardContent className="p-0">
         <div
           ref={scrollRef}
-          className="h-64 overflow-y-auto font-mono text-xs bg-linear-to-b from-muted/20 to-background/70 rounded-b-lg border-t border-border/40 p-4 space-y-0.5"
+          className="h-64 overflow-auto font-mono text-xs bg-linear-to-b from-muted/20 to-background/70 rounded-b-lg border-t border-border/40 p-4 space-y-0.5"
         >
           {logs.length === 0 ? (
             <div className="flex items-center gap-2 text-muted-foreground">
@@ -241,7 +242,7 @@ export default function AgentLogs({ planId, onAgentStatusChange }: AgentLogsProp
                       {agent}
                     </span>
                   )}
-                  <span className={typeColor(type)}>{agent ? body : log.text}</span>
+                  <span className={cn(typeColor(type), "break-all")}>{agent ? body : log.text}</span>
                 </div>
               );
             })

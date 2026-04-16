@@ -22,7 +22,7 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <body
-        className="min-h-full flex flex-col bg-background text-foreground tracking-tight relative overflow-x-hidden"
+        className="min-h-full flex flex-col bg-background text-foreground tracking-tight relative"
         suppressHydrationWarning
       >
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>

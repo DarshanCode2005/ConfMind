@@ -238,6 +238,10 @@ def _initial_state(config: EventConfigInput, run_id: str | None = None) -> Agent
     All list and dict fields are initialised to empty so agents that run first
     don't encounter KeyErrors when reading OTHER agents' fields.
     """
+    # Ensure config is a proper object, not a dict
+    if isinstance(config, dict):
+        config = EventConfigInput(**config)
+
     return AgentState(
         event_config=config,
         past_events=[],
@@ -256,6 +260,44 @@ def _initial_state(config: EventConfigInput, run_id: str | None = None) -> Agent
     )
 
 
+def hydrate_state(state: dict[str, Any]) -> AgentState:
+    """Convert a plain dictionary state (e.g. from JSON cache) into a proper AgentState 
+    with Pydantic models hydrated for all schema fields.
+    """
+    from backend.models.schemas import (
+        CommunitySchema,
+        ExhibitorSchema,
+        SpeakerSchema,
+        SponsorSchema,
+        TicketTierSchema,
+        VenueSchema,
+    )
+
+    h_state = state.copy()
+
+    # Hydrate EventConfig
+    if "event_config" in h_state and isinstance(h_state["event_config"], dict):
+        h_state["event_config"] = EventConfigInput(**h_state["event_config"])
+
+    # Hydrate lists of models
+    mappings = {
+        "sponsors": SponsorSchema,
+        "speakers": SpeakerSchema,
+        "venues": VenueSchema,
+        "exhibitors": ExhibitorSchema,
+        "pricing": TicketTierSchema,
+        "communities": CommunitySchema,
+    }
+
+    for key, schema_cls in mappings.items():
+        if key in h_state and isinstance(h_state[key], list):
+            h_state[key] = [
+                schema_cls(**item) if isinstance(item, dict) else item for item in h_state[key]
+            ]
+
+    return h_state  # type: ignore[return-value]
+
+
 async def run_plan(config: EventConfigInput, run_id: str | None = None) -> AgentState:
     """Run the full conference planning pipeline for a given EventConfigInput.
 
@@ -266,30 +308,39 @@ async def run_plan(config: EventConfigInput, run_id: str | None = None) -> Agent
     Returns:
         The final AgentState with all agent outputs filled in.
     """
+    # Ensure config is an object even if passed as a dict
+    if isinstance(config, dict):
+        config = EventConfigInput(**config)
+
     initial = _initial_state(config, run_id)
     final_state: AgentState = await graph.ainvoke(initial)  # type: ignore[assignment]
     return final_state
 
-async def rerun_nodes(node_names: list[str], current_state: AgentState) -> AgentState:
+async def rerun_nodes(node_names: list[str], current_state: AgentState | dict[str, Any]) -> AgentState:
     """Re-executes only the named nodes and merges deltas back into state.
-    
+
     If "all" is in node_names, restarts the full workflow with the current config.
     """
+    # Important: Hydrate state if it's a plain dict (e.g. from cache)
+    # This ensures cfg.field dot-notation works in agents.
+    if not isinstance(current_state.get("event_config"), EventConfigInput):
+        current_state = hydrate_state(current_state)
+
     agents = _import_agents()
-    
+
     if "all" in node_names:
         run_id = current_state.get("metadata", {}).get("run_id")
         return await run_plan(current_state["event_config"], run_id)
-        
+
     import operator
-    
+
     for name in node_names:
         agent = agents.get(name)
         if agent:
             # We call the wrapped node function to get the delta dict
             node_fn = _make_node(agent, name)
             delta = node_fn(current_state)
-            
+
             # Merge delta back into state according to AgentState reducers
             for key, value in delta.items():
                 if key in ["past_events", "errors"]:

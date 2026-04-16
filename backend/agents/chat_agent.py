@@ -178,6 +178,17 @@ class ChatAgentHost:
             return "\n\n".join(docs)
 
         @tool
+        async def update_plan_parameter(field: str, value: Any) -> str:
+            """Update a specific parameter in the conference plan's event configuration.
+            Valid fields: category, geography, audience_size, budget_usd, event_dates, event_name.
+            Example: update_plan_parameter('geography', 'London')
+            """
+            if "pending_updates" not in state:
+                state["pending_updates"] = {} # type: ignore
+            state["pending_updates"][field] = value # type: ignore
+            return f"Updated {field} to {value}. This will be applied in the next rerun."
+
+        @tool
         def draft_outreach_email(name: str, type: str) -> str:
             """
             Draft a personalized outreach email for a sponsor or speaker.
@@ -214,14 +225,16 @@ class ChatAgentHost:
             res = llm.invoke([HumanMessage(content=prompt)])
             return str(res.content)
 
-        tools = [retrieve, trigger_rerun, get_summary, draft_outreach_email]
+        tools = [retrieve, trigger_rerun, get_summary, draft_outreach_email, update_plan_parameter]
         llm = _get_chat_llm(temperature=0)
 
         system_prompt = SystemMessage(
             content=(
                 "You are the ConfMind conversational assistant. You help users understand and modify their conference plan. "
                 "You DO NOT have direct access to the plan state. You MUST use tools to fetch data from the vector db (retrieve). "
-                "If the user wants to change something, you can trigger a state rerun of specific agents (trigger_rerun)."
+                "If the user wants to change something (e.g. 'Change city to London'), use 'update_plan_parameter' to set the new value, "
+                "and then 'trigger_rerun' for the relevant agents (e.g. ['venue_agent']). "
+                "Always confirm to the user what you have updated and what rerun you triggered."
             )
         )
 

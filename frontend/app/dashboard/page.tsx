@@ -276,149 +276,147 @@ export default function DashboardPage() {
           </div>
         )}
 
-        <section className="grid gap-6 lg:grid-cols-[2.2fr_1fr]">
-          <div className="space-y-6">
-            {/* Layer 1: Financial & GTM Intelligence */}
-            <div className="grid gap-6 md:grid-cols-2">
-              {/* ROI & Revenue Center */}
-              <div className="rounded-[2rem] border border-border/60 bg-card/80 p-6 shadow-sm overflow-hidden relative group">
-                <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-                  <TrendingUp className="w-20 h-20" />
-                </div>
-                <div className="mb-6">
-                  <p className="text-xs uppercase tracking-[0.35em] text-muted-foreground">Revenue Agent</p>
-                  <h3 className="text-xl font-semibold">ROI Analysis</h3>
-                </div>
-                <div className="space-y-4">
-                  <div>
-                    <p className="text-xs text-muted-foreground mb-1">Total Est. Revenue</p>
-                    <p className="text-3xl font-bold text-emerald-500">
-                      ${(state?.total_est_revenue ?? state?.revenue?.total_projected_revenue ?? 0).toLocaleString()}
-                    </p>
-                  </div>
-                  <Separator className="bg-border/40" />
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <p className="text-xs text-muted-foreground mb-1">Break-even Att.</p>
-                      <p className="text-lg font-semibold">{state?.break_even_price ?? state?.revenue?.break_even?.attendance_needed ?? "N/A"}</p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-muted-foreground mb-1">Target Margin</p>
-                      <p className="text-lg font-semibold text-cyan-500">32.4%</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
+        {/* Execution Layer */}
+        <section className="grid gap-6 lg:grid-cols-[1fr_1.6fr]">
+          <AgentLogs planId={planId ?? undefined} onAgentStatusChange={handleAgentStatus} />
+          <AgentGraph agentStatuses={agentStatuses} />
+        </section>
 
-              {/* Live GTM */}
-              <div className="rounded-[2rem] border border-border/60 bg-card/80 p-6 shadow-sm">
-                <div className="mb-4 flex items-center justify-between gap-4">
-                  <div>
-                    <p className="text-xs uppercase tracking-[0.35em] text-muted-foreground">Live GTM</p>
-                    <h3 className="text-xl font-semibold">GTM Messaging</h3>
-                  </div>
-                  <Badge variant="outline" className="text-xs">
-                    {gtmCount}
-                  </Badge>
-                </div>
-                {state?.gtm_messages && gtmCount > 0 ? (
-                  <div className="space-y-3 max-h-[160px] overflow-y-auto pr-2 custom-scrollbar">
-                    {Object.entries(state.gtm_messages).map(([platform, message]) => (
-                      <div key={platform} className="rounded-2xl border border-border/50 bg-muted/30 p-3">
-                        <p className="text-[10px] uppercase tracking-[0.24em] text-muted-foreground">{platform}</p>
-                        <p className="mt-1 text-xs leading-5 text-foreground line-clamp-2">{message}</p>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-sm text-muted-foreground">GTM recommendations will appear here once the agent completes.</p>
-                )}
-              </div>
+        <section className="grid gap-6 lg:grid-cols-[1fr_1fr]">
+          {/* ROI & Revenue Center */}
+          <div className="rounded-[2rem] border border-border/60 bg-card/80 p-6 shadow-sm overflow-hidden relative group">
+            <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+              <TrendingUp className="w-20 h-20" />
             </div>
-
-            {/* Layer 2: Core Discovery Sections */}
-            {(state?.speakers?.length ?? 0) > 0 && (
-              <SpeakerGrid speakers={state?.speakers} loading={loading} />
-            )}
-
-            {(state?.sponsors?.length ?? 0) > 0 && (
-              <SponsorCards sponsors={state?.sponsors} loading={loading} />
-            )}
-
-            {(state?.venues?.length ?? 0) > 0 && (
-              <VenueTable venues={state?.venues} loading={loading} />
-            )}
-
-            {/* Layer 3: Opportunities Grid */}
-            <div className="grid gap-6 md:grid-cols-2">
-              {/* Exhibitor Opportunities */}
-              {(state?.exhibitors?.length ?? 0) > 0 && (
-                <div className="rounded-[2rem] border border-border/60 bg-card/80 p-6 shadow-sm">
-                  <div className="mb-4 flex items-center justify-between gap-4">
-                    <div>
-                      <p className="text-xs uppercase tracking-[0.35em] text-muted-foreground">Exhibitor Agent</p>
-                      <h3 className="text-xl font-semibold">Exhibitors</h3>
-                    </div>
-                    <Badge variant="outline" className="text-xs">
-                      {state?.exhibitors?.length}
-                    </Badge>
-                  </div>
-                  <div className="space-y-3">
-                    {state?.exhibitors?.slice(0, 4).map((exhibitor) => (
-                      <div key={exhibitor.name} className="flex items-center justify-between p-3 rounded-2xl border border-border/40 bg-muted/30">
-                        <div>
-                          <p className="text-sm font-medium">{exhibitor.name}</p>
-                          <p className="text-[10px] text-muted-foreground uppercase tracking-wider">{exhibitor.cluster}</p>
-                        </div>
-                        <Badge variant="outline" className="text-[10px]">
-                          {exhibitor.relevance?.toFixed?.(1) ?? exhibitor.relevance}
-                        </Badge>
-                      </div>
-                    ))}
-                  </div>
+            <div className="mb-6">
+              <p className="text-xs uppercase tracking-[0.35em] text-muted-foreground">Revenue Agent</p>
+              <h3 className="text-xl font-semibold">ROI Analysis</h3>
+            </div>
+            <div className="space-y-4">
+              <div>
+                <p className="text-xs text-muted-foreground mb-1">Total Est. Revenue</p>
+                <p className="text-3xl font-bold text-emerald-500">
+                  ${(state?.total_est_revenue ?? state?.revenue?.total_projected_revenue ?? 0).toLocaleString()}
+                </p>
+              </div>
+              <Separator className="bg-border/40" />
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-xs text-muted-foreground mb-1">Break-even Att.</p>
+                  <p className="text-lg font-semibold">{state?.break_even_price ?? state?.revenue?.break_even?.attendance_needed ?? "N/A"}</p>
                 </div>
-              )}
-
-              {/* Community Channels */}
-              {(state?.communities?.length ?? 0) > 0 && (
-                <div className="rounded-[2rem] border border-border/60 bg-card/80 p-6 shadow-sm">
-                  <div className="mb-4 flex items-center justify-between gap-4">
-                    <div>
-                      <p className="text-xs uppercase tracking-[0.35em] text-muted-foreground">Community GTM</p>
-                      <h3 className="text-xl font-semibold">Channels</h3>
-                    </div>
-                    <Badge variant="outline" className="text-xs">
-                      {state?.communities?.length}
-                    </Badge>
-                  </div>
-                  <div className="space-y-3">
-                    {state?.communities?.slice(0, 4).map((community) => (
-                      <div key={`${community.platform}-${community.name}`} className="p-3 rounded-2xl border border-border/40 bg-muted/30">
-                        <p className="text-sm font-medium">{community.name}</p>
-                        <p className="text-[10px] text-muted-foreground">{community.platform} • {community.size.toLocaleString()} members</p>
-                      </div>
-                    ))}
-                  </div>
+                <div>
+                  <p className="text-xs text-muted-foreground mb-1">Target Margin</p>
+                  <p className="text-lg font-semibold text-cyan-500">32.4%</p>
                 </div>
-              )}
+              </div>
             </div>
           </div>
 
-          <div className="space-y-6">
-            <AgentLogs planId={planId ?? undefined} onAgentStatusChange={handleAgentStatus} />
-            <AgentGraph agentStatuses={agentStatuses} />
-            
-            {state && (
-              <WhatIfPanel 
-                tiers={state.ticket_tiers} 
-                demandModel={state.metadata?.pricing_analysis?.what_if_model} 
-              />
+          {/* Live GTM */}
+          <div className="rounded-[2rem] border border-border/60 bg-card/80 p-6 shadow-sm">
+            <div className="mb-4 flex items-center justify-between gap-4">
+              <div>
+                <p className="text-xs uppercase tracking-[0.35em] text-muted-foreground">Live GTM</p>
+                <h3 className="text-xl font-semibold">GTM Messaging</h3>
+              </div>
+              <Badge variant="outline" className="text-xs">
+                {gtmCount}
+              </Badge>
+            </div>
+            {state?.gtm_messages && gtmCount > 0 ? (
+              <div className="space-y-3 max-h-[160px] overflow-y-auto pr-2 custom-scrollbar">
+                {Object.entries(state.gtm_messages).map(([platform, message]) => (
+                  <div key={platform} className="rounded-2xl border border-border/50 bg-muted/30 p-3">
+                    <p className="text-[10px] uppercase tracking-[0.24em] text-muted-foreground">{platform}</p>
+                    <p className="mt-1 text-xs leading-5 text-foreground line-clamp-2">{message}</p>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground">GTM recommendations will appear here once the agent completes.</p>
             )}
           </div>
         </section>
 
-        {/* Full Width Sections: Pricing & Schedule */}
-        <section className="space-y-6">
+        {/* Discovery Sections */}
+        <section className="space-y-10">
+          {(state?.speakers?.length ?? 0) > 0 && (
+            <SpeakerGrid speakers={state?.speakers} loading={loading} />
+          )}
+
+          {(state?.sponsors?.length ?? 0) > 0 && (
+            <SponsorCards sponsors={state?.sponsors} loading={loading} />
+          )}
+
+          {(state?.venues?.length ?? 0) > 0 && (
+            <VenueTable venues={state?.venues} loading={loading} />
+          )}
+        </section>
+
+        {/* Intelligence Grid */}
+        <div className="grid gap-6 md:grid-cols-2">
+          {/* Exhibitor Opportunities */}
+          {(state?.exhibitors?.length ?? 0) > 0 && (
+            <div className="rounded-[2rem] border border-border/60 bg-card/80 p-6 shadow-sm">
+              <div className="mb-4 flex items-center justify-between gap-4">
+                <div>
+                  <p className="text-xs uppercase tracking-[0.35em] text-muted-foreground">Exhibitor Agent</p>
+                  <h3 className="text-xl font-semibold">Exhibitors</h3>
+                </div>
+                <Badge variant="outline" className="text-xs">
+                  {state?.exhibitors?.length}
+                </Badge>
+              </div>
+              <div className="space-y-3">
+                {state?.exhibitors?.slice(0, 4).map((exhibitor) => (
+                  <div key={exhibitor.name} className="flex items-center justify-between p-3 rounded-2xl border border-border/40 bg-muted/30">
+                    <div>
+                      <p className="text-sm font-medium">{exhibitor.name}</p>
+                      <p className="text-[10px] text-muted-foreground uppercase tracking-wider">{exhibitor.cluster}</p>
+                    </div>
+                    <Badge variant="outline" className="text-[10px]">
+                      {exhibitor.relevance?.toFixed?.(1) ?? exhibitor.relevance}
+                    </Badge>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Community Channels */}
+          {(state?.communities?.length ?? 0) > 0 && (
+            <div className="rounded-[2rem] border border-border/60 bg-card/80 p-6 shadow-sm">
+              <div className="mb-4 flex items-center justify-between gap-4">
+                <div>
+                  <p className="text-xs uppercase tracking-[0.35em] text-muted-foreground">Community GTM</p>
+                  <h3 className="text-xl font-semibold">Channels</h3>
+                </div>
+                <Badge variant="outline" className="text-xs">
+                  {state?.communities?.length}
+                </Badge>
+              </div>
+              <div className="space-y-3">
+                {state?.communities?.slice(0, 4).map((community) => (
+                  <div key={`${community.platform}-${community.name}`} className="p-3 rounded-2xl border border-border/40 bg-muted/30">
+                    <p className="text-sm font-medium">{community.name}</p>
+                    <p className="text-[10px] text-muted-foreground">{community.platform} • {community.size.toLocaleString()} members</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Full Width Sections: Simulaton, Pricing & Schedule */}
+        <section className="space-y-10">
+          {state && (
+            <WhatIfPanel 
+              tiers={state.ticket_tiers} 
+              demandModel={state.metadata?.pricing_analysis?.what_if_model} 
+            />
+          )}
+
           {(state?.ticket_tiers?.length ?? 0) > 0 && (
             <div className="rounded-[2rem] border border-border/60 bg-card/80 p-6 shadow-sm">
               <div className="mb-6 flex items-center justify-between gap-4">

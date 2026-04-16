@@ -247,22 +247,54 @@ async def chat_endpoint(input_data: ChatInput) -> dict[str, Any]:
     state = get_chat_state(input_data.session_id)
 
     # Check if we need to trigger any agent reruns based on the chat tools
-    if state.get("pending_rerun") and input_data.plan_id:
-        nodes_to_rerun = state["pending_rerun"]
+    if (state.get("pending_rerun") or state.get("pending_updates")) and input_data.plan_id:
+        nodes_to_rerun = state.get("pending_rerun") or []
         state["pending_rerun"] = None
+        pending_updates = state.get("pending_updates")
+        state["pending_updates"] = None
 
         if input_data.plan_id in _plan_cache:
             current_plan_state = _plan_cache[input_data.plan_id]
 
             async def do_rerun() -> None:
                 try:
-                    new_state = await rerun_nodes(nodes_to_rerun, current_plan_state)
-                    _plan_cache[input_data.plan_id] = new_state
+                    from backend.orchestrator import hydrate_state
+                    nonlocal current_plan_state
+                    
+                    # Ensure state is hydrated for property access
+                    hydrated = hydrate_state(current_plan_state)
+                    
+                    # Apply configuration updates from Chat Agent (if any)
+                    if pending_updates:
+                        for field, value in pending_updates.items():
+                            if hasattr(hydrated["event_config"], field):
+                                setattr(hydrated["event_config"], field, value)
+                    
+                    # Update status for UI
+                    if input_data.plan_id not in _agent_status:
+                        _agent_status[input_data.plan_id] = {}
+                    
+                    for node in nodes_to_rerun:
+                        _agent_status[input_data.plan_id][node] = "running"
+                    
+                    # Execute agents
+                    new_state = await rerun_nodes(nodes_to_rerun, hydrated)
+                    
+                    # Update status for UI
+                    for node in nodes_to_rerun:
+                        _agent_status[input_data.plan_id][node] = "completed"
+                    
+                    # Use _dump_state to ensure all Pydantic models are serialized to dicts
+                    dumped_state = _dump_state(input_data.plan_id, new_state)
+                    _plan_cache[input_data.plan_id] = dumped_state
                     await _persist_plan_silently(new_state)
                 except Exception as e:
                     import logging
-
                     logging.error(f"Rerun failed: {e}")
+                    # Clear status on failure
+                    if input_data.plan_id in _agent_status:
+                        for node in nodes_to_rerun:
+                            _agent_status[input_data.plan_id][node] = "failed"
 
             task = asyncio.create_task(do_rerun())
             task.add_done_callback(lambda _: None)
@@ -271,6 +303,33 @@ async def chat_endpoint(input_data: ChatInput) -> dict[str, Any]:
 
 
 # ── Internal helpers ──────────────────────────────────────────────────────────
+
+
+def _dump_state(plan_id: str, state: AgentState) -> dict[str, Any]:
+    """Convert AgentState (potentially with Pydantic models) to a serializable dict."""
+    from backend.models.schemas import (
+        CommunitySchema,
+        ExhibitorSchema,
+        PricingTierSchema,
+        SpeakerSchema,
+        SponsorSchema,
+        VenueSchema,
+        EventConfigInput
+    )
+
+    def dump_val(v: Any) -> Any:
+        if isinstance(v, (SponsorSchema, SpeakerSchema, VenueSchema, ExhibitorSchema, 
+                         PricingTierSchema, CommunitySchema, EventConfigInput)):
+            return v.model_dump()
+        if isinstance(v, list):
+            return [dump_val(i) for i in v]
+        if isinstance(v, dict):
+            return {k: dump_val(val) for k, val in v.items()}
+        return v
+
+    dumped = {k: dump_val(v) for k, v in state.items()}
+    dumped["plan_id"] = plan_id
+    return dumped
 
 
 async def _persist_plan_silently(state: AgentState) -> None:

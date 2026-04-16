@@ -17,6 +17,8 @@ import { Input } from "@/components/ui/input";
 import { chat, type ChatInput } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 interface Message {
   role: "user" | "assistant";
@@ -102,7 +104,7 @@ export default function ChatWidget({ planId }: ChatWidgetProps) {
     <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end">
       {/* Chat Window */}
       {isOpen && (
-        <Card className="mb-4 w-[380px] h-[520px] shadow-2xl border-primary/20 bg-background/90 backdrop-blur-xl flex flex-col animate-in slide-in-from-bottom-5 duration-300">
+        <Card className="mb-4 w-full max-w-[calc(100vw-3rem)] sm:w-[380px] h-[520px] shadow-2xl border-primary/20 bg-background/90 backdrop-blur-xl flex flex-col animate-in slide-in-from-bottom-5 duration-300">
           <CardHeader className="p-4 border-b bg-primary/5 flex flex-row items-center justify-between">
             <div className="flex items-center gap-2">
               <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center">
@@ -155,12 +157,26 @@ export default function ChatWidget({ planId }: ChatWidgetProps) {
                   {msg.role === "user" ? <User className="w-4 h-4" /> : <Sparkles className="w-4 h-4 text-primary" />}
                 </div>
                 <div className={cn(
-                  "px-3.5 py-2.5 rounded-2xl text-sm leading-relaxed shadow-sm",
+                  "px-3.5 py-2.5 rounded-2xl text-sm leading-relaxed shadow-sm break-words overflow-hidden",
                   msg.role === "user" 
                     ? "bg-primary text-primary-foreground rounded-tr-none" 
                     : "bg-muted/80 backdrop-blur-sm border border-border/50 rounded-tl-none"
                 )}>
-                  {msg.content}
+                  <ReactMarkdown 
+                    remarkPlugins={[remarkGfm]}
+                    components={{
+                      h1: ({node, ...props}) => <h1 className="text-lg font-bold my-2 break-words" {...props} />,
+                      h2: ({node, ...props}) => <h2 className="text-base font-bold my-2 break-words" {...props} />,
+                      h3: ({node, ...props}) => <h3 className="text-sm font-bold my-1 break-words" {...props} />,
+                      ul: ({node, ...props}) => <ul className="list-disc ml-4 my-2 space-y-1 break-words" {...props} />,
+                      ol: ({node, ...props}) => <ol className="list-decimal ml-4 my-2 space-y-1 break-words" {...props} />,
+                      p: ({node, ...props}) => <p className="mb-2 last:mb-0 break-words" {...props} />,
+                      code: ({node, ...props}) => <code className="bg-black/10 dark:bg-white/10 rounded px-1 px-0.5 font-mono text-[0.8em] whitespace-pre-wrap break-all" {...props} />,
+                      pre: ({node, ...props}) => <pre className="bg-black/5 dark:bg-white/5 p-2 rounded-lg my-2 overflow-x-auto scrollbar-thin" {...props} />,
+                    }}
+                  >
+                    {msg.content}
+                  </ReactMarkdown>
                 </div>
               </div>
             ))}

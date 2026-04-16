@@ -130,7 +130,7 @@ export default function ScheduleTimeline({
                     SESSION_COLORS[idx % SESSION_COLORS.length]
                   }`}
                 >
-                  <p className="text-sm font-semibold leading-tight mb-1">
+                  <p className="text-sm font-semibold leading-tight mb-1 break-words">
                     {entry.topic}
                   </p>
                   <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
