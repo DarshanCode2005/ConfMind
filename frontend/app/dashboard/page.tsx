@@ -16,6 +16,7 @@ import ScheduleTimeline from "@/components/ScheduleTimeline";
 import WhatIfPanel from "@/components/WhatIfPanel";
 import RefinementPanel from "@/components/RefinementPanel";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import ChatWidget from "@/components/ChatWidget";
 
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -333,6 +334,9 @@ export default function DashboardPage() {
           </div>
         </section>
       </main>
+
+      {/* Floating Chat Agent */}
+      <ChatWidget planId={planId ?? undefined} />
     </div>
   );
 }

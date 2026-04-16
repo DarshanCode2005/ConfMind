@@ -199,3 +199,31 @@ export function subscribeToAgentStatus(
 
   return () => es.close();
 }
+
+export interface ChatInput {
+  session_id: string;
+  message: string;
+  plan_id?: string;
+}
+
+export interface ChatResponse {
+  message: string;
+}
+
+/**
+ * POST /api/chat — Chat with the ConfMind agent.
+ */
+export async function chat(input: ChatInput): Promise<ChatResponse> {
+  const res = await fetch(`${BACKEND_URL}/api/chat`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(input),
+  });
+
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`chat failed: ${res.status} — ${text}`);
+  }
+
+  return (await res.json()) as ChatResponse;
+}
