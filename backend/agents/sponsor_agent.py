@@ -31,8 +31,8 @@ from .base_agent import BaseAgent
 
 # ── Constants ──────────────────────────────────────────────────────────────────
 
-_TOP_N = 15          # how many sponsors to keep in final output
-_ENRICH_TOP = 20     # how many to enrich via Tavily
+_TOP_N = 10         # how many sponsors to keep in final output
+_ENRICH_TOP = 15     # how many to enrich via Tavily
 _PROPOSAL_TOP = 3    # how many PDF proposals to generate
 
 # Scoring weights per spec

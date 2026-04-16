@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import type { TicketTierSchema } from "@/lib/api";
+import type { TicketTierSchema, WhatIfLinearModel } from "@/lib/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Slider } from "@/components/ui/slider";
 import { Label } from "@/components/ui/label";
@@ -11,6 +11,64 @@ import { Minus, RotateCcw, TrendingDown, TrendingUp, Users, Zap } from "lucide-r
 
 interface WhatIfPanelProps {
   tiers?: TicketTierSchema[];
+  demandModel?: WhatIfLinearModel | null;
+}
+
+type PriceSalesPoint = {
+  price: number;
+  sales: number;
+};
+
+type LinearRegressionModel = {
+  slope: number;
+  intercept: number;
+  valid: boolean;
+};
+
+function fitLinearRegression(points: PriceSalesPoint[]): LinearRegressionModel {
+  if (points.length < 2) {
+    return { slope: 0, intercept: 0, valid: false };
+  }
+
+  const n = points.length;
+  const meanX = points.reduce((sum, p) => sum + p.price, 0) / n;
+  const meanY = points.reduce((sum, p) => sum + p.sales, 0) / n;
+
+  let numerator = 0;
+  let denominator = 0;
+
+  for (const p of points) {
+    const dx = p.price - meanX;
+    const dy = p.sales - meanY;
+    numerator += dx * dy;
+    denominator += dx * dx;
+  }
+
+  if (denominator === 0) {
+    return { slope: 0, intercept: meanY, valid: false };
+  }
+
+  const slope = numerator / denominator;
+  const intercept = meanY - slope * meanX;
+
+  return { slope, intercept, valid: Number.isFinite(slope) && Number.isFinite(intercept) };
+}
+
+function predictSales(
+  model: LinearRegressionModel,
+  price: number,
+  fallbackSales: number
+): number {
+  if (!model.valid) {
+    return fallbackSales;
+  }
+
+  const predicted = model.intercept + model.slope * price;
+  if (!Number.isFinite(predicted)) {
+    return fallbackSales;
+  }
+
+  return Math.max(0, predicted);
 }
 
 function formatRevenue(rev: number): string {
@@ -60,7 +118,7 @@ const MULTIPLIERS: Record<string, number> = {
   VIP: 2.5,
 };
 
-export default function WhatIfPanel({ tiers }: WhatIfPanelProps) {
+export default function WhatIfPanel({ tiers, demandModel }: WhatIfPanelProps) {
   const generalTier = tiers?.find((t) => t.name === "General");
   const basePrice = generalTier?.price ?? 200;
 
@@ -77,24 +135,35 @@ export default function WhatIfPanel({ tiers }: WhatIfPanelProps) {
       return null;
     }
 
-    const safeBasePrice = Math.max(basePrice, 1);
-    const priceChangePercent = (price - safeBasePrice) / safeBasePrice;
+    const regressionData = tiers
+      .map((tier) => ({ price: tier.price, sales: tier.est_sales }))
+      .filter(
+        (point) =>
+          Number.isFinite(point.price) &&
+          Number.isFinite(point.sales) &&
+          point.price >= 0 &&
+          point.sales >= 0
+      );
+
+    const fittedModel = fitLinearRegression(regressionData);
+    const activeModel: LinearRegressionModel =
+      demandModel && Number.isFinite(demandModel.slope) && Number.isFinite(demandModel.intercept)
+        ? {
+            slope: demandModel.slope,
+            intercept: demandModel.intercept,
+            valid: demandModel.valid,
+          }
+        : fittedModel;
     const attendanceManualMultiplier = 1 + attendanceShift / 100;
-    const demandMultiplier = Math.min(
-      Math.max(1 - priceChangePercent * 0.45, 0.55),
-      1.65
-    );
-    const finalAttendanceMultiplier = Math.max(
-      demandMultiplier * attendanceManualMultiplier,
-      0
-    );
 
     const adjustedTiers = tiers.map((tier) => {
       const adjustedPrice = Math.round((price * (MULTIPLIERS[tier.name] ?? 1.0)) / 5) * 5;
+      const predictedSalesFromPrice = predictSales(activeModel, adjustedPrice, tier.est_sales);
       const adjustedSales = Math.max(
         0,
-        Math.round(tier.est_sales * finalAttendanceMultiplier)
+        Math.round(predictedSalesFromPrice * attendanceManualMultiplier)
       );
+      const priceOnlySales = Math.max(0, Math.round(predictedSalesFromPrice));
       const adjustedRevenue = adjustedPrice * adjustedSales;
       const revenueDelta = adjustedRevenue - tier.revenue;
       const salesDelta = adjustedSales - tier.est_sales;
@@ -104,6 +173,7 @@ export default function WhatIfPanel({ tiers }: WhatIfPanelProps) {
         adjustedPrice,
         adjustedRevenue,
         adjustedSales,
+        priceOnlySales,
         revenueDelta,
         salesDelta,
       };
@@ -119,13 +189,21 @@ export default function WhatIfPanel({ tiers }: WhatIfPanelProps) {
       (sum, tier) => sum + tier.adjustedSales,
       0
     );
+    const priceOnlyAttendance = adjustedTiers.reduce(
+      (sum, tier) => sum + tier.priceOnlySales,
+      0
+    );
+    const demandImpactPercent =
+      originalAttendance > 0
+        ? Math.round(((priceOnlyAttendance - originalAttendance) / originalAttendance) * 100)
+        : 0;
 
     return {
       adjustedAttendance,
       adjustedTiers,
       adjustedTotal,
       attendanceDelta: adjustedAttendance - originalAttendance,
-      demandImpactPercent: Math.round((demandMultiplier - 1) * 100),
+      demandImpactPercent,
       originalAttendance,
       originalTotal,
     };
@@ -301,8 +379,8 @@ export default function WhatIfPanel({ tiers }: WhatIfPanelProps) {
         </div>
 
         <div className="rounded-lg bg-primary/8 border border-primary/20 p-3 text-xs text-muted-foreground">
-          This simulator applies a simple price-demand response: higher ticket
-          prices reduce expected sales, while lower prices can increase demand.
+          This simulator uses a backend-generated linear regression demand model
+          from the pricing agent output, with a local fallback for older plans.
           Use the attendance slider to model market confidence or campaign lift.
         </div>
       </CardContent>

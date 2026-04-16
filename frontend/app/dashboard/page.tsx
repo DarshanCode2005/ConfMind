@@ -328,7 +328,10 @@ export default function DashboardPage() {
           <Separator />
           <h2 className="text-xl font-bold">Simulate & Refine</h2>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <WhatIfPanel tiers={state?.ticket_tiers} />
+            <WhatIfPanel
+              tiers={state?.ticket_tiers}
+              demandModel={state?.metadata?.pricing_analysis?.what_if_model}
+            />
             <RefinementPanel onRefined={handleRefined} />
           </div>
         </section>
