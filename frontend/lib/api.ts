@@ -18,6 +18,7 @@ export interface EventConfigInput {
   audience_size: number;
   budget_usd: number;
   event_dates: string;
+  event_name?: string;
   refinement_prompt?: string;
 }
 
@@ -100,6 +101,7 @@ export interface PricingAnalysisMetadata {
 export interface AgentState {
   plan_id?: string;
   status?: string;
+  event_config?: EventConfigInput;
   sponsors?: SponsorSchema[];
   speakers?: SpeakerSchema[];
   venues?: VenueSchema[];

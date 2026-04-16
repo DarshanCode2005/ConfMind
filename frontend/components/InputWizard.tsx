@@ -148,94 +148,115 @@ export default function InputWizard() {
   };
 
   return (
-    <div className="min-h-screen bg-background flex flex-col items-center justify-center px-4 py-16 relative overflow-hidden">
-      <div className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(circle_at_16%_10%,hsl(var(--primary)/0.12),transparent_30rem),radial-gradient(circle_at_86%_18%,hsl(var(--secondary)/0.12),transparent_28rem),linear-gradient(180deg,hsl(var(--background)),hsl(var(--muted)/0.46))]" />
-      <div className="absolute top-6 right-6">
+    <div className="min-h-screen bg-background">
+      {/* Top Bar */}
+      <div className="fixed top-0 left-0 right-0 h-16 border-b border-border/60 bg-card/50 flex items-center justify-between px-8 z-50">
+        <div className="flex items-center gap-2">
+          <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
+            <Brain className="w-5 h-5 text-primary-foreground" />
+          </div>
+          <div>
+            <h2 className="font-bold text-sm">ConfMind</h2>
+          </div>
+        </div>
         <ThemeToggle />
       </div>
 
-      <div className="mb-12 text-center max-w-3xl">
-        <div className="inline-flex items-center gap-2 rounded-lg border border-primary/25 bg-linear-to-r from-primary/10 via-secondary/15 to-accent px-4 py-1.5 mb-6 shadow-sm">
-          <Brain className="w-4 h-4 text-primary" />
-          <span className="text-sm font-medium text-primary">
-            AI Powered Conference Planner
-          </span>
-        </div>
-        <h1 className="text-5xl md:text-6xl font-bold tracking-tight mb-4 text-foreground">
-          Plan your <span className="text-primary">conference</span>
-          <br />
-          with <span className="text-chart-4">AI agents</span>
-        </h1>
-        <p className="text-muted-foreground text-lg max-w-2xl mx-auto leading-7">
-          8 specialized agents working in parallel to find sponsors, speakers,
-          venues, pricing, and revenue opportunities in minutes.
-        </p>
-      </div>
-
-      <div className="w-full max-w-2xl mb-8">
-        <div className="flex items-center justify-between mb-3 gap-2">
-          {STEP_META.map((s, i) => {
-            const Icon = s.icon;
-            const done = i < step;
-            const active = i === step;
-            return (
-              <div key={s.label} className="flex flex-col items-center gap-1">
-                <div
-                  className={`w-10 h-10 rounded-full flex items-center justify-center border-2 transition-all duration-300 ${
-                    done
-                      ? "bg-primary border-primary text-primary-foreground shadow-md shadow-primary/20"
-                      : active
-                        ? "border-secondary text-foreground bg-secondary/25 shadow-sm"
-                        : "border-border bg-card text-muted-foreground"
-                  }`}
-                >
-                  {done ? (
-                    <CheckCircle2 className="w-5 h-5" />
-                  ) : (
-                    <Icon className="w-4 h-4" />
-                  )}
-                </div>
-                <span
-                  className={`text-xs font-medium ${active ? "text-primary" : done ? "text-foreground" : "text-muted-foreground"}`}
-                >
-                  {s.label}
-                </span>
+      {/* Main Content */}
+      <main className="min-h-screen flex flex-col items-center justify-center px-8 py-16 pt-28">
+        {/* Header Section */}
+        <section className="rounded-[2rem] border border-border/60 bg-card/80 p-8 shadow-sm max-w-4xl w-full mb-12">
+          <div className="grid gap-8 xl:grid-cols-[1fr_auto]">
+            <div>
+              <p className="text-xs uppercase tracking-[0.35em] text-muted-foreground mb-2">
+                Setup Wizard
+              </p>
+              <h1 className="text-4xl font-bold tracking-tight mb-2">
+                Conference Configuration
+              </h1>
+              <p className="text-muted-foreground text-sm max-w-md leading-6">
+                Define your event parameters. 8 specialized AI agents will search for sponsors, speakers, venues, and optimize pricing.
+              </p>
+            </div>
+            {/* Progress indicator */}
+            <div className="flex flex-col items-end justify-start gap-3">
+              <div className="text-right">
+                <p className="text-sm font-medium text-foreground">{step + 1} of {TOTAL_STEPS}</p>
+                <p className="text-xs text-muted-foreground">Steps</p>
               </div>
-            );
-          })}
-        </div>
-        <div className="relative h-2 bg-muted rounded-full overflow-hidden border border-border/70">
-          <div
-            className="absolute left-0 top-0 h-full bg-linear-to-r from-primary via-secondary to-chart-4 rounded-full transition-all duration-500"
-            style={{ width: `${((step) / (TOTAL_STEPS - 1)) * 100}%` }}
-          />
-        </div>
-      </div>
+              <div className="w-24 h-24 rounded-full border-4 border-primary/20 flex items-center justify-center bg-primary/5">
+                <div className="text-center">
+                  <p className="text-2xl font-bold text-primary">{Math.round(((step + 1) / TOTAL_STEPS) * 100)}%</p>
+                  <p className="text-[10px] text-muted-foreground">Complete</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
 
-      <Card className="w-full max-w-2xl border-t-4 border-t-primary bg-card shadow-[0_28px_80px_-38px_rgba(15,23,42,0.62)]">
-        <CardContent className="pt-9 pb-9 px-8 md:px-10">
+        {/* Step Icons */}
+        <div className="w-full max-w-4xl mb-8">
+          <div className="flex items-center justify-between gap-2">
+            {STEP_META.map((s, i) => {
+              const Icon = s.icon;
+              const done = i < step;
+              const active = i === step;
+              return (
+                <div key={s.label} className="flex flex-col items-center gap-2 flex-1">
+                  <div
+                    className={`w-12 h-12 rounded-full flex items-center justify-center border-2 transition-all duration-300 ${
+                      done
+                        ? "bg-primary border-primary text-primary-foreground"
+                        : active
+                          ? "border-secondary bg-secondary/25 text-foreground"
+                          : "border-border bg-card text-muted-foreground"
+                    }`}
+                  >
+                    {done ? (
+                      <CheckCircle2 className="w-5 h-5" />
+                    ) : (
+                      <Icon className="w-5 h-5" />
+                    )}
+                  </div>
+                  <span className={`text-xs font-medium text-center ${active ? "text-primary" : done ? "text-foreground" : "text-muted-foreground"}`}>
+                    {s.label}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+          <div className="relative h-1 bg-muted rounded-full overflow-hidden border border-border/40 mt-4">
+            <div
+              className="absolute left-0 top-0 h-full bg-primary rounded-full transition-all duration-500"
+              style={{ width: `${((step) / (TOTAL_STEPS - 1)) * 100}%` }}
+            />
+          </div>
+        </div>
+
+        {/* Form Card */}
+        <Card className="w-full max-w-4xl bg-card/80 border-border/60 shadow-sm">
+          <CardContent className="pt-8 pb-8 px-8">
           {step === 0 && (
             <div>
-              <h2 className="text-xl font-semibold mb-2">
+              <h2 className="text-2xl font-semibold mb-2">
                 What type of event are you planning?
               </h2>
-              <p className="text-muted-foreground text-sm mb-6">
+              <p className="text-muted-foreground text-sm mb-8">
                 Agents will tailor sponsor and speaker searches to this domain.
               </p>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-2 xl:grid-cols-3 gap-3">
                 {CATEGORIES.map((cat) => (
-                  <Button
+                  <button
                     key={cat}
-                    variant={category === cat ? "default" : "outline"}
-                    className={`h-auto py-3 px-4 text-left justify-start transition-all duration-200 rounded-lg border ${
-                      category === cat
-                        ? "bg-primary text-primary-foreground border-transparent ring-2 ring-secondary/60 ring-offset-2 ring-offset-background shadow-md shadow-primary/20"
-                        : "bg-card border-input border-l-primary/60 border-l-4 text-foreground hover:border-primary/60 hover:bg-primary/10"
-                    }`}
                     onClick={() => setCategory(cat)}
+                    className={`h-auto py-4 px-4 text-left rounded-lg border-2 transition-all duration-200 ${
+                      category === cat
+                        ? "bg-primary/10 border-primary text-primary font-semibold"
+                        : "bg-card border-border/40 text-foreground hover:border-primary/60 hover:bg-muted/50"
+                    }`}
                   >
                     {cat}
-                  </Button>
+                  </button>
                 ))}
               </div>
             </div>
@@ -244,17 +265,17 @@ export default function InputWizard() {
           {step === 1 && (
             <div className="flex flex-col gap-6">
               <div className="relative z-30">
-                <h2 className="text-xl font-semibold mb-2">
+                <h2 className="text-2xl font-semibold mb-2">
                   Where will this event be held?
                 </h2>
-                <p className="text-muted-foreground text-sm mb-4">
+                <p className="text-muted-foreground text-sm mb-6">
                   Venue agents will search within this region.
                 </p>
-                <Label className="mb-2 block">Select a country</Label>
+                <Label className="mb-3 block text-sm font-medium">Select a country</Label>
                 <Select value={geography} onValueChange={handleGeographyChange}>
                   <SelectTrigger
                     id="geography-select"
-                    className="w-full h-12 rounded-lg border-input bg-card text-base shadow-sm"
+                    className="w-full h-12 rounded-lg border-border bg-muted/30 text-base"
                   >
                     <SelectValue placeholder="Choose a country" />
                   </SelectTrigger>
@@ -275,7 +296,7 @@ export default function InputWizard() {
                 </Select>
               </div>
 
-              <div className="w-full rounded-lg overflow-hidden border border-border bg-muted/45 relative z-0 shadow-inner">
+              <div className="w-full rounded-lg overflow-hidden border border-border/60 bg-muted/20 relative z-0">
                 <ComposableMap projection="geoMercator" className="w-full" style={{ height: 250 }} projectionConfig={{ scale: 100, center: [0, 20] }}>
                   <Geographies geography={geoUrl}>
                     {({ geographies }) =>
@@ -332,18 +353,19 @@ export default function InputWizard() {
 
           {step === 2 && (
             <div>
-              <h2 className="text-xl font-semibold mb-2">
+              <h2 className="text-2xl font-semibold mb-2">
                 How many attendees are you targeting?
               </h2>
-              <p className="text-muted-foreground text-sm mb-6">
-                Pricing and venue agents use this to calculate capacity and
-                revenue tiers.
+              <p className="text-muted-foreground text-sm mb-8">
+                Pricing and venue agents use this to calculate capacity and revenue tiers.
               </p>
-              <div className="flex items-center justify-between mb-4">
-                <Label>Audience Size</Label>
-                <span className="text-3xl font-bold text-primary tabular-nums">
-                  {audienceSize.toLocaleString()}
-                </span>
+              <div className="rounded-xl border border-border/60 bg-muted/30 p-6 mb-6">
+                <div className="flex items-center justify-between">
+                  <Label className="text-sm text-muted-foreground">Audience Size</Label>
+                  <span className="text-4xl font-bold text-primary tabular-nums">
+                    {audienceSize.toLocaleString()}
+                  </span>
+                </div>
               </div>
               <Slider
                 id="audience-slider"
@@ -352,7 +374,7 @@ export default function InputWizard() {
                 step={50}
                 value={[audienceSize]}
                 onValueChange={(v) => { const val = Array.isArray(v) ? v[0] : v as number; if (typeof val === "number") setAudienceSize(val); }}
-                className="mb-3"
+                className="mb-4"
               />
               <div className="flex justify-between text-xs text-muted-foreground">
                 <span>50</span>
@@ -364,18 +386,19 @@ export default function InputWizard() {
 
           {step === 3 && (
             <div>
-              <h2 className="text-xl font-semibold mb-2">
+              <h2 className="text-2xl font-semibold mb-2">
                 What is your total event budget?
               </h2>
-              <p className="text-muted-foreground text-sm mb-6">
-                Used to filter venues, plan sponsorship targets, and validate
-                break even.
+              <p className="text-muted-foreground text-sm mb-8">
+                Used to filter venues, plan sponsorship targets, and validate break even.
               </p>
-              <div className="flex items-center justify-between mb-4">
-                <Label>Budget Amount</Label>
-                <span className="text-3xl font-bold text-primary tabular-nums">
-                  {formatBudget(budgetVal)}
-                </span>
+              <div className="rounded-xl border border-border/60 bg-muted/30 p-6 mb-6">
+                <div className="flex items-center justify-between">
+                  <Label className="text-sm text-muted-foreground">Budget Amount</Label>
+                  <span className="text-4xl font-bold text-primary tabular-nums">
+                    {formatBudget(budgetVal)}
+                  </span>
+                </div>
               </div>
               <Slider
                 id="budget-slider"
@@ -384,14 +407,14 @@ export default function InputWizard() {
                 step={5_000}
                 value={[budgetVal]}
                 onValueChange={(v) => { const val = Array.isArray(v) ? v[0] : v as number; if (typeof val === "number") setBudgetVal(val); }}
-                className="mb-3"
+                className="mb-4"
               />
               <div className="flex justify-between text-xs text-muted-foreground">
                 <span>{formatBudget(5_000)}</span>
                 <span>{formatBudget(250_000)}</span>
                 <span>{formatBudget(500_000)}</span>
               </div>
-              <p className="mt-3 text-xs text-muted-foreground">
+              <p className="mt-4 text-xs text-muted-foreground">
                 Budget values follow the selected country currency.
               </p>
             </div>
@@ -399,14 +422,14 @@ export default function InputWizard() {
 
           {step === 4 && (
             <div>
-              <h2 className="text-xl font-semibold mb-2">
+              <h2 className="text-2xl font-semibold mb-2">
                 When will the event take place?
               </h2>
-              <p className="text-muted-foreground text-sm mb-6">
+              <p className="text-muted-foreground text-sm mb-8">
                 The Event Ops agent will build a schedule around this date.
               </p>
-              <Label htmlFor="event-date" className="mb-2 block">
-                Event date range
+              <Label htmlFor="event-date" className="block text-sm mb-3 font-medium">
+                Event date
               </Label>
               <Input
                 id="event-date"
@@ -414,46 +437,47 @@ export default function InputWizard() {
                 min={todayInputValue}
                 value={eventDates}
                 onChange={(e) => handleDateChange(e.target.value)}
-                className="h-12 text-base w-full"
+                className="h-12 text-base w-full mb-6 rounded-lg"
               />
-              <p className="mt-2 text-xs text-muted-foreground">
+              <p className="text-xs text-muted-foreground mb-6">
                 Choose today or a future date. Past dates are disabled.
               </p>
               {eventDates && (
-                <div className="mt-6 p-4 rounded-lg bg-muted/50 border border-border/50 space-y-2 text-sm">
-                  <p className="font-semibold text-foreground mb-3">
+                <div className="rounded-xl border border-border/60 bg-muted/30 p-6">
+                  <p className="font-semibold text-foreground mb-4 flex items-center gap-2">
+                    <CheckCircle2 className="w-5 h-5 text-primary" />
                     Ready to launch your plan
                   </p>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Category</span>
-                    <span className="font-medium">{category}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Geography</span>
-                    <span className="font-medium">{geography}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Audience</span>
-                    <span className="font-medium">
-                      {audienceSize.toLocaleString()} attendees
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Budget</span>
-                    <span className="font-medium">{formatBudget(budgetVal)}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Date</span>
-                    <span className="font-medium">{eventDates}</span>
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <p className="text-muted-foreground text-xs mb-1">Category</p>
+                      <p className="font-medium text-foreground">{category}</p>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground text-xs mb-1">Geography</p>
+                      <p className="font-medium text-foreground">{geography}</p>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground text-xs mb-1">Audience</p>
+                      <p className="font-medium text-foreground">{audienceSize.toLocaleString()} attendees</p>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground text-xs mb-1">Budget</p>
+                      <p className="font-medium text-foreground">{formatBudget(budgetVal)}</p>
+                    </div>
+                    <div className="col-span-2">
+                      <p className="text-muted-foreground text-xs mb-1">Event Date</p>
+                      <p className="font-medium text-foreground">{new Date(eventDates).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</p>
+                    </div>
                   </div>
                 </div>
               )}
             </div>
           )}
 
-          <div className="flex items-center justify-between mt-8">
+          <div className="flex items-center justify-between mt-8 gap-4">
             <Button
-              variant="ghost"
+              variant="outline"
               onClick={() => setStep((s) => s - 1)}
               disabled={step === 0}
               className="gap-2 rounded-lg"
@@ -466,7 +490,7 @@ export default function InputWizard() {
               <Button
                 onClick={() => setStep((s) => s + 1)}
                 disabled={!canAdvance()}
-                className="gap-2 px-6 rounded-lg shadow-sm"
+                className="gap-2 px-6 rounded-lg"
               >
                 Continue
                 <ArrowRight className="w-4 h-4" />
@@ -476,12 +500,12 @@ export default function InputWizard() {
                 id="launch-plan-btn"
                 onClick={handleSubmit}
                 disabled={!canAdvance() || loading}
-                className="gap-2 px-8 rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground shadow-md shadow-primary/20"
+                className="gap-2 px-8 rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground"
               >
                 {loading ? (
                   <>
                     <Loader2 className="w-4 h-4 animate-spin" />
-                    Launching agents
+                    Launching...
                   </>
                 ) : (
                   <>
@@ -494,11 +518,8 @@ export default function InputWizard() {
           </div>
         </CardContent>
       </Card>
-
-      <p className="mt-8 text-xs text-muted-foreground text-center max-w-sm">
-        8 specialized agents will run in parallel for sponsor discovery, speaker
-        enrichment, venue scoring, pricing optimization, and more.
-      </p>
+    </main>
     </div>
   );
 }
+

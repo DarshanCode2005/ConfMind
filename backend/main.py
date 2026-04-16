@@ -33,6 +33,9 @@ from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
+from pydantic import BaseModel
+
+import openai
 
 from backend.models.schemas import AgentState, EventConfigInput
 
@@ -195,6 +198,70 @@ async def agent_status_stream(plan_id: str | None = None) -> StreamingResponse:
             await asyncio.sleep(0.5)
 
     return StreamingResponse(event_generator(), media_type="text/event-stream")
+
+
+class ChatRequest(BaseModel):
+    session_id: str
+    message: str
+    plan_id: str | None = None
+
+
+@api.post(
+    "/api/chat",
+    summary="Chat with the ConfMind assistant",
+    response_description="A single assistant answer for the current session and plan.",
+)
+async def chat_endpoint(request: ChatRequest) -> dict[str, str]:
+    """Respond to the frontend chat widget.
+
+    This returns a quick assistant message and uses OpenAI/OpenRouter if available.
+    """
+    if not request.message.strip():
+        return {
+            "message": (
+                "Hello! I'm your ConfMind assistant. Ask me about sponsors, venues, pricing, "
+                "schedule, or revenue planning."
+            )
+        }
+
+    openai_key = os.getenv("OPENAI_API_KEY")
+    openrouter_key = os.getenv("OPENROUTER_API_KEY") or os.getenv("openrouter_key")
+
+    if not openai_key and not openrouter_key:
+        return {
+            "message": (
+                "Chat is currently unavailable because no LLM credentials are configured. "
+                "Please set OPENAI_API_KEY or OPENROUTER_API_KEY in your .env file."
+            )
+        }
+
+    try:
+        if openrouter_key:
+            openai.api_key = openrouter_key
+            openai.api_base = "https://openrouter.ai/api/v1"
+            model = os.getenv("OPENROUTER_MODEL", "gemma-2-27b")
+        else:
+            openai.api_key = openai_key
+            model = os.getenv("OPENAI_MODEL", "gpt-3.5-turbo")
+
+        response = openai.ChatCompletion.create(
+            model=model,
+            messages=[
+                {"role": "system", "content": "You are ConfMind, a conference planning assistant."},
+                {"role": "user", "content": request.message},
+            ],
+            max_tokens=250,
+            temperature=0.7,
+        )
+
+        answer = response.choices[0].message.content.strip()
+        return {"message": answer}
+    except Exception:
+        return {
+            "message": (
+                "Sorry, the chat backend is temporarily unavailable. Please try again later."
+            )
+        }
 
 
 @api.get(
