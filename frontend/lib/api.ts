@@ -80,6 +80,23 @@ export interface ScheduleEntry {
   topic: string;
 }
 
+export interface WhatIfLinearModel {
+  slope: number;
+  intercept: number;
+  valid: boolean;
+  sample_count?: number;
+}
+
+export interface PricingAnalysisMetadata {
+  demand_ratio?: number;
+  base_price?: number;
+  tier_prices?: Record<string, number>;
+  monte_carlo?: Record<string, unknown>;
+  break_even?: Record<string, unknown>;
+  historical_pairs_count?: number;
+  what_if_model?: WhatIfLinearModel;
+}
+
 export interface AgentState {
   plan_id?: string;
   status?: string;
@@ -102,6 +119,10 @@ export interface AgentState {
   gtm_messages?: Record<string, string>;
   distribution_plan?: string[];
   conflicts?: string[];
+  metadata?: {
+    pricing_analysis?: PricingAnalysisMetadata;
+    [key: string]: unknown;
+  };
   errors?: string[];
   error?: string;
 }

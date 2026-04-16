@@ -94,6 +94,13 @@ export default function AgentLogs({ planId, onAgentStatusChange }: AgentLogsProp
   const reconnectTimeoutRef = useRef<number | null>(null);
 
   useEffect(() => {
+    if (!planId) {
+      setConnected(false);
+      setDone(false);
+      setLogs([]);
+      return;
+    }
+
     let isActive = true;
     let unsubscribe: (() => void) | undefined;
 
