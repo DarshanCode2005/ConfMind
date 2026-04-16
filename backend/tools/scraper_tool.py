@@ -51,26 +51,33 @@ class ScraperError(Exception):
 
 def _get_llm_candidates() -> list[dict[str, Any]]:
     """Return a list of LLM configurations in order of preference."""
+    from backend.config import (
+        PRIMARY_MODEL, SECONDARY_MODEL, LOCAL_MODEL,
+        MAX_TOKENS, OPENROUTER_BASE_URL
+    )
+    
     or_key = os.getenv("OPENROUTER_API_KEY") or os.getenv("openrouter_key")
     candidates = []
 
-    # 1. OpenRouter Gemma-2-27b
+    # 1. OpenRouter Primary
     if or_key:
         candidates.append({
-            "model": "openai/google/gemma-2-27b-it",
+            "model": f"openai/{PRIMARY_MODEL}",
             "api_key": or_key,
-            "base_url": "https://openrouter.ai/api/v1",
+            "base_url": OPENROUTER_BASE_URL,
+            "max_tokens": MAX_TOKENS,
         })
-        # 2. OpenRouter Gemma-2-9b
+        # 2. OpenRouter Secondary
         candidates.append({
-            "model": "openai/google/gemma-2-9b-it",
+            "model": f"openai/{SECONDARY_MODEL}",
             "api_key": or_key,
-            "base_url": "https://openrouter.ai/api/v1",
+            "base_url": OPENROUTER_BASE_URL,
+            "max_tokens": MAX_TOKENS,
         })
 
     # 3. Local Ollama (Always available if Ollama is running)
     candidates.append({
-        "model": "ollama/gemma4",
+        "model": f"ollama/{LOCAL_MODEL}",
         "base_url": "http://localhost:11434",
     })
 

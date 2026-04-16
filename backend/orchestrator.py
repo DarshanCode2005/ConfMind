@@ -57,6 +57,7 @@ from typing import Any
 from langgraph.graph import END, START, StateGraph  # type: ignore[import-untyped]
 
 from backend.models.schemas import AgentState, EventConfigInput
+from backend.config import MAX_AGENTS
 
 # ── Agent imports ─────────────────────────────────────────────────────────────
 # Each agent is imported lazily here.  At scaffolding time these modules are
@@ -171,12 +172,30 @@ def _build_graph() -> Any:
     """Build and compile the LangGraph StateGraph.
 
     The graph is compiled once at module load time and reused for all requests.
+    Enforces a hard cap of MAX_AGENTS concurrent agent nodes.
     """
     agents = _import_agents()
 
+    # ── MAX_AGENTS cap guard ──────────────────────────────────────────────────
+    # Defensive check: if more than MAX_AGENTS are registered, trim the excess
+    # and log a clear warning. This prevents runaway API costs and rate-limit
+    # exhaustion from unbounded parallel spawns.
+    active_agents = {k: v for k, v in agents.items() if v is not None}
+    if len(active_agents) > MAX_AGENTS:
+        import warnings
+        excess = list(active_agents.keys())[MAX_AGENTS:]
+        warnings.warn(
+            f"[Orchestrator] {len(active_agents)} agents registered but MAX_AGENTS={MAX_AGENTS}. "
+            f"Disabling excess agents: {excess}. "
+            f"Increase MAX_AGENTS env var to allow more.",
+            stacklevel=2,
+        )
+        for key in excess:
+            agents[key] = None  # Demote to passthrough
+
     builder = StateGraph(AgentState)
 
-    # Register all 8 agent nodes
+    # Register all agent nodes (excess become passthrough stubs)
     for name, agent in agents.items():
         builder.add_node(name, _make_node(agent, name))
 
@@ -208,7 +227,7 @@ def _build_graph() -> Any:
 graph = _build_graph()
 
 
-def _initial_state(config: EventConfigInput) -> AgentState:
+def _initial_state(config: EventConfigInput, run_id: str | None = None) -> AgentState:
     """Create a blank AgentState from the user's EventConfigInput.
 
     All list and dict fields are initialised to empty so agents that run first
@@ -228,31 +247,57 @@ def _initial_state(config: EventConfigInput) -> AgentState:
         gtm_messages={},
         messages=[],
         errors=[],
-        metadata={},
+        metadata={"run_id": run_id} if run_id else {},
     )
 
 
-async def run_plan(config: EventConfigInput) -> AgentState:
+async def run_plan(config: EventConfigInput, run_id: str | None = None) -> AgentState:
     """Run the full conference planning pipeline for a given EventConfigInput.
 
     Args:
         config: User's event configuration from the API or UI.
+        run_id: A unique identifier for the run.
 
     Returns:
         The final AgentState with all agent outputs filled in.
-
-    Usage::
-
-        state = await run_plan(
-            EventConfigInput(
-                category="AI",
-                geography="Europe",
-                audience_size=800,
-                budget_usd=50_000,
-                event_dates="2025-09-15",
-            )
-        )
     """
-    initial = _initial_state(config)
+    initial = _initial_state(config, run_id)
     final_state: AgentState = await graph.ainvoke(initial)  # type: ignore[assignment]
     return final_state
+
+async def rerun_nodes(node_names: list[str], current_state: AgentState) -> AgentState:
+    """Re-executes only the named nodes and merges deltas back into state.
+    
+    If "all" is in node_names, restarts the full workflow with the current config.
+    """
+    agents = _import_agents()
+    
+    if "all" in node_names:
+        run_id = current_state.get("metadata", {}).get("run_id")
+        return await run_plan(current_state["event_config"], run_id)
+        
+    import operator
+    
+    for name in node_names:
+        agent = agents.get(name)
+        if agent:
+            # We call the wrapped node function to get the delta dict
+            node_fn = _make_node(agent, name)
+            delta = node_fn(current_state)
+            
+            # Merge delta back into state according to AgentState reducers
+            for key, value in delta.items():
+                if key in ["past_events", "errors"]:
+                    current_state[key] = current_state.get(key, []) + value
+                elif key == "metadata":
+                    current_state["metadata"] = current_state.get("metadata", {}) | value
+                elif key == "messages":
+                    # Simple append for messages if any
+                    current_state["messages"].extend(value)
+                else:
+                    # Overwrite for lists/dicts like sponsors, speakers, revenue
+                    current_state[key] = value
+
+    return current_state
+
+

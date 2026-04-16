@@ -14,9 +14,10 @@ Then open http://localhost:8000/docs for the interactive Swagger UI.
 
 Environment variables (all from .env)
 ──────────────────────────────────────
-    OPENAI_API_KEY   Required — used by agents
-    DATABASE_URL     Optional — Supabase/PostgreSQL for plan persistence
-    ALLOWED_ORIGINS  Comma-separated CORS origins (default: http://localhost:3000)
+    ANTHROPIC_API_KEY  Primary LLM — used by all agents (preferred)
+    OPENAI_API_KEY     Secondary/tool LLM — scraper and fallback agents
+    DATABASE_URL       Optional — Supabase/PostgreSQL for plan persistence
+    ALLOWED_ORIGINS    Comma-separated CORS origins (default: http://localhost:3000)
 """
 
 from __future__ import annotations
@@ -33,7 +34,7 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 
-from backend.models.schemas import AgentState, EventConfigInput
+from backend.models.schemas import AgentState, ChatInput, EventConfigInput
 
 load_dotenv()
 
@@ -51,11 +52,20 @@ _agent_status: dict[str, dict[str, str]] = {}  # plan_id -> {agent_name -> statu
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     """FastAPI lifespan: runs on startup and teardown."""
     # Validate required environment variables on startup
-    if not os.getenv("OPENAI_API_KEY"):
+    if not os.getenv("ANTHROPIC_API_KEY"):
         import warnings
 
         warnings.warn(
-            "OPENAI_API_KEY is not set — agents will fail when called. Add it to your .env file.",
+            "ANTHROPIC_API_KEY is not set — agents will fall back to OpenRouter/Gemini. "
+            "Add it to your .env file for best performance.",
+            stacklevel=1,
+        )
+    elif not os.getenv("OPENAI_API_KEY"):
+        import warnings
+
+        warnings.warn(
+            "OPENAI_API_KEY is not set — scraper_tool and OpenAI fallback will fail. "
+            "Anthropic is primary, so the pipeline may still run.",
             stacklevel=1,
         )
 
@@ -151,6 +161,12 @@ async def run_plan_endpoint(config: EventConfigInput) -> dict[str, Any]:
     _bg_task = asyncio.create_task(_persist_plan_silently(final_state))
     _bg_task.add_done_callback(lambda _: None)  # suppress RUF006 "unhandled task"
 
+    # Generate Chat summary asynchronously
+    from backend.agents.chat_agent import generate_workflow_completion_summary
+
+    _bg_task_summary = asyncio.create_task(generate_workflow_completion_summary(plan_id, response))
+    _bg_task_summary.add_done_callback(lambda _: None)
+
     return response
 
 
@@ -211,6 +227,47 @@ async def get_output(plan_id: str) -> dict[str, Any]:
 async def health() -> dict[str, str]:
     """Simple liveness probe used by Railway/Render deployment checks."""
     return {"status": "ok", "service": "confmind-api"}
+
+
+@api.post(
+    "/api/chat",
+    summary="Chat with the ConfMind agent",
+)
+async def chat_endpoint(input_data: ChatInput) -> dict[str, Any]:
+    """Handle user queries, intent classification, and tool routing for the Chat Agent."""
+    from backend.agents.chat_agent import chat_agent_host, get_chat_state
+    from backend.orchestrator import rerun_nodes
+
+    response_text = await chat_agent_host.invoke(
+        session_id=input_data.session_id,
+        message=input_data.message,
+        plan_id=input_data.plan_id,
+    )
+
+    state = get_chat_state(input_data.session_id)
+
+    # Check if we need to trigger any agent reruns based on the chat tools
+    if state.get("pending_rerun") and input_data.plan_id:
+        nodes_to_rerun = state["pending_rerun"]
+        state["pending_rerun"] = None
+
+        if input_data.plan_id in _plan_cache:
+            current_plan_state = _plan_cache[input_data.plan_id]
+
+            async def do_rerun() -> None:
+                try:
+                    new_state = await rerun_nodes(nodes_to_rerun, current_plan_state)
+                    _plan_cache[input_data.plan_id] = new_state
+                    await _persist_plan_silently(new_state)
+                except Exception as e:
+                    import logging
+
+                    logging.error(f"Rerun failed: {e}")
+
+            task = asyncio.create_task(do_rerun())
+            task.add_done_callback(lambda _: None)
+
+    return {"message": response_text}
 
 
 # ── Internal helpers ──────────────────────────────────────────────────────────

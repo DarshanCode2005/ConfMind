@@ -351,6 +351,32 @@ class EventOpsAgent(BaseAgent):
             meta = [{"total_entries": len(schedule), "days": params['days']}]
             self._write_memory(docs, meta, collection="events")
 
+            # Chat Agent Indexing Contract
+            run_id = state.get("metadata", {}).get("run_id", "unknown")
+            chat_docs = []
+            chat_meta = []
+            
+            day_map = {}
+            for entry in schedule:
+                day = entry.get("day", 1)
+                if day not in day_map:
+                    day_map[day] = []
+                day_map[day].append(
+                    f"{entry['time_start']}-{entry['time_end']}: {entry['topic']} "
+                    f"by {entry['speaker']} in {entry['room']}"
+                )
+                
+            for d, slots in day_map.items():
+                text = f"Day {d} schedule: " + "; ".join(slots)
+                chat_docs.append(text)
+                chat_meta.append({
+                    "agent": "schedule",
+                    "run_id": run_id,
+                    "day": d
+                })
+                
+            self.index_to_chroma(chat_docs, "chat_index", chat_meta)
+
             self._log_info(f"Completed — {len(schedule)} schedule entries")
 
             return {"schedule": schedule}

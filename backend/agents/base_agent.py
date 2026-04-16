@@ -66,47 +66,72 @@ class BaseAgent(ABC):
 
     # ── LLM ──────────────────────────────────────────────────────────────
 
-    def _get_llm(self, temperature: float = 0.3) -> Any:
-        """Return a Chat LLM with fallback logic.
+    def _get_llm(self, temperature: float | None = None) -> Any:
+        """Return a Chat LLM with Anthropic-first fallback chain.
 
         Priority:
-        1. OpenRouter: google/gemma-2-27b-it
-        2. OpenRouter: google/gemma-2-9b-it (Fallback)
-        3. Local Ollama: confmind-planner (Tertiary fallback)
+        1. Anthropic Claude (claude-3-haiku)      — PRIMARY   (max_tokens=ANTHROPIC_MAX_TOKENS)
+        2. OpenRouter: google/gemma-2-27b-it       — SECONDARY (max_tokens=MAX_TOKENS_FALLBACK)
+        3. OpenRouter: google/gemma-2-9b-it        — TERTIARY  (max_tokens=MAX_TOKENS_FALLBACK)
+        4. Local Ollama: confmind-planner/gemma4   — LAST RESORT (num_ctx only)
+
+        Token caps:
+        - Claude uses ANTHROPIC_MAX_TOKENS (default 4096) - generous, not free-tier limited.
+        - All fallback models use MAX_TOKENS_FALLBACK (default 1100) - free-tier safe.
         """
+        from langchain_anthropic import ChatAnthropic  # type: ignore[import-untyped]
         from langchain_openai import ChatOpenAI
         from langchain_ollama import ChatOllama
-
-        or_key = os.getenv("OPENROUTER_API_KEY") or os.getenv("openrouter_key")
-
-        # ── 1. Primary: Gemma 2 27B via OpenRouter ────────────────────────────
-        primary_llm = ChatOpenAI(
-            model="google/gemma-2-27b-it",
-            openai_api_key=or_key,
-            openai_api_base="https://openrouter.ai/api/v1",
-            temperature=temperature,
-            max_retries=1,  # Fast fallback
+        from backend.config import (
+            ANTHROPIC_MODEL, ANTHROPIC_MAX_TOKENS,
+            PRIMARY_MODEL, SECONDARY_MODEL, LOCAL_MODEL,
+            MAX_TOKENS_FALLBACK, TEMPERATURE, MAX_RETRIES,
+            OPENROUTER_BASE_URL, OLLAMA_NUM_CTX,
         )
 
-        # ── 2. Secondary: Gemma 2 9B (Cheaper/Faster) ─────────────────────────
+        anthropic_key = os.getenv("ANTHROPIC_API_KEY", "")
+        or_key = os.getenv("OPENROUTER_API_KEY") or os.getenv("openrouter_key", "")
+        effective_temp = temperature if temperature is not None else TEMPERATURE
+
+        # ── 1. Primary: Anthropic Claude ─────────────────────────────────────
+        # max_tokens is REQUIRED by the Anthropic API (unlike OpenAI where it is optional).
+        primary_llm = ChatAnthropic(
+            model=ANTHROPIC_MODEL,
+            anthropic_api_key=anthropic_key,  # type: ignore[arg-type]
+            temperature=effective_temp,
+            max_tokens=ANTHROPIC_MAX_TOKENS,  # generous cap - Claude is primary
+            max_retries=MAX_RETRIES,
+        )
+
+        # ── 2. Secondary: Gemma 2 27B via OpenRouter (free-tier cap) ─────────
         secondary_llm = ChatOpenAI(
-            model="google/gemma-2-9b-it",
-            openai_api_key=or_key,
-            openai_api_base="https://openrouter.ai/api/v1",
-            temperature=temperature,
-            max_retries=1,
+            model=PRIMARY_MODEL,
+            openai_api_key=or_key,  # type: ignore[arg-type]
+            openai_api_base=OPENROUTER_BASE_URL,
+            temperature=effective_temp,
+            max_tokens=MAX_TOKENS_FALLBACK,  # 1100 - free-tier safe
+            max_retries=MAX_RETRIES,
         )
 
-        # ── 3. Tertiary: Local Ollama (Always available) ──────────────────────
-        local_model = os.getenv("OLLAMA_MODEL", "confmind-planner")
+        # ── 3. Tertiary: Gemma 2 9B via OpenRouter (free-tier cap) ───────────
+        tertiary_llm = ChatOpenAI(
+            model=SECONDARY_MODEL,
+            openai_api_key=or_key,  # type: ignore[arg-type]
+            openai_api_base=OPENROUTER_BASE_URL,
+            temperature=effective_temp,
+            max_tokens=MAX_TOKENS_FALLBACK,  # 1100 - free-tier safe
+            max_retries=MAX_RETRIES,
+        )
+
+        # ── 4. Last resort: Local Ollama (always available offline) ──────────
         local_llm = ChatOllama(
-            model=local_model,
-            temperature=temperature,
-            num_ctx=32768,
+            model=LOCAL_MODEL,
+            temperature=effective_temp,
+            num_ctx=OLLAMA_NUM_CTX,
         )
 
-        # Build fallback chain
-        llm = primary_llm.with_fallbacks([secondary_llm, local_llm])
+        # Build fallback chain: Claude -> OR 27B -> OR 9B -> Ollama
+        llm = primary_llm.with_fallbacks([secondary_llm, tertiary_llm, local_llm])
 
         if self.tools:
             return llm.bind_tools(self.tools)
@@ -260,6 +285,26 @@ class BaseAgent(ABC):
             self._log_info(f"  Wrote {len(docs)} items to memory [{collection}]")
         except Exception as e:
             self._log_info(f"  Memory write failed (non-fatal): {e}")
+
+    def index_to_chroma(
+        self,
+        documents: list[str],
+        collection: str,
+        metadata: list[dict[str, Any]],
+    ) -> None:
+        """Contract: Index agent output to ChromaDB for the Chat Agent.
+        
+        Args:
+            documents: List of formatted text strings.
+            collection: The ChromaDB collection (e.g., 'chat_index').
+            metadata: List of metadata dicts for filtering (must include 'agent').
+        """
+        try:
+            embed_and_store(documents, metadata, collection=collection)
+            self._log_info(f"  Indexed {len(documents)} objects to ChromaDB [{collection}]")
+        except Exception as e:
+            self._log_info(f"  ChromaDB indexing failed: {e}")
+
 
     # ── Tavily helper with retry ──────────────────────────────────────────
 

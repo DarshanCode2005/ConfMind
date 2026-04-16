@@ -193,6 +193,14 @@ class EventConfigInput(BaseModel):
     event_name: str = ""  # optional; agents fall back to "{category} Summit"
 
 
+class ChatInput(BaseModel):
+    """Input for the POST /chat endpoint."""
+
+    session_id: str
+    message: str
+    plan_id: str | None = None
+
+
 class AgentState(TypedDict):
     """Shared mutable state flowing through the LangGraph graph.
 
@@ -235,3 +243,12 @@ class AgentState(TypedDict):
     messages: Annotated[list[Any], add_messages]
     errors: Annotated[list[str], operator.add]
     metadata: Annotated[dict[str, Any], operator.ior]
+
+
+class ChatState(TypedDict):
+    """A lightweight separate state for the Chat Agent."""
+
+    chat_history: list[dict[str, str]]
+    run_id: str
+    current_summary: str
+    pending_rerun: dict[str, Any] | None

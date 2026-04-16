@@ -440,6 +440,23 @@ class PricingAgent(BaseAgent):
             meta = [{"category": category, "geography": geography, "base_price": base_price}]
             self._write_memory(docs, meta, collection="events")
 
+            # Chat Agent Indexing Contract
+            run_id = state.get("metadata", {}).get("run_id", "unknown")
+            tier_texts = []
+            for t in tiers:
+                tier_texts.append(f"{t.name} tier is ${t.price} with {t.est_sales} estimated sales.")
+            
+            pricing_doc = (
+                f"Pricing Analysis: {', '.join(tier_texts)} "
+                f"Demand ratio is {demand_ratio:.2f}. Base price is ${base_price:.2f}. "
+                f"Expected attendance: {expected_attendance}. Break-even attendance: {break_even.get('break_even_attendance')}."
+            )
+            self.index_to_chroma(
+                [pricing_doc], 
+                "chat_index", 
+                [{"agent": "pricing", "run_id": run_id, "category": category, "geography": geography}]
+            )
+
             self._log_info(
                 f"Completed — Base: ${base_price:.2f}, "
                 f"Tiers: EB=${tiers[0].price}, G=${tiers[1].price}, VIP=${tiers[2].price}"

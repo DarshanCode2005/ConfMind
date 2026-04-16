@@ -80,31 +80,35 @@ class RevenueAgent(BaseAgent):
 
             # ── 1. Ticket Revenue ─────────────────────────────────────────
             with self._pass_context(
-                "Aggregate: Ticket revenue", state,
-                f"ticket revenue from pricing"
+                "Aggregate: Ticket revenue", state, "ticket revenue from pricing"
             ):
                 ticket_revenue = 0.0
                 pricing = state.get("pricing", [])
                 ticket_breakdown = []
                 for tier in pricing:
-                    tier_revenue = getattr(tier, "revenue", 0.0) if hasattr(tier, "revenue") else 0.0
-                    tier_name = getattr(tier, "name", "Unknown") if hasattr(tier, "name") else "Unknown"
+                    tier_revenue = (
+                        getattr(tier, "revenue", 0.0) if hasattr(tier, "revenue") else 0.0
+                    )
+                    tier_name = (
+                        getattr(tier, "name", "Unknown") if hasattr(tier, "name") else "Unknown"
+                    )
                     tier_price = getattr(tier, "price", 0.0) if hasattr(tier, "price") else 0.0
                     tier_sales = getattr(tier, "est_sales", 0) if hasattr(tier, "est_sales") else 0
 
                     ticket_revenue += tier_revenue
-                    ticket_breakdown.append({
-                        "tier": tier_name,
-                        "price": round(tier_price, 2),
-                        "estimated_sales": tier_sales,
-                        "revenue": round(tier_revenue, 2),
-                    })
+                    ticket_breakdown.append(
+                        {
+                            "tier": tier_name,
+                            "price": round(tier_price, 2),
+                            "estimated_sales": tier_sales,
+                            "revenue": round(tier_revenue, 2),
+                        }
+                    )
                 self._log_info(f"  Ticket revenue: ${ticket_revenue:,.2f}")
 
             # ── 2. Sponsor Revenue ────────────────────────────────────────
             with self._pass_context(
-                "Aggregate: Sponsor revenue", state,
-                f"sponsor revenue from sponsors"
+                "Aggregate: Sponsor revenue", state, "sponsor revenue from sponsors"
             ):
                 sponsor_revenue = 0.0
                 sponsor_breakdown = []
@@ -113,22 +117,25 @@ class RevenueAgent(BaseAgent):
                     name = getattr(s, "name", "Unknown") if hasattr(s, "name") else "Unknown"
                     value = _SPONSOR_VALUES.get(tier, 2000.0)
                     sponsor_revenue += value
-                    sponsor_breakdown.append({
-                        "sponsor": name,
-                        "tier": tier,
-                        "value": round(value, 2),
-                    })
-                self._log_info(f"  Sponsor revenue: ${sponsor_revenue:,.2f} ({len(sponsor_breakdown)} sponsors)")
+                    sponsor_breakdown.append(
+                        {
+                            "sponsor": name,
+                            "tier": tier,
+                            "value": round(value, 2),
+                        }
+                    )
+                self._log_info(
+                    f"  Sponsor revenue: ${sponsor_revenue:,.2f} ({len(sponsor_breakdown)} sponsors)"
+                )
 
             # ── 3. Exhibitor Revenue ──────────────────────────────────────
-            with self._pass_context(
-                "Aggregate: Exhibitor revenue", state,
-                f"exhibitor revenue"
-            ):
+            with self._pass_context("Aggregate: Exhibitor revenue", state, "exhibitor revenue"):
                 exhibitors = state.get("exhibitors", [])
                 exhibitor_count = len(exhibitors)
                 exhibitor_revenue = exhibitor_count * _EXHIBITOR_FEE
-                self._log_info(f"  Exhibitor revenue: ${exhibitor_revenue:,.2f} ({exhibitor_count} exhibitors)")
+                self._log_info(
+                    f"  Exhibitor revenue: ${exhibitor_revenue:,.2f} ({exhibitor_count} exhibitors)"
+                )
 
             # ── 4. Community/GTM uplift (optional) ────────────────────────
             communities = state.get("communities", [])
@@ -165,9 +172,9 @@ class RevenueAgent(BaseAgent):
                 "break_even": {
                     "attendance_needed": break_even_attendance,
                     "is_profitable": projected_profit > 0,
-                    "profit_margin_pct": round(
-                        (projected_profit / total_revenue) * 100, 2
-                    ) if total_revenue > 0 else 0.0,
+                    "profit_margin_pct": round((projected_profit / total_revenue) * 100, 2)
+                    if total_revenue > 0
+                    else 0.0,
                 },
                 "monte_carlo_summary": {
                     "revenue_p10": monte_carlo.get("revenue", {}).get("p10", 0),
@@ -190,6 +197,19 @@ class RevenueAgent(BaseAgent):
             ]
             meta = [{"total": total_revenue, "profit": projected_profit, "roi": roi_pct}]
             self._write_memory(docs, meta, collection="events")
+
+            # Chat Agent Indexing Contract
+            run_id = state.get("metadata", {}).get("run_id", "unknown")
+            chat_docs = [
+                f"Revenue Projection: Total revenue: ${total_revenue:,.2f}. "
+                f"Ticket revenue: ${ticket_revenue:,.2f}. "
+                f"Sponsor revenue: ${sponsor_revenue:,.2f}. "
+                f"Exhibitor revenue: ${exhibitor_revenue:,.2f}. "
+                f"Projected profit: ${projected_profit:,.2f}. ROI: {roi_pct}%."
+            ]
+            chat_meta = [{"agent": "revenue", "run_id": run_id}]
+
+            self.index_to_chroma(chat_docs, "chat_index", chat_meta)
 
             self._log_info(
                 f"Completed — Total: ${total_revenue:,.2f}, "
