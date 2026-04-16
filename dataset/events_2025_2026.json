@@ -8256,7 +8256,7 @@
     "country": "Germany",
     "category": "opensource",
     "theme": "",
-    "sponsors": ["linbit","grafana","incinga"],
+    "sponsors": ["linbit","grafana","Icinga"],
     "speakers": [],
     "exhibitors": [],
     "ticket_price_early": 200,
