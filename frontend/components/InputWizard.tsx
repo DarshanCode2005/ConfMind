@@ -17,7 +17,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Card, CardContent } from "@/components/ui/card";
-import { runPlan, type EventConfigInput } from "@/lib/api";
+import { type EventConfigInput } from "@/lib/api";
 import {
   Brain,
   Globe,
@@ -135,11 +135,12 @@ export default function InputWizard() {
 
     setLoading(true);
     try {
-      await runPlan(input);
       sessionStorage.setItem("confmind_config", JSON.stringify(input));
+      sessionStorage.removeItem("confmind_plan_id");
+      sessionStorage.setItem("confmind_run_on_dashboard", "1");
       router.push("/dashboard");
     } catch (err) {
-      toast.error("Failed to start planning. Is the backend running?", {
+      toast.error("Failed to prepare plan launch.", {
         description: err instanceof Error ? err.message : String(err),
       });
       setLoading(false);
@@ -154,7 +155,7 @@ export default function InputWizard() {
       </div>
 
       <div className="mb-12 text-center max-w-3xl">
-        <div className="inline-flex items-center gap-2 rounded-lg border border-primary/25 bg-gradient-to-r from-primary/10 via-secondary/15 to-accent px-4 py-1.5 mb-6 shadow-sm">
+        <div className="inline-flex items-center gap-2 rounded-lg border border-primary/25 bg-linear-to-r from-primary/10 via-secondary/15 to-accent px-4 py-1.5 mb-6 shadow-sm">
           <Brain className="w-4 h-4 text-primary" />
           <span className="text-sm font-medium text-primary">
             AI Powered Conference Planner
@@ -205,7 +206,7 @@ export default function InputWizard() {
         </div>
         <div className="relative h-2 bg-muted rounded-full overflow-hidden border border-border/70">
           <div
-            className="absolute left-0 top-0 h-full bg-gradient-to-r from-primary via-secondary to-chart-4 rounded-full transition-all duration-500"
+            className="absolute left-0 top-0 h-full bg-linear-to-r from-primary via-secondary to-chart-4 rounded-full transition-all duration-500"
             style={{ width: `${((step) / (TOTAL_STEPS - 1)) * 100}%` }}
           />
         </div>
@@ -262,7 +263,7 @@ export default function InputWizard() {
                     align="start"
                     sideOffset={8}
                     alignItemWithTrigger={false}
-                    className="z-[100] rounded-lg"
+                    className="z-100 rounded-lg"
                     style={{ maxHeight: 300 }}
                   >
                     {ALL_COUNTRIES.map((g) => (

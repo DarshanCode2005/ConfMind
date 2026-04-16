@@ -74,6 +74,9 @@ export default function RefinementPanel({ onRefined }: RefinementPanelProps) {
 
     try {
       const result = await runPlan(refinedConfig);
+      if (result.plan_id) {
+        sessionStorage.setItem("confmind_plan_id", result.plan_id);
+      }
       onRefined(result);
       toast.success("Plan refined successfully!", {
         description: "Results have been updated below.",
@@ -89,9 +92,9 @@ export default function RefinementPanel({ onRefined }: RefinementPanelProps) {
   };
 
   return (
-    <Card className="border-border/50 border-primary/20 relative overflow-hidden">
+    <Card className="border-primary/20 relative overflow-hidden">
       {/* Subtle gradient accent */}
-      <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/50 to-transparent" />
+      <div className="absolute inset-x-0 top-0 h-px bg-linear-to-r from-transparent via-primary/50 to-transparent" />
       <CardHeader className="pb-3">
         <CardTitle className="text-base flex items-center gap-2">
           <Sparkles className="w-4 h-4 text-primary" />
@@ -137,7 +140,7 @@ export default function RefinementPanel({ onRefined }: RefinementPanelProps) {
             placeholder="Describe your changes... e.g. 'Find sponsors with sustainability focus', 'Add more keynote speakers from Europe', 'Increase VIP tier price by 30%'"
             value={prompt}
             onChange={(e) => setPrompt(e.target.value)}
-            className="min-h-[100px] text-sm resize-none bg-muted/20 border-border/50 focus:border-primary/50"
+            className="min-h-25 text-sm resize-none bg-muted/20 border-border/50 focus:border-primary/50"
             disabled={loading}
           />
         </div>

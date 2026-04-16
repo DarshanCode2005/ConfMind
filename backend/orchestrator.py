@@ -157,7 +157,39 @@ def _make_node(agent: Any, name: str):
         return passthrough
 
     def node_fn(state: AgentState) -> dict[str, Any]:
-        result = agent.run(state)
+        plan_id = None
+        metadata = state.get("metadata", {})
+        if isinstance(metadata, dict):
+            plan_id = metadata.get("plan_id")
+
+        if plan_id:
+            try:
+                from backend.main import _agent_status
+
+                _agent_status.setdefault(str(plan_id), {})[name] = "running"
+            except Exception:
+                pass
+
+        try:
+            result = agent.run(state)
+        except Exception as exc:
+            if plan_id:
+                try:
+                    from backend.main import _agent_status
+
+                    _agent_status.setdefault(str(plan_id), {})[name] = "failed"
+                except Exception:
+                    pass
+            raise exc
+
+        if plan_id:
+            try:
+                from backend.main import _agent_status
+
+                _agent_status.setdefault(str(plan_id), {})[name] = "completed"
+            except Exception:
+                pass
+
         # Ensure it returns a dict for LangGraph merging
         if isinstance(result, dict):
             return result
@@ -208,7 +240,7 @@ def _build_graph() -> Any:
 graph = _build_graph()
 
 
-def _initial_state(config: EventConfigInput) -> AgentState:
+def _initial_state(config: EventConfigInput, plan_id: str | None = None) -> AgentState:
     """Create a blank AgentState from the user's EventConfigInput.
 
     All list and dict fields are initialised to empty so agents that run first
@@ -228,11 +260,11 @@ def _initial_state(config: EventConfigInput) -> AgentState:
         gtm_messages={},
         messages=[],
         errors=[],
-        metadata={},
+        metadata={"plan_id": plan_id} if plan_id else {},
     )
 
 
-async def run_plan(config: EventConfigInput) -> AgentState:
+async def run_plan(config: EventConfigInput, plan_id: str | None = None) -> AgentState:
     """Run the full conference planning pipeline for a given EventConfigInput.
 
     Args:
@@ -253,6 +285,6 @@ async def run_plan(config: EventConfigInput) -> AgentState:
             )
         )
     """
-    initial = _initial_state(config)
+    initial = _initial_state(config, plan_id=plan_id)
     final_state: AgentState = await graph.ainvoke(initial)  # type: ignore[assignment]
     return final_state

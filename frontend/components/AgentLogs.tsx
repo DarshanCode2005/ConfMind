@@ -12,12 +12,33 @@ interface LogLine {
   ts: string;
 }
 
-// Derive a tag and agent name from a log line like "[Sponsor Agent] Running..."
-function parseLogLine(raw: string): {
+type ParsedLogLine = {
   agent: string | null;
   body: string;
   type: "start" | "running" | "done" | "info";
-} {
+};
+
+function parseLogLine(raw: string): ParsedLogLine {
+  try {
+    const parsed = JSON.parse(raw) as { agent?: string; status?: string };
+    if (parsed.agent && parsed.status) {
+      const statusLower = parsed.status.toLowerCase();
+      const type: ParsedLogLine["type"] =
+        statusLower === "running"
+          ? "running"
+          : statusLower === "completed" || statusLower === "done" || statusLower === "failed"
+            ? "done"
+            : "info";
+      return {
+        agent: parsed.agent,
+        body: parsed.status,
+        type,
+      };
+    }
+  } catch {
+    // Non-JSON line; fall through to legacy parser.
+  }
+
   const match = raw.match(/^\[([^\]]+)\]\s*(.*)$/);
   if (!match) return { agent: null, body: raw, type: "info" };
 
@@ -60,57 +81,82 @@ function agentColor(t: "start" | "running" | "done" | "info"): string {
 }
 
 interface AgentLogsProps {
+  planId?: string;
   onAgentStatusChange?: (agent: string, status: "running" | "completed" | "pending") => void;
 }
 
-export default function AgentLogs({ onAgentStatusChange }: AgentLogsProps) {
+export default function AgentLogs({ planId, onAgentStatusChange }: AgentLogsProps) {
   const [logs, setLogs] = useState<LogLine[]>([]);
   const [connected, setConnected] = useState(false);
   const [done, setDone] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const counterRef = useRef(0);
+  const reconnectTimeoutRef = useRef<number | null>(null);
 
   useEffect(() => {
-    const cleanup = subscribeToAgentStatus(
-      (line) => {
-        setConnected(true);
+    let isActive = true;
+    let unsubscribe: (() => void) | undefined;
 
-        const id = ++counterRef.current;
-        const ts = new Date().toLocaleTimeString("en-US", {
-          hour12: false,
-          hour: "2-digit",
-          minute: "2-digit",
-          second: "2-digit",
-        });
+    setConnected(false);
+    setDone(false);
+    setLogs([]);
 
-        setLogs((prev) => [...prev, { id, text: line, ts }]);
-
-        // Notify parent about agent status
-        const { agent, type } = parseLogLine(line);
-        if (agent && onAgentStatusChange) {
-          if (type === "running" || type === "start") {
-            onAgentStatusChange(agent, "running");
-          } else if (type === "done") {
-            onAgentStatusChange(agent, "completed");
+    const connect = () => {
+      unsubscribe = subscribeToAgentStatus(
+        planId,
+        (line) => {
+          if (!isActive) {
+            return;
           }
-        }
+          setConnected(true);
 
-        // Detect completion
-        if (
-          line.toLowerCase().includes("orchestrat") &&
-          (line.toLowerCase().includes("complet") || line.toLowerCase().includes("done"))
-        ) {
-          setDone(true);
+          const id = ++counterRef.current;
+          const ts = new Date().toLocaleTimeString("en-US", {
+            hour12: false,
+            hour: "2-digit",
+            minute: "2-digit",
+            second: "2-digit",
+          });
+          setLogs((prev) => [...prev, { id, text: line, ts }]);
+
+          const parsed = parseLogLine(line);
+          if (parsed.agent && onAgentStatusChange) {
+            if (parsed.type === "running" || parsed.type === "start") {
+              onAgentStatusChange(parsed.agent, "running");
+            } else if (parsed.type === "done") {
+              onAgentStatusChange(parsed.agent, "completed");
+            }
+          }
+
+          if (parsed.agent === "__all__" && parsed.type === "done") {
+            setDone(true);
+            unsubscribe?.();
+          }
+        },
+        () => {
+          if (!isActive || done) {
+            return;
+          }
+          setConnected(false);
+          reconnectTimeoutRef.current = window.setTimeout(() => {
+            if (isActive && !done) {
+              connect();
+            }
+          }, 1000);
         }
-      },
-      (_e) => {
-        // SSE closed or errored
-        setDone(true);
+      );
+    };
+
+    connect();
+
+    return () => {
+      isActive = false;
+      if (reconnectTimeoutRef.current !== null) {
+        window.clearTimeout(reconnectTimeoutRef.current);
       }
-    );
-
-    return cleanup;
-  }, [onAgentStatusChange]);
+      unsubscribe?.();
+    };
+  }, [onAgentStatusChange, planId]);
 
   // Auto-scroll
   useEffect(() => {

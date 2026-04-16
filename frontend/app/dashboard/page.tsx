@@ -1,8 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { getOutput, type AgentState } from "@/lib/api";
+import { getOutput, runPlan, type AgentState, type EventConfigInput } from "@/lib/api";
 import type { AgentStatus } from "@/components/AgentGraph";
 
 import AgentLogs from "@/components/AgentLogs";
@@ -25,16 +25,22 @@ import { Brain, RefreshCw, ArrowLeft, AlertTriangle } from "lucide-react";
 
 export default function DashboardPage() {
   const router = useRouter();
+  const launchStartedRef = useRef(false);
   const [state, setState] = useState<AgentState | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [planId, setPlanId] = useState<string | null>(null);
   const [agentStatuses, setAgentStatuses] = useState<
     Record<string, AgentStatus>
   >({});
 
   const fetchOutput = useCallback(async () => {
+    if (!planId) {
+      return;
+    }
+
     try {
-      const data = await getOutput();
+      const data = await getOutput(planId);
       setState(data);
       setError(null);
     } catch (err) {
@@ -42,9 +48,70 @@ export default function DashboardPage() {
     } finally {
       setLoading(false);
     }
+  }, [planId]);
+
+  useEffect(() => {
+    if (launchStartedRef.current) {
+      return;
+    }
+    launchStartedRef.current = true;
+
+    const maybeLaunch = async () => {
+      const storedPlanId = sessionStorage.getItem("confmind_plan_id");
+      const launchOnDashboard = sessionStorage.getItem("confmind_run_on_dashboard") === "1";
+      const storedConfig = sessionStorage.getItem("confmind_config");
+
+      if (launchOnDashboard && storedConfig) {
+        let parsedConfig: EventConfigInput;
+        try {
+          parsedConfig = JSON.parse(storedConfig) as EventConfigInput;
+        } catch {
+          setLoading(false);
+          setError("Saved event config is invalid. Please start a new plan.");
+          sessionStorage.removeItem("confmind_run_on_dashboard");
+          return;
+        }
+
+        setLoading(true);
+        setError(null);
+        setState(null);
+        setPlanId(null);
+        setAgentStatuses({ orchestrator: "running" });
+        sessionStorage.removeItem("confmind_run_on_dashboard");
+
+        try {
+          const result = await runPlan(parsedConfig);
+          setState(result);
+          if (result.plan_id) {
+            sessionStorage.setItem("confmind_plan_id", result.plan_id);
+            setPlanId(result.plan_id);
+          }
+          setError(null);
+        } catch (err) {
+          setError(err instanceof Error ? err.message : "Failed to run plan.");
+        } finally {
+          setLoading(false);
+        }
+        return;
+      }
+
+      if (!storedPlanId) {
+        setLoading(false);
+        setError("No saved plan found. Start a new plan from the home page.");
+        return;
+      }
+
+      setPlanId(storedPlanId);
+    };
+
+    void maybeLaunch();
   }, []);
 
   useEffect(() => {
+    if (!planId) {
+      return;
+    }
+
     // Initial fetch — backend may already have results
     fetchOutput();
 
@@ -54,7 +121,7 @@ export default function DashboardPage() {
     }, 5000);
 
     return () => clearInterval(interval);
-  }, [fetchOutput]);
+  }, [fetchOutput, planId]);
 
   const handleAgentStatus = useCallback(
     (agent: string, status: "running" | "completed" | "pending") => {
@@ -65,6 +132,10 @@ export default function DashboardPage() {
 
   const handleRefined = useCallback((newState: AgentState) => {
     setState(newState);
+    if (newState.plan_id) {
+      sessionStorage.setItem("confmind_plan_id", newState.plan_id);
+      setPlanId(newState.plan_id);
+    }
     setLoading(false);
   }, []);
 
@@ -77,11 +148,11 @@ export default function DashboardPage() {
       state.schedule?.length);
 
   return (
-    <div className="min-h-screen relative max-w-[100vw] overflow-x-hidden pt-[72px]">
+    <div className="min-h-screen relative max-w-[100vw] overflow-x-hidden pt-18">
       <header className="fixed top-0 left-0 right-0 z-30 border-b border-border/60 bg-background/75 backdrop-blur-xl shadow-sm">
         <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <h1 className="text-2xl font-bold tracking-tight bg-gradient-to-br from-slate-900 via-indigo-700 to-cyan-600 dark:from-white dark:via-indigo-200 dark:to-cyan-300 bg-clip-text text-transparent">
+            <h1 className="text-2xl font-bold tracking-tight bg-linear-to-br from-slate-900 via-indigo-700 to-cyan-600 dark:from-white dark:via-indigo-200 dark:to-cyan-300 bg-clip-text text-transparent">
               Event Dashboard
             </h1>
             <Button
@@ -157,7 +228,7 @@ export default function DashboardPage() {
 
         {/* Agent Logs */}
         <section>
-          <AgentLogs onAgentStatusChange={handleAgentStatus} />
+          <AgentLogs planId={planId ?? undefined} onAgentStatusChange={handleAgentStatus} />
         </section>
 
         {/* Agent Graph */}
@@ -231,7 +302,7 @@ export default function DashboardPage() {
           {/* Revenue summary */}
           {state?.total_est_revenue && (
             <div className="flex gap-4 flex-wrap">
-              <div className="flex-1 min-w-[180px] bg-card/80 border border-border/60 rounded-xl px-5 py-4 shadow-sm">
+              <div className="flex-1 min-w-45 bg-card/80 border border-border/60 rounded-xl px-5 py-4 shadow-sm">
                 <p className="text-xs text-muted-foreground">Total Est. Revenue</p>
                 <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-300 tabular-nums">
                   $
@@ -241,7 +312,7 @@ export default function DashboardPage() {
                 </p>
               </div>
               {state.break_even_price != null && (
-                <div className="flex-1 min-w-[180px] bg-card/80 border border-border/60 rounded-xl px-5 py-4 shadow-sm">
+                <div className="flex-1 min-w-45 bg-card/80 border border-border/60 rounded-xl px-5 py-4 shadow-sm">
                   <p className="text-xs text-muted-foreground">Break-even Price</p>
                   <p className="text-2xl font-bold text-primary tabular-nums">
                     ${state.break_even_price.toLocaleString()}

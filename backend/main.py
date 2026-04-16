@@ -26,6 +26,7 @@ import json
 import os
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
+from importlib import import_module
 from typing import Any
 
 from dotenv import load_dotenv
@@ -42,6 +43,7 @@ load_dotenv()
 # Replaced by Postgres in production — see backend/memory/postgres_store.py.
 _plan_cache: dict[str, Any] = {}
 _agent_status: dict[str, dict[str, str]] = {}  # plan_id -> {agent_name -> status}
+_latest_plan_id: str | None = None
 
 
 # ── Lifespan ──────────────────────────────────────────────────────────────────
@@ -116,13 +118,16 @@ async def run_plan_endpoint(config: EventConfigInput) -> dict[str, Any]:
     """
     import uuid
 
-    from backend.orchestrator import run_plan
+    orchestrator = import_module("backend.orchestrator")
 
+    global _latest_plan_id
     plan_id = str(uuid.uuid4())
     _agent_status[plan_id] = {}
+    _latest_plan_id = plan_id
 
     try:
-        final_state: AgentState = await run_plan(config)
+        run_plan_fn = orchestrator.run_plan
+        final_state: AgentState = await run_plan_fn(config, plan_id=plan_id)
     except Exception as exc:
         raise HTTPException(status_code=500, detail=str(exc)) from exc
 
@@ -159,7 +164,7 @@ async def run_plan_endpoint(config: EventConfigInput) -> dict[str, Any]:
     summary="Stream agent execution status via Server-Sent Events",
     response_class=StreamingResponse,
 )
-async def agent_status_stream(plan_id: str) -> StreamingResponse:
+async def agent_status_stream(plan_id: str | None = None) -> StreamingResponse:
     """SSE endpoint — the frontend polls this while /api/run-plan is executing.
 
     Each event is a JSON object: `{ "agent": "sponsor_agent", "status": "done" }`
@@ -168,10 +173,17 @@ async def agent_status_stream(plan_id: str) -> StreamingResponse:
     - `plan_id` — the UUID returned by /api/run-plan
     """
 
+    resolved_plan_id = plan_id or _latest_plan_id
+    if not resolved_plan_id:
+        raise HTTPException(
+            status_code=400,
+            detail="plan_id is required. Call /api/run-plan first and use the returned plan_id.",
+        )
+
     async def event_generator() -> AsyncGenerator[str, None]:
         last_count = 0
         while True:
-            status = _agent_status.get(plan_id, {})
+            status = _agent_status.get(resolved_plan_id, {})
             items = list(status.items())
             for agent_name, agent_status_val in items[last_count:]:
                 data = json.dumps({"agent": agent_name, "status": agent_status_val})
@@ -183,6 +195,17 @@ async def agent_status_stream(plan_id: str) -> StreamingResponse:
             await asyncio.sleep(0.5)
 
     return StreamingResponse(event_generator(), media_type="text/event-stream")
+
+
+@api.get(
+    "/api/output",
+    summary="Retrieve the most recently generated conference plan",
+)
+async def get_latest_output() -> dict[str, Any]:
+    """Return the latest cached plan when the caller does not provide an ID."""
+    if _latest_plan_id and _latest_plan_id in _plan_cache:
+        return _plan_cache[_latest_plan_id]
+    raise HTTPException(status_code=404, detail="No completed plan is available yet.")
 
 
 @api.get(
