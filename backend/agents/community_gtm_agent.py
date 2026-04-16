@@ -318,6 +318,30 @@ class CommunityGTMAgent(BaseAgent):
             meta = [{"name": c.name, "platform": c.platform} for c in community_schemas]
             self._write_memory(docs, meta, collection="events")
 
+            # Chat Agent Indexing Contract
+            run_id = state.get("metadata", {}).get("run_id", "unknown")
+            chat_docs = []
+            chat_meta = []
+            for c in communities[:_TARGET_COMMUNITIES]:
+                name = c.get("name", "Unknown")
+                platform = c.get("platform", "Other")
+                count = c.get("size", 0)
+                tags = c.get("niche", "general")
+                score = c.get("relevance", 0)
+                text = f"{name}. Platform: {platform}. Members: {count}. Niche: {tags}. Relevance: {score}"
+                chat_docs.append(text)
+                chat_meta.append({"agent": "gtm", "run_id": run_id})
+                
+            # Plus one doc for message variants
+            msg_doc_parts = []
+            for plat, msgs in gtm_messages.items():
+                msg_doc_parts.append(f"{plat}: {msgs[0] if msgs else 'none'}")
+            msg_doc = f"Message variants: {', '.join(msg_doc_parts)}"
+            chat_docs.append(msg_doc)
+            chat_meta.append({"agent": "gtm", "run_id": run_id, "type": "messages"})
+            
+            self.index_to_chroma(chat_docs, "chat_index", chat_meta)
+
             self._log_info(f"Completed — {len(community_schemas)} communities, {len(gtm_messages)} platform messages")
 
             return {

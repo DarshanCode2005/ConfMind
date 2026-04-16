@@ -379,9 +379,28 @@ class VenueAgent(BaseAgent):
             meta = [{"name": v.name, "city": v.city, "score": v.score} for v in venue_schemas]
             self._write_memory(docs, meta, collection="venues")
 
+            # Chat Agent Indexing Contract
+            run_id = state.get("metadata", {}).get("run_id", "unknown")
+            chat_docs = []
+            chat_meta = []
+            for v in venue_schemas:
+                past_events_count = len(v.past_events)
+                cost_tier = v.price_range if v.price_range else "Unknown"
+                text = (
+                    f"{v.name}. City: {v.city}. Capacity: {v.capacity}. "
+                    f"Cost tier: {cost_tier}. Past events: {past_events_count}. Fit score: {v.score}"
+                )
+                chat_docs.append(text)
+                chat_meta.append({
+                    "agent": "venue",
+                    "run_id": run_id,
+                })
+            self.index_to_chroma(chat_docs, "chat_index", chat_meta)
+
             self._log_info(f"Completed — {len(venue_schemas)} venues ranked")
 
             return {"venues": venue_schemas}
+
 
         except Exception as exc:
             return self._log_error(state, f"VenueAgent failed: {exc}")

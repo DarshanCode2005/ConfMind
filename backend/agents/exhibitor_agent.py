@@ -91,21 +91,21 @@ class ExhibitorAgent(BaseAgent):
 
         exhibitors = []
         for name, count in exhibitor_counter.most_common():
-            exhibitors.append({
-                "name": name,
-                "frequency": count,
-                "cluster": "",
-                "relevance": 0.0,
-            })
+            exhibitors.append(
+                {
+                    "name": name,
+                    "frequency": count,
+                    "cluster": "",
+                    "relevance": 0.0,
+                }
+            )
 
         self._log_info(f"Extracted {len(exhibitors)} unique exhibitors")
         return exhibitors
 
     # ── Pass 2: LLM clustering ───────────────────────────────────────────
 
-    def _cluster_exhibitors(
-        self, exhibitors: list[dict], category: str
-    ) -> dict[str, list[dict]]:
+    def _cluster_exhibitors(self, exhibitors: list[dict], category: str) -> dict[str, list[dict]]:
         """Use LLM to assign each exhibitor to a cluster."""
         if not exhibitors:
             return {label: [] for label in _CLUSTER_LABELS}
@@ -124,7 +124,7 @@ class ExhibitorAgent(BaseAgent):
             f"Event category: {category}\n\n"
             f"Exhibitors:\n{', '.join(exhibitor_names[:50])}\n\n"
             f"Output as JSON object mapping exhibitor name to cluster label.\n"
-            f"Example: {{\"CompanyA\": \"startup\", \"CompanyB\": \"enterprise\"}}\n\n"
+            f'Example: {{"CompanyA": "startup", "CompanyB": "enterprise"}}\n\n'
             f"Output ONLY valid JSON."
         )
         cluster_map = self._invoke_llm_json(batch_prompt)
@@ -180,20 +180,20 @@ class ExhibitorAgent(BaseAgent):
                 if names and isinstance(names, list):
                     for name in names[:3]:  # Max 3 per cluster
                         if isinstance(name, str) and name.strip():
-                            clusters[label].append({
-                                "name": name.strip(),
-                                "frequency": 0,
-                                "cluster": label,
-                                "relevance": 3.0,  # Lower score for gap-filled
-                            })
+                            clusters[label].append(
+                                {
+                                    "name": name.strip(),
+                                    "frequency": 0,
+                                    "cluster": label,
+                                    "relevance": 3.0,  # Lower score for gap-filled
+                                }
+                            )
 
         return clusters
 
     # ── Scoring ──────────────────────────────────────────────────────────
 
-    def _score_exhibitors(
-        self, exhibitors: list[dict], category: str
-    ) -> list[dict]:
+    def _score_exhibitors(self, exhibitors: list[dict], category: str) -> list[dict]:
         """Score each exhibitor's relevance to the event category."""
         for exhibitor in exhibitors:
             freq = exhibitor.get("frequency", 0)
@@ -228,22 +228,21 @@ class ExhibitorAgent(BaseAgent):
 
             # ── Pass 1: Extract from past_events ──────────────────────────
             with self._pass_context(
-                "Pass 1: Extract exhibitors", state,
-                f"exhibitors for {category} events"
+                "Pass 1: Extract exhibitors", state, f"exhibitors for {category} events"
             ):
                 exhibitors = self._extract_exhibitors(past_events)
 
             # ── Pass 2: LLM clustering ────────────────────────────────────
             with self._pass_context(
-                "Pass 2: LLM clustering", state,
-                f"clustering exhibitors for {category}"
+                "Pass 2: LLM clustering", state, f"clustering exhibitors for {category}"
             ):
                 clusters = self._cluster_exhibitors(exhibitors, category)
 
             # ── Pass 3: Gap-fill empty clusters ──────────────────────────
             with self._pass_context(
-                "Pass 3: Gap-fill empty clusters", state,
-                f"gap-filling exhibitor clusters for {category}"
+                "Pass 3: Gap-fill empty clusters",
+                state,
+                f"gap-filling exhibitor clusters for {category}",
             ):
                 clusters = self._gap_fill_clusters(clusters, category, geography)
 
@@ -258,19 +257,39 @@ class ExhibitorAgent(BaseAgent):
             # ── Build output ExhibitorSchema list ─────────────────────────
             exhibitor_schemas = []
             for e in all_exhibitors:
-                exhibitor_schemas.append(ExhibitorSchema(
-                    name=e["name"],
-                    cluster=e.get("cluster", "individual"),
-                    relevance=min(10.0, e.get("relevance", 0)),
-                    website="",
-                ))
+                exhibitor_schemas.append(
+                    ExhibitorSchema(
+                        name=e["name"],
+                        cluster=e.get("cluster", "individual"),
+                        relevance=min(10.0, e.get("relevance", 0)),
+                        website="",
+                    )
+                )
 
             # Write to memory
             docs = [f"Exhibitor: {e.name} | Cluster: {e.cluster}" for e in exhibitor_schemas]
             meta = [{"name": e.name, "cluster": e.cluster} for e in exhibitor_schemas]
             self._write_memory(docs, meta, collection="events")
 
-            self._log_info(f"Completed — {len(exhibitor_schemas)} exhibitors in {sum(1 for c in clusters.values() if c)}/{len(_CLUSTER_LABELS)} clusters")
+            # Chat Agent Indexing Contract
+            run_id = state.get("metadata", {}).get("run_id", "unknown")
+            chat_docs = []
+            chat_meta = []
+            for e in exhibitor_schemas:
+                text = f"Exhibitor {e.name}. Cluster: {e.cluster}. Relevance: {e.relevance}."
+                chat_docs.append(text)
+                chat_meta.append(
+                    {
+                        "agent": "exhibitor",
+                        "run_id": run_id,
+                    }
+                )
+
+            self.index_to_chroma(chat_docs, "chat_index", chat_meta)
+
+            self._log_info(
+                f"Completed — {len(exhibitor_schemas)} exhibitors in {sum(1 for c in clusters.values() if c)}/{len(_CLUSTER_LABELS)} clusters"
+            )
 
             return {"exhibitors": exhibitor_schemas}
 

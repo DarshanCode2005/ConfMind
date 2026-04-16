@@ -345,6 +345,29 @@ class SpeakerAgent(BaseAgent):
             meta = [{"name": s.name, "score": s.influence_score} for s in speaker_schemas]
             self._write_memory(docs, meta, collection="speakers")
 
+            # Chat Agent Indexing Contract
+            run_id = state.get("metadata", {}).get("run_id", "unknown")
+            chat_docs = []
+            chat_meta = []
+            for s in speakers[:_TARGET_SPEAKERS]:
+                name = s["name"]
+                topics = ", ".join(s.get("topics", []))
+                score = min(10.0, s.get("influence_score", 0))
+                freq = s.get("frequency", 0)
+                # Find mapped agenda topics for this speaker
+                mapped = [a.get("topic", "") for a in agenda_draft if name in a.get("speakers", [])]
+                agenda_topics = ", ".join(mapped) if mapped else "none"
+                text = (
+                    f"{name}. Topics: {topics}. Score: {score}. "
+                    f"Past events: {freq}. Agenda: {agenda_topics}"
+                )
+                chat_docs.append(text)
+                chat_meta.append({
+                    "agent": "speaker",
+                    "run_id": run_id,
+                })
+            self.index_to_chroma(chat_docs, "chat_index", chat_meta)
+
             self._log_info(f"Completed — {len(speaker_schemas)} speakers ranked")
 
             return {

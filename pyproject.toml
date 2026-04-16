@@ -36,6 +36,8 @@ docstring-code-format = true
 [tool.pyright]
 pythonVersion = "3.11"
 typeCheckingMode = "basic"        # "strict" is too aggressive for a hackathon
+venvPath = "."
+venv = ".venv"
 include = ["backend", "scraping"]
 exclude = ["node_modules", ".venv", "venv", "__pycache__"]
 reportMissingImports = true

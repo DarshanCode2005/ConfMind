@@ -96,57 +96,36 @@ def similarity_search(
     query: str,
     collection: str = "events",
     k: int = 5,
+    agents: list[str] | None = None,
 ) -> list[dict[str, Any]]:
-    """Retrieve the k most semantically similar documents to a query.
-
-    Args:
-        query:      Natural language query string.
-        collection: Collection / namespace to search in.
-        k:          Number of results to return.
-
-    Returns:
-        List of dicts, each with:
-            - "document": the original text that was stored
-            - "metadata": the metadata dict that was stored alongside it
-            - "distance": cosine distance (0 = identical, 2 = opposite)
-
-    Usage::
-
-        results = similarity_search("AI sponsors Europe", collection="sponsors", k=3)
-        for r in results:
-            print(r["metadata"]["name"], r["distance"])
-    """
     if _USE_PINECONE:
-        return _pinecone_query(query, collection, k)
-    return _chroma_query(query, collection, k)
+        return _pinecone_query(query, collection, k, agents)
+    return _chroma_query(query, collection, k, agents)
 
-
-# ── ChromaDB backend ──────────────────────────────────────────────────────────
-
-
-def _chroma_upsert(
-    docs: list[str],
-    metadata: list[dict[str, Any]],
-    collection: str,
-) -> None:
-    import hashlib
-
+def _chroma_query(query: str, collection: str, k: int, agents: list[str] | None = None) -> list[dict[str, Any]]:
     coll = _get_chroma_collection(collection)
-    ids = [hashlib.md5(d.encode()).hexdigest() for d in docs]
-    coll.upsert(documents=docs, metadatas=metadata, ids=ids)
-
-
-def _chroma_query(query: str, collection: str, k: int) -> list[dict[str, Any]]:
-    coll = _get_chroma_collection(collection)
+    
+    where = None
+    if agents:
+        if len(agents) == 1:
+            where = {"agent": agents[0]}
+        else:
+            where = {"agent": {"$in": agents}}
+            
     results = coll.query(
-        query_texts=[query], n_results=k, include=["documents", "metadatas", "distances"]
+        query_texts=[query], n_results=k, include=["documents", "metadatas", "distances"], where=where
     )
     output: list[dict[str, Any]] = []
+    
+    # Handle empty results
+    if not results.get("documents") or not results["documents"][0]:
+        return output
+        
     for doc, meta, dist in zip(
         results["documents"][0],
         results["metadatas"][0],
         results["distances"][0],
-        strict=True,
+        strict=False,
     ):
         output.append({"document": doc, "metadata": meta, "distance": dist})
     return output
@@ -194,10 +173,18 @@ def _pinecone_upsert(
     index.upsert(vectors=vectors)
 
 
-def _pinecone_query(query: str, collection: str, k: int) -> list[dict[str, Any]]:
+def _pinecone_query(query: str, collection: str, k: int, agents: list[str] | None = None) -> list[dict[str, Any]]:
     index = _get_pinecone_index(collection)
     emb = _embed_texts([query])[0]
-    res = index.query(vector=emb, top_k=k, include_metadata=True)
+    
+    filter = None
+    if agents:
+        if len(agents) == 1:
+            filter = {"agent": {"$eq": agents[0]}}
+        else:
+            filter = {"agent": {"$in": agents}}
+            
+    res = index.query(vector=emb, top_k=k, include_metadata=True, filter=filter)
     return [
         {
             "document": match["metadata"].pop("_document", ""),

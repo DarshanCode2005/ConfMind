@@ -398,6 +398,27 @@ class SponsorAgent(BaseAgent):
             docs = [f"Sponsor: {s.name} | Tier: {s.tier} | Score: {s.relevance_score}" for s in sponsor_schemas]
             meta = [{"name": s.name, "tier": s.tier, "score": s.relevance_score} for s in sponsor_schemas]
             self._write_memory(docs, meta, collection="sponsors")
+            
+            # Chat Agent Indexing Contract
+            run_id = state.get("metadata", {}).get("run_id", "unknown")
+            chat_docs = []
+            chat_meta = []
+            for s in sponsors:
+                score = s.get("relevance_score", 0)
+                freq = s.get("frequency", 1)
+                md_preview = metadata.get(f"proposal_{s['name']}_md", "")[:200]
+                text = (
+                    f"{s['name']}. Industry: {category}. Geography: {geography}. "
+                    f"Score: {score}. Seen at: {freq} events. Proposal summary: {md_preview}"
+                )
+                chat_docs.append(text)
+                chat_meta.append({
+                    "agent": "sponsor",
+                    "run_id": run_id,
+                    "geography": geography,
+                    "category": category,
+                })
+            self.index_to_chroma(chat_docs, "chat_index", chat_meta)
 
             self._log_info(f"Completed — {len(sponsor_schemas)} sponsors ranked")
 
