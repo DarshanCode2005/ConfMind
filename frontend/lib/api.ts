@@ -153,23 +153,58 @@ function normalizeAgentState(raw: AgentState): AgentState {
 }
 
 /**
- * POST /api/run-plan — Start or refine a conference plan.
+ * POST /api/run-plan/async — Start a plan (returns plan_id immediately),
+ * then poll /api/output/{plan_id} until agents finish.
+ *
+ * Uses the fire-and-forget async endpoint to avoid Render's 30-second
+ * HTTP proxy timeout that kills the blocking /api/run-plan endpoint.
  */
 export async function runPlan(input: EventConfigInput): Promise<AgentState> {
-  const res = await fetch(`${BACKEND_URL}/api/run-plan`, {
+  // Step 1: Fire the plan — backend returns {plan_id, status:"running"} instantly
+  const startRes = await fetch(`${BACKEND_URL}/api/run-plan/async`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(input),
   });
 
-  if (!res.ok) {
-    const text = await res.text();
-    throw new Error(`runPlan failed: ${res.status} — ${text}`);
+  if (!startRes.ok) {
+    const text = await startRes.text();
+    throw new Error(`runPlan failed to start: ${startRes.status} — ${text}`);
   }
 
-  const data = (await res.json()) as AgentState;
-  return normalizeAgentState(data);
+  const { plan_id } = (await startRes.json()) as { plan_id: string; status: string };
+
+  // Step 2: Poll /api/output/{plan_id} until status is "done" or "error"
+  const POLL_INTERVAL_MS = 3000;
+  const MAX_WAIT_MS = 10 * 60 * 1000; // 10 minute hard ceiling
+  const deadline = Date.now() + MAX_WAIT_MS;
+
+  while (Date.now() < deadline) {
+    await new Promise((r) => setTimeout(r, POLL_INTERVAL_MS));
+
+    const pollRes = await fetch(
+      `${BACKEND_URL}/api/output/${encodeURIComponent(plan_id)}`,
+      { cache: "no-store" }
+    );
+
+    if (!pollRes.ok) continue; // 404 means still booting — retry
+
+    const data = (await pollRes.json()) as AgentState & { status?: string };
+
+    if (data.status === "error") {
+      const msg = (data as { errors?: string[] }).errors?.join(" | ") ?? "Pipeline failed";
+      throw new Error(msg);
+    }
+
+    if (data.status === "done") {
+      return normalizeAgentState(data);
+    }
+    // status === "running" → keep polling
+  }
+
+  throw new Error("Plan timed out after 10 minutes. Check backend logs.");
 }
+
 
 /**
  * GET /api/output — Retrieve the full AgentState after agents have completed.

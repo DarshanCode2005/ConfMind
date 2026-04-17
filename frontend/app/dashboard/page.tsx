@@ -109,9 +109,10 @@ export default function DashboardPage() {
         try {
           const result = await runPlan(parsedConfig);
           setState(result);
-          if (result.plan_id) {
-            sessionStorage.setItem("confmind_plan_id", result.plan_id);
-            setPlanId(result.plan_id);
+          const id = result.plan_id ?? null;
+          if (id) {
+            sessionStorage.setItem("confmind_plan_id", id);
+            setPlanId(id);
           }
           setError(null);
         } catch (err) {
@@ -119,6 +120,7 @@ export default function DashboardPage() {
         } finally {
           setLoading(false);
         }
+
         return;
       }
 

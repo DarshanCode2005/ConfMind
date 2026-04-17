@@ -107,22 +107,15 @@ api.add_middleware(
 
 @api.post(
     "/api/run-plan",
-    summary="Run the full conference planning pipeline",
+    summary="Run the full conference planning pipeline (blocking — dev only)",
     response_description="The complete AgentState after all 8 agents have run.",
 )
 async def run_plan_endpoint(config: EventConfigInput) -> dict[str, Any]:
-    """Accept an EventConfigInput and invoke the LangGraph orchestrator.
+    """Synchronous endpoint — waits for the full pipeline to finish.
 
-    The orchestrator runs up to 8 specialized agents in sequence/parallel and
-    returns the complete conference plan as structured JSON.
-
-    **Body** (all fields required unless noted):
-    - `category` — Event type: "AI", "Web3", "ClimateTech", "Music", "Sports"
-    - `geography` — Target region: "Europe", "India", "USA", "Singapore"
-    - `audience_size` — Expected attendees (integer ≥ 1)
-    - `budget_usd` — Total budget in USD (float ≥ 0)
-    - `event_dates` — ISO 8601 date string e.g. "2025-09-15"
-    - `event_name` — Optional custom name; defaults to "{category} Summit"
+    ⚠️  This endpoint blocks until all agents complete (can take 2-5 min).
+    On hosted environments with a 30-second proxy timeout, use
+    POST /api/run-plan/async instead.
     """
     import uuid
 
@@ -136,38 +129,65 @@ async def run_plan_endpoint(config: EventConfigInput) -> dict[str, Any]:
     except Exception as exc:
         raise HTTPException(status_code=500, detail=str(exc)) from exc
 
-    # Serialise for JSON response (Pydantic models need .model_dump())
-    cfg_dict = config.model_dump()
-    response: dict[str, Any] = {
+    response = _build_plan_response(plan_id, config, final_state)
+    _plan_cache[plan_id] = response
+    _fire_background_tasks(plan_id, response, final_state)
+    return response
+
+
+@api.post(
+    "/api/run-plan/async",
+    summary="Start the planning pipeline — returns plan_id immediately",
+    response_description="{ plan_id, status } — poll /api/output/{plan_id} for results.",
+)
+async def run_plan_async_endpoint(config: EventConfigInput) -> dict[str, Any]:
+    """Fire-and-forget endpoint for production / hosted environments.
+
+    Returns a plan_id within milliseconds. The full multi-agent pipeline runs
+    in the background. Use GET /api/output/{plan_id} (or poll every few seconds)
+    to retrieve results once agents complete.
+
+    The plan transitions through these statuses in /api/output/{plan_id}:
+        { "status": "running" }    → agents still executing
+        { "status": "done", ... }  → full plan payload returned
+        { "status": "error", ... } → pipeline failed, check "errors" field
+    """
+    import uuid
+
+    from backend.orchestrator import run_plan
+
+    plan_id = str(uuid.uuid4())
+    _agent_status[plan_id] = {}
+
+    # Seed the cache immediately so /api/output/{plan_id} returns "running"
+    # rather than 404 while agents are executing.
+    _plan_cache[plan_id] = {
         "plan_id": plan_id,
-        "event_config": cfg_dict,
-        "sponsors": [s.model_dump() for s in final_state.get("sponsors", [])],
-        "speakers": [s.model_dump() for s in final_state.get("speakers", [])],
-        "venues": [v.model_dump() for v in final_state.get("venues", [])],
-        "exhibitors": [e.model_dump() for e in final_state.get("exhibitors", [])],
-        "pricing": [t.model_dump() for t in final_state.get("pricing", [])],
-        "communities": [c.model_dump() for c in final_state.get("communities", [])],
-        "schedule": final_state.get("schedule", []),
-        "revenue": final_state.get("revenue", {}),
-        "gtm_messages": final_state.get("gtm_messages", {}),
-        "errors": final_state.get("errors", []),
-        "metadata": final_state.get("metadata", {}),
+        "status": "running",
+        "event_config": config.model_dump(),
     }
 
-    # Cache plan for /api/output/{id}
-    _plan_cache[plan_id] = response
+    async def _run_and_cache() -> None:
+        try:
+            final_state: AgentState = await run_plan(config)
+            response = _build_plan_response(plan_id, config, final_state)
+            response["status"] = "done"
+            _plan_cache[plan_id] = response
+            _fire_background_tasks(plan_id, response, final_state)
+        except Exception as exc:
+            import logging
 
-    # Optionally persist to Postgres (non-blocking, ignore result)
-    _bg_task = asyncio.create_task(_persist_plan_silently(final_state))
-    _bg_task.add_done_callback(lambda _: None)  # suppress RUF006 "unhandled task"
+            logging.error(f"run-plan/async failed for {plan_id}: {exc}")
+            _plan_cache[plan_id] = {
+                "plan_id": plan_id,
+                "status": "error",
+                "errors": [str(exc)],
+            }
 
-    # Generate Chat summary asynchronously
-    from backend.agents.chat_agent import generate_workflow_completion_summary
+    task = asyncio.create_task(_run_and_cache())
+    task.add_done_callback(lambda _: None)
 
-    _bg_task_summary = asyncio.create_task(generate_workflow_completion_summary(plan_id, response))
-    _bg_task_summary.add_done_callback(lambda _: None)
-
-    return response
+    return {"plan_id": plan_id, "status": "running"}
 
 
 @api.get(
@@ -259,37 +279,39 @@ async def chat_endpoint(input_data: ChatInput) -> dict[str, Any]:
             async def do_rerun() -> None:
                 try:
                     from backend.orchestrator import hydrate_state
+
                     nonlocal current_plan_state
-                    
+
                     # Ensure state is hydrated for property access
                     hydrated = hydrate_state(current_plan_state)
-                    
+
                     # Apply configuration updates from Chat Agent (if any)
                     if pending_updates:
                         for field, value in pending_updates.items():
                             if hasattr(hydrated["event_config"], field):
                                 setattr(hydrated["event_config"], field, value)
-                    
+
                     # Update status for UI
                     if input_data.plan_id not in _agent_status:
                         _agent_status[input_data.plan_id] = {}
-                    
+
                     for node in nodes_to_rerun:
                         _agent_status[input_data.plan_id][node] = "running"
-                    
+
                     # Execute agents
                     new_state = await rerun_nodes(nodes_to_rerun, hydrated)
-                    
+
                     # Update status for UI
                     for node in nodes_to_rerun:
                         _agent_status[input_data.plan_id][node] = "completed"
-                    
+
                     # Use _dump_state to ensure all Pydantic models are serialized to dicts
                     dumped_state = _dump_state(input_data.plan_id, new_state)
                     _plan_cache[input_data.plan_id] = dumped_state
                     await _persist_plan_silently(new_state)
                 except Exception as e:
                     import logging
+
                     logging.error(f"Rerun failed: {e}")
                     # Clear status on failure
                     if input_data.plan_id in _agent_status:
@@ -309,17 +331,27 @@ def _dump_state(plan_id: str, state: AgentState) -> dict[str, Any]:
     """Convert AgentState (potentially with Pydantic models) to a serializable dict."""
     from backend.models.schemas import (
         CommunitySchema,
+        EventConfigInput,
         ExhibitorSchema,
         PricingTierSchema,
         SpeakerSchema,
         SponsorSchema,
         VenueSchema,
-        EventConfigInput
     )
 
     def dump_val(v: Any) -> Any:
-        if isinstance(v, (SponsorSchema, SpeakerSchema, VenueSchema, ExhibitorSchema, 
-                         PricingTierSchema, CommunitySchema, EventConfigInput)):
+        if isinstance(
+            v,
+            (
+                SponsorSchema,
+                SpeakerSchema,
+                VenueSchema,
+                ExhibitorSchema,
+                PricingTierSchema,
+                CommunitySchema,
+                EventConfigInput,
+            ),
+        ):
             return v.model_dump()
         if isinstance(v, list):
             return [dump_val(i) for i in v]
@@ -340,3 +372,38 @@ async def _persist_plan_silently(state: AgentState) -> None:
         await save_plan(state)
     except Exception:
         pass  # Postgres not configured yet in dev — that's fine
+
+
+def _build_plan_response(
+    plan_id: str, config: EventConfigInput, final_state: AgentState
+) -> dict[str, Any]:
+    """Serialise a completed AgentState into the standard JSON response dict."""
+    return {
+        "plan_id": plan_id,
+        "status": "done",
+        "event_config": config.model_dump(),
+        "sponsors": [s.model_dump() for s in final_state.get("sponsors", [])],
+        "speakers": [s.model_dump() for s in final_state.get("speakers", [])],
+        "venues": [v.model_dump() for v in final_state.get("venues", [])],
+        "exhibitors": [e.model_dump() for e in final_state.get("exhibitors", [])],
+        "pricing": [t.model_dump() for t in final_state.get("pricing", [])],
+        "communities": [c.model_dump() for c in final_state.get("communities", [])],
+        "schedule": final_state.get("schedule", []),
+        "revenue": final_state.get("revenue", {}),
+        "gtm_messages": final_state.get("gtm_messages", {}),
+        "errors": final_state.get("errors", []),
+        "metadata": final_state.get("metadata", {}),
+    }
+
+
+def _fire_background_tasks(plan_id: str, response: dict[str, Any], final_state: AgentState) -> None:
+    """Fire non-critical background tasks after a plan completes."""
+    # Persist to Postgres (non-blocking)
+    _bg_task = asyncio.create_task(_persist_plan_silently(final_state))
+    _bg_task.add_done_callback(lambda _: None)
+
+    # Generate Chat summary
+    from backend.agents.chat_agent import generate_workflow_completion_summary
+
+    _bg_summary = asyncio.create_task(generate_workflow_completion_summary(plan_id, response))
+    _bg_summary.add_done_callback(lambda _: None)
