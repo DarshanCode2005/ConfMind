@@ -7,23 +7,24 @@ plan via the chat_index in Chroma, and trigger reruns of specific nodes.
 
 from __future__ import annotations
 
-import os
 import logging
+import os
 from typing import Any
 
 from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
 from langchain_core.tools import tool
-from langchain_openai import ChatOpenAI
-from langchain_ollama import ChatOllama
 from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_ollama import ChatOllama
+from langchain_openai import ChatOpenAI
 from langgraph.prebuilt import create_react_agent
 
 from backend.memory.vector_store import similarity_search
+from backend.models.schemas import ChatState
 from backend.tools.tavily_tool import find_contact_info
-from backend.models.schemas import AgentState, ChatState
 
 # Shared in-memory mock Redis state for ChatState
 _chat_cache: dict[str, ChatState] = {}
+
 
 def _get_chat_llm(temperature: float = 0.0) -> Any:
     """Return a Chat LLM for the chat interface with Anthropic-first priority.
@@ -40,10 +41,15 @@ def _get_chat_llm(temperature: float = 0.0) -> Any:
     - All others: MAX_TOKENS_FALLBACK (default 1100) - free-tier safe.
     """
     from langchain_anthropic import ChatAnthropic  # type: ignore[import-untyped]
+
     from backend.config import (
-        ANTHROPIC_MODEL, ANTHROPIC_MAX_TOKENS,
-        SECONDARY_MODEL, LOCAL_MODEL,
-        MAX_TOKENS_FALLBACK, OPENROUTER_BASE_URL, OLLAMA_NUM_CTX,
+        ANTHROPIC_MAX_TOKENS,
+        ANTHROPIC_MODEL,
+        LOCAL_MODEL,
+        MAX_TOKENS_FALLBACK,
+        OLLAMA_NUM_CTX,
+        OPENROUTER_BASE_URL,
+        SECONDARY_MODEL,
     )
 
     candidates: list[tuple[str, Any]] = []
@@ -52,69 +58,79 @@ def _get_chat_llm(temperature: float = 0.0) -> Any:
     anthropic_key = os.getenv("ANTHROPIC_API_KEY", "")
     if anthropic_key:
         try:
-            candidates.append((
-                f"Anthropic ({ANTHROPIC_MODEL})",
-                ChatAnthropic(
-                    model=ANTHROPIC_MODEL,
-                    anthropic_api_key=anthropic_key,  # type: ignore[arg-type]
-                    temperature=temperature,
-                    max_tokens=ANTHROPIC_MAX_TOKENS,  # generous, not capped at 1100
-                ),
-            ))
+            candidates.append(
+                (
+                    f"Anthropic ({ANTHROPIC_MODEL})",
+                    ChatAnthropic(
+                        model=ANTHROPIC_MODEL,
+                        anthropic_api_key=anthropic_key,  # type: ignore[arg-type]
+                        temperature=temperature,
+                        max_tokens=ANTHROPIC_MAX_TOKENS,  # generous, not capped at 1100
+                    ),
+                )
+            )
         except Exception:
             pass
 
     # 2. Gemini — fallback if Anthropic fails
     gemini_key = os.getenv("GEMINI_API_KEY", "")
     if gemini_key:
-        candidates.append((
-            "Gemini (1.5-flash)",
-            ChatGoogleGenerativeAI(
-                model="gemini-1.5-flash",
-                google_api_key=gemini_key,
-                temperature=temperature,
-                max_output_tokens=MAX_TOKENS_FALLBACK,  # free-tier cap
-            ),
-        ))
+        candidates.append(
+            (
+                "Gemini (1.5-flash)",
+                ChatGoogleGenerativeAI(
+                    model="gemini-1.5-flash",
+                    google_api_key=gemini_key,
+                    temperature=temperature,
+                    max_output_tokens=MAX_TOKENS_FALLBACK,  # free-tier cap
+                ),
+            )
+        )
 
     # 3. OpenAI — fallback
     openai_key = os.getenv("OPENAI_API_KEY", "")
     if openai_key:
-        candidates.append((
-            "OpenAI (gpt-4o-mini)",
-            ChatOpenAI(
-                model="gpt-4o-mini",
-                openai_api_key=openai_key,
-                temperature=temperature,
-                max_tokens=MAX_TOKENS_FALLBACK,  # free-tier cap
-            ),
-        ))
+        candidates.append(
+            (
+                "OpenAI (gpt-4o-mini)",
+                ChatOpenAI(
+                    model="gpt-4o-mini",
+                    openai_api_key=openai_key,
+                    temperature=temperature,
+                    max_tokens=MAX_TOKENS_FALLBACK,  # free-tier cap
+                ),
+            )
+        )
 
     # 4. OpenRouter — fallback
     or_key = os.getenv("OPENROUTER_API_KEY", "")
     if or_key:
-        candidates.append((
-            f"OpenRouter ({SECONDARY_MODEL})",
-            ChatOpenAI(
-                model=SECONDARY_MODEL,
-                openai_api_key=or_key,
-                openai_api_base=OPENROUTER_BASE_URL,
-                temperature=temperature,
-                max_tokens=MAX_TOKENS_FALLBACK,  # free-tier cap
-            ),
-        ))
+        candidates.append(
+            (
+                f"OpenRouter ({SECONDARY_MODEL})",
+                ChatOpenAI(
+                    model=SECONDARY_MODEL,
+                    openai_api_key=or_key,
+                    openai_api_base=OPENROUTER_BASE_URL,
+                    temperature=temperature,
+                    max_tokens=MAX_TOKENS_FALLBACK,  # free-tier cap
+                ),
+            )
+        )
 
     # 5. Ollama — last resort (no token cap — local model)
     if os.getenv("USE_OLLAMA", "false").lower() == "true":
         try:
-            candidates.append((
-                f"Ollama ({LOCAL_MODEL})",
-                ChatOllama(
-                    model=LOCAL_MODEL,
-                    temperature=temperature,
-                    num_ctx=OLLAMA_NUM_CTX,
-                ),
-            ))
+            candidates.append(
+                (
+                    f"Ollama ({LOCAL_MODEL})",
+                    ChatOllama(
+                        model=LOCAL_MODEL,
+                        temperature=temperature,
+                        num_ctx=OLLAMA_NUM_CTX,
+                    ),
+                )
+            )
         except Exception:
             pass
 
@@ -133,6 +149,7 @@ def _get_chat_llm(temperature: float = 0.0) -> Any:
     if fallbacks:
         return primary_llm.with_fallbacks(fallbacks)
     return primary_llm
+
 
 def get_chat_state(session_id: str) -> ChatState:
     if session_id not in _chat_cache:
@@ -184,8 +201,8 @@ class ChatAgentHost:
             Example: update_plan_parameter('geography', 'London')
             """
             if "pending_updates" not in state:
-                state["pending_updates"] = {} # type: ignore
-            state["pending_updates"][field] = value # type: ignore
+                state["pending_updates"] = {}  # type: ignore
+            state["pending_updates"][field] = value  # type: ignore
             return f"Updated {field} to {value}. This will be applied in the next rerun."
 
         @tool
@@ -193,24 +210,22 @@ class ChatAgentHost:
             """
             Draft a personalized outreach email for a sponsor or speaker.
             If info is missing from knowledge base, it searches the web via Tavily.
-            
+
             Args:
                 name: Full name of the sponsor company or speaker.
                 type: Either 'sponsor' or 'speaker'.
             """
-            import os
-            from langchain_openai import ChatOpenAI
             from langchain_core.messages import HumanMessage
-            
+
             # 1. Look in RAG
             results = similarity_search(name, collection=f"{type}s", k=3)
             context = ""
             if results:
-                context = "\n".join([r['document'] for r in results])
-            
+                context = "\n".join([r["document"] for r in results])
+
             # 2. Look for email/contact via Tavily
             contact_info = find_contact_info(name, type)
-            
+
             # 3. Draft the email
             llm = _get_chat_llm(temperature=0.7)
             prompt = (
@@ -221,7 +236,7 @@ class ChatAgentHost:
                 f"At the TOP, display the 'Recipient Address' (if an email was found, use it; otherwise say 'Contact via [URL]').\n"
                 f"Then output the full email draft."
             )
-            
+
             res = llm.invoke([HumanMessage(content=prompt)])
             return str(res.content)
 
@@ -245,6 +260,9 @@ class ChatAgentHost:
                 messages.append(HumanMessage(content=msg["content"]))
             elif msg["role"] == "assistant":
                 messages.append(AIMessage(content=msg["content"]))
+
+        if not message.strip():
+            message = "Hello! I just opened the chat. Could you introduce yourself and tell me what you can help me with regarding my generated conference plan?"
 
         messages.append(HumanMessage(content=message))
 
@@ -286,7 +304,7 @@ async def generate_workflow_completion_summary(plan_id: str, plan_data: dict[str
             else:
                 top_venues_list.append(getattr(v, "name", "Unknown Venue"))
         top_venues = ", ".join(top_venues_list)
-        
+
         speakers = plan_data.get("speakers", []) or []
         top_speakers_list = []
         for s in speakers[:3]:
@@ -316,11 +334,11 @@ async def generate_workflow_completion_summary(plan_id: str, plan_data: dict[str
         if isinstance(res, AIMessage):
             chat_state = get_chat_state(plan_id)
             chat_state["run_id"] = plan_id
-            
+
             content = str(getattr(res, "content", ""))
             if len(chat_state["chat_history"]) == 0:
                 chat_state["chat_history"].append({"role": "assistant", "content": content})
-                
+
             chat_state["current_summary"] = content
     except Exception as e:
         logging.error(f"Failed to generate completion summary: {e}")
