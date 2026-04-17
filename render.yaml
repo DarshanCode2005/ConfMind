@@ -28,9 +28,6 @@ services:
     dockerfilePath: ./Dockerfile.backend
     dockerContext: .
 
-    # Render routes public HTTPS traffic to this port inside the container
-    port: 8000
-
     # Persistent disk for ChromaDB vector data (keeps embeddings across deploys)
     disk:
       name: chroma-data
@@ -98,8 +95,6 @@ services:
 
     dockerfilePath: ./Dockerfile.frontend
     dockerContext: .
-
-    port: 3000
 
     envVars:
       # Points Next.js client bundles at the deployed backend service.
