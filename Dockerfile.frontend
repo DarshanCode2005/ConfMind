@@ -12,7 +12,7 @@ WORKDIR /app
 # Copy package manifests only → cache layer until they change
 COPY frontend/package.json frontend/package-lock.json ./
 
-RUN npm ci
+RUN npm ci --legacy-peer-deps
 
 # ---------- Stage 2: build Next.js app ----------------------------------------
 FROM node:20-alpine AS builder
