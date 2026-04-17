@@ -2,11 +2,12 @@
 # render.yaml — Render Blueprint for ConfMind
 #
 # Two services:
-#   1. confmind-backend   — FastAPI (Python) Docker service, port 8000
-#   2. confmind-frontend  — Next.js Docker service, port 3000
+#   1. confmind-backend   — FastAPI (Python) Docker service
+#   2. confmind-frontend  — Next.js Docker service
 #
-# One disk:
-#   1. chroma-data — mounted at /app/chroma_db inside the backend container
+# NOTE: Persistent disks are not supported on Render free tier.
+# ChromaDB writes to /app/chroma_db inside the container (ephemeral).
+# Embeddings are re-built on each deploy — acceptable for demo/hackathon use.
 #
 # HOW TO DEPLOY:
 #   1. Connect your GitHub repo on Render (https://dashboard.render.com/select-repo)
@@ -28,11 +29,6 @@ services:
     dockerfilePath: ./Dockerfile.backend
     dockerContext: .
 
-    # Persistent disk for ChromaDB vector data (keeps embeddings across deploys)
-    disk:
-      name: chroma-data
-      mountPath: /app/chroma_db
-      sizeGB: 1
 
     # Health check — Render marks deployment healthy when /health returns 200
     healthCheckPath: /health
