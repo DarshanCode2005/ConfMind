@@ -83,6 +83,7 @@ langchain-aws==1.4.3
 langchain-classic==1.0.3
 langchain-community==0.4.1
 langchain-core==1.2.28
+langchain-google-genai==2.0.1
 langchain-mistralai==1.1.2
 langchain-ollama==1.1.0
 langchain-openai==1.1.12
