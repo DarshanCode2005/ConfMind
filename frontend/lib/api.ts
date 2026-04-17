@@ -174,42 +174,27 @@ export async function runPlan(input: EventConfigInput): Promise<AgentState> {
 
   const { plan_id } = (await startRes.json()) as { plan_id: string; status: string };
 
-  // Step 2: Poll /api/output/{plan_id} until status is "done" or "error"
-  const POLL_INTERVAL_MS = 3000;
-  const MAX_WAIT_MS = 10 * 60 * 1000; // 10 minute hard ceiling
-  const deadline = Date.now() + MAX_WAIT_MS;
-
-  while (Date.now() < deadline) {
-    await new Promise((r) => setTimeout(r, POLL_INTERVAL_MS));
-
-    const pollRes = await fetch(
-      `${BACKEND_URL}/api/output/${encodeURIComponent(plan_id)}`,
-      { cache: "no-store" }
-    );
-
-    if (!pollRes.ok) continue; // 404 means still booting — retry
-
-    const data = (await pollRes.json()) as AgentState & { status?: string };
-
-    if (data.status === "error") {
-      const msg = (data as { errors?: string[] }).errors?.join(" | ") ?? "Pipeline failed";
-      throw new Error(msg);
-    }
-
-    if (data.status === "done") {
-      return normalizeAgentState(data);
-    }
-    // status === "running" → keep polling
-  }
-
-  throw new Error("Plan timed out after 10 minutes. Check backend logs.");
+  // Return immediately so the dashboard can establish SSE connections using plan_id.
+  // The dashboard's existing setInterval will handle polling /api/output/{plan_id}.
+  return normalizeAgentState({
+    plan_id,
+    event_config: input,
+    sponsors: [],
+    speakers: [],
+    venues: [],
+    exhibitors: [],
+    pricing: [],
+    communities: [],
+    schedule: [],
+    revenue: {},
+    gtm_messages: {},
+    messages: [],
+    errors: [],
+  } as unknown as AgentState);
 }
 
 
-/**
- * GET /api/output — Retrieve the full AgentState after agents have completed.
- */
-export async function getOutput(planId?: string): Promise<AgentState> {
+export async function getOutput(planId?: string): Promise<AgentState | null> {
   const url = planId
     ? `${BACKEND_URL}/api/output/${encodeURIComponent(planId)}`
     : `${BACKEND_URL}/api/output`;
@@ -219,11 +204,22 @@ export async function getOutput(planId?: string): Promise<AgentState> {
 
   if (!res.ok) {
     const text = await res.text();
+    // Use the specific 404 message from earlier
+    if (res.status === 404) throw new Error("Plan not found. It may be expired or invalid.");
     throw new Error(`getOutput failed: ${res.status} — ${text}`);
   }
 
-  const data = (await res.json()) as AgentState;
-  return normalizeAgentState(data);
+  const data = (await res.json()) as AgentState & { status?: string, errors?: string[] };
+  
+  if (data.status === "error") {
+      throw new Error(data.errors?.join(" | ") ?? "Pipeline failed");
+  }
+
+  if (data.status === "running") {
+      return null;
+  }
+
+  return normalizeAgentState(data as AgentState);
 }
 
 /**

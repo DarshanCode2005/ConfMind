@@ -68,7 +68,9 @@ export default function DashboardPage() {
 
     try {
       const data = await getOutput(planId);
-      setState(data);
+      if (data !== null) {
+        setState(data);
+      }
       setError(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load output.");
