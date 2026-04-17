@@ -1,0 +1,62 @@
+# ──────────────────────────────────────────────────────────────────────────────
+# ConfMind — Frontend Dockerfile (Next.js 16)
+# Multi-stage build: deps → builder → runner
+# NEXT_PUBLIC_BACKEND_URL is injected at BUILD TIME via --build-arg / Render env
+# ──────────────────────────────────────────────────────────────────────────────
+
+# ---------- Stage 1: install dependencies -------------------------------------
+FROM node:20-alpine AS deps
+
+WORKDIR /app
+
+# Copy package manifests only → cache layer until they change
+COPY frontend/package.json frontend/package-lock.json ./
+
+RUN npm ci
+
+# ---------- Stage 2: build Next.js app ----------------------------------------
+FROM node:20-alpine AS builder
+
+WORKDIR /app
+
+# Carry over node_modules from deps stage
+COPY --from=deps /app/node_modules ./node_modules
+
+# Copy source
+COPY frontend/ .
+
+# NEXT_PUBLIC_BACKEND_URL must be available at build time so Next.js can bake it
+# into client bundles. Override this with the real Render backend URL.
+ARG NEXT_PUBLIC_BACKEND_URL=http://localhost:8000
+ENV NEXT_PUBLIC_BACKEND_URL=${NEXT_PUBLIC_BACKEND_URL}
+
+# Disable Next.js telemetry in CI
+ENV NEXT_TELEMETRY_DISABLED=1
+
+RUN npm run build
+
+# ---------- Stage 3: minimal production runner --------------------------------
+FROM node:20-alpine AS runner
+
+WORKDIR /app
+
+ENV NODE_ENV=production
+ENV NEXT_TELEMETRY_DISABLED=1
+
+# Run as non-root for security
+RUN addgroup --system --gid 1001 nodejs \
+    && adduser --system --uid 1001 nextjs
+
+# Copy only the built artefacts needed at runtime
+COPY --from=builder /app/public ./public
+COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
+COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+
+USER nextjs
+
+EXPOSE 3000
+
+ENV PORT=3000
+ENV HOSTNAME=0.0.0.0
+
+CMD ["node", "server.js"]

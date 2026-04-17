@@ -15,3 +15,15 @@
 - **Improved Dashboard Spacing**: Restructured the main dashboard grid to provide more horizontal room for high-density components (Agent Graph, What-If Simulator, Agent Logs).
 - **Markdown Support**: Integrated `react-markdown` and `remark-gfm` into the chat widget to correctly render AI responses (headers, bold text, etc.).
 - **Text Wrapping**: Applied word-breaking styles to chat bubbles, log entries, and schedule items to prevent layout distortion from long strings.
+
+---
+
+# Changes made in root `/` (Deployment)
+
+## Render Docker Deployment Files
+
+- **Created `Dockerfile.backend`**: Python 3.12-slim image running `uvicorn backend.main:api`. Mounts `/app/chroma_db` for persistent ChromaDB storage. Sets `USE_PINECONE=false`, `USE_OLLAMA=false`, and `CHROMA_PERSIST_DIR=/app/chroma_db`.
+- **Created `Dockerfile.frontend`**: Multi-stage build (deps → builder → runner) for Next.js 16. Accepts `NEXT_PUBLIC_BACKEND_URL` as a build-arg baked into client bundles at build time.
+- **Created `render.yaml`**: Render Blueprint with two Docker web services (`confmind-backend` on port 8000 and `confmind-frontend` on port 3000), both on `Suryansh_final_integration` branch, both on free plan. Includes a 1 GB persistent disk for ChromaDB, all production API keys, and CORS/embedding config.
+- **Created `.dockerignore`**: Excludes `venv/`, `node_modules/`, `.git/`, `chroma_db/`, `.env`, `tests/`, and other non-essential files to keep images lean.
+- **Updated `frontend/next.config.ts`**: Added `output: "standalone"` to enable Next.js standalone mode required by the Docker runner stage.

@@ -1,0 +1,111 @@
+# ──────────────────────────────────────────────────────────────────────────────
+# render.yaml — Render Blueprint for ConfMind
+#
+# Two services:
+#   1. confmind-backend   — FastAPI (Python) Docker service, port 8000
+#   2. confmind-frontend  — Next.js Docker service, port 3000
+#
+# One disk:
+#   1. chroma-data — mounted at /app/chroma_db inside the backend container
+#
+# HOW TO DEPLOY:
+#   1. Connect your GitHub repo on Render (https://dashboard.render.com/select-repo)
+#   2. Render auto-detects this file and creates both services.
+#   3. After creation, go to each service → Environment → and set the secret
+#      env vars marked with `sync: false` below.
+#
+# Branch: Suryansh_final_integration
+# ──────────────────────────────────────────────────────────────────────────────
+
+services:
+  # ── Backend (FastAPI + LangGraph + ChromaDB) ─────────────────────────────
+  - type: web
+    name: confmind-backend
+    env: docker
+    plan: free
+    branch: Suryansh_final_integration
+
+    dockerfilePath: ./Dockerfile.backend
+    dockerContext: .
+
+    # Render routes public HTTPS traffic to this port inside the container
+    port: 8000
+
+    # Persistent disk for ChromaDB vector data (keeps embeddings across deploys)
+    disk:
+      name: chroma-data
+      mountPath: /app/chroma_db
+      sizeGB: 1
+
+    # Health check — Render marks deployment healthy when /health returns 200
+    healthCheckPath: /health
+
+    # ── Environment Variables ────────────────────────────────────────────────
+    envVars:
+      # ---- SECRETS (set these manually in Render dashboard after deploy) ----
+      # Go to: confmind-backend → Environment → Add Environment Variable
+      - key: OPENROUTER_API_KEY
+        sync: false   # Set in Render dashboard: sk-or-v1-...
+
+      - key: OPENAI_API_KEY
+        sync: false   # Set in Render dashboard: sk-proj-...
+
+      - key: ANTHROPIC_API_KEY
+        sync: false   # Set in Render dashboard: sk-ant-api03-...
+
+      - key: PREDICTHQ_API_KEY
+        sync: false   # Set in Render dashboard: 3U5VXGyAs_...
+
+      - key: TAVILY_API_KEY
+        sync: false   # Set in Render dashboard: tvly-dev-...
+
+      - key: LANGCHAIN_API_KEY
+        sync: false   # Set in Render dashboard: lsv2_pt_...
+
+      # ---- Non-secret config (safe to commit) -------------------------------
+      - key: LANGCHAIN_TRACING_V2
+        value: "true"
+
+      - key: LANGCHAIN_PROJECT
+        value: confmind-backend
+
+      # ChromaDB — always use local persistence (no Pinecone)
+      - key: USE_PINECONE
+        value: "false"
+
+      - key: CHROMA_PERSIST_DIR
+        value: /app/chroma_db
+
+      # Use OpenRouter for ChromaDB embeddings (no extra quota needed)
+      - key: USE_OPENROUTER_EMBEDDINGS
+        value: "true"
+
+      # Disable Ollama (not available on Render)
+      - key: USE_OLLAMA
+        value: "false"
+
+      # CORS — allow the frontend service domain
+      # After first deploy, tighten this to: https://confmind-frontend.onrender.com
+      - key: ALLOWED_ORIGINS
+        value: "*"
+
+  # ── Frontend (Next.js) ───────────────────────────────────────────────────
+  - type: web
+    name: confmind-frontend
+    env: docker
+    plan: free
+    branch: Suryansh_final_integration
+
+    dockerfilePath: ./Dockerfile.frontend
+    dockerContext: .
+
+    port: 3000
+
+    envVars:
+      # Points Next.js client bundles at the deployed backend service.
+      # This is baked into the JS bundle at build time via NEXT_PUBLIC_*.
+      - key: NEXT_PUBLIC_BACKEND_URL
+        value: https://confmind-backend.onrender.com
+
+      - key: NODE_ENV
+        value: production
