@@ -30,9 +30,8 @@ from contextlib import asynccontextmanager
 from typing import Any
 
 from dotenv import load_dotenv
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import StreamingResponse
 
 from backend.models.schemas import AgentState, ChatInput, EventConfigInput
 
@@ -193,9 +192,8 @@ async def run_plan_async_endpoint(config: EventConfigInput) -> dict[str, Any]:
 @api.get(
     "/api/agent-status",
     summary="Stream agent execution status via Server-Sent Events",
-    response_class=StreamingResponse,
 )
-async def agent_status_stream(plan_id: str) -> StreamingResponse:
+async def agent_status_stream(request: Request, plan_id: str):
     """SSE endpoint — the frontend polls this while /api/run-plan is executing.
 
     Each event is a JSON object: `{ "agent": "sponsor_agent", "status": "done" }`
@@ -203,42 +201,30 @@ async def agent_status_stream(plan_id: str) -> StreamingResponse:
     Query params:
     - `plan_id` — the UUID returned by /api/run-plan
     """
+    from sse_starlette.sse import EventSourceResponse
 
-    async def event_generator() -> AsyncGenerator[str, None]:
+    async def event_generator():
         last_count = 0
-        iterations_since_ping = 0
         while True:
+            if await request.is_disconnected():
+                break
+
             status = _agent_status.get(plan_id, {})
             items = list(status.items())
             for agent_name, agent_status_val in items[last_count:]:
                 data = json.dumps({"agent": agent_name, "status": agent_status_val})
-                yield f"data: {data}\n\n"
+                yield {"data": data}
 
             if len(items) > last_count:
                 last_count = len(items)
-                iterations_since_ping = 0
 
             if len(status) >= 8:  # all 8 agents reported
-                yield 'data: {"agent": "__all__", "status": "done"}\n\n'
+                yield {"data": '{"agent": "__all__", "status": "done"}'}
                 break
-
-            # Send a keep-alive ping every 5 seconds (10 * 0.5s) to defeat Render proxy timeouts
-            iterations_since_ping += 1
-            if iterations_since_ping >= 10:
-                yield ": keepalive\n\n"
-                iterations_since_ping = 0
 
             await asyncio.sleep(0.5)
 
-    return StreamingResponse(
-        event_generator(),
-        media_type="text/event-stream",
-        headers={
-            "Cache-Control": "no-cache",
-            "Connection": "keep-alive",
-            "X-Accel-Buffering": "no",
-        },
-    )
+    return EventSourceResponse(event_generator())
 
 
 @api.get(
