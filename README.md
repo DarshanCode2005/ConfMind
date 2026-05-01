@@ -2,11 +2,9 @@
 
 **The intelligent, domain-agnostic system that autonomously plans, prices, and executes conferences, music festivals, sports events, and educational conferences.**
 
-![High Prep Logo](https://via.placeholder.com/800x200/0A2540/FFFFFF?text=Pinch+%C3%97+IIT+Roorkee+High+Prep+2026)
-
 **Built for the Pinch × IIT Roorkee High Prep Problem Solving Championship 2026**
 
-**Live Demo** • [GitHub Repo](https://github.com/yourusername/confmind) • [Demo Video](https://youtu.be/placeholder) • [Hosted Platform](https://confmind.streamlit.app)
+**Live Demo** • [GitHub Repo](https://github.com/yourusername/confmind) • [Demo Video](https://youtu.be/P7eyUpPqW-k)
 
 ---
 
